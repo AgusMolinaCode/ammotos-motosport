@@ -6,21 +6,38 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:start": "docker-compose up -d",
+    "db:stop": "docker-compose down",
+    "db:logs": "docker-compose logs -f postgres",
+    "db:shell": "docker exec -it turn14-postgres psql -U turn14user -d turn14db",
+    "db:studio": "dotenv -e .env.local -- npx prisma studio",
+    "prisma:generate": "dotenv -e .env.local -- npx prisma generate",
+    "prisma:push": "dotenv -e .env.local -- npx prisma db push",
+    "test:env": "dotenv -e .env.local -- tsx scripts/test-env.ts",
+    "test:auth": "dotenv -e .env.local -- tsx scripts/test-auth.ts"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.2.0",
+    "@prisma/client": "^7.2.0",
     "next": "16.1.1",
+    "pg": "^8.16.3",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^20.19.27",
+    "@types/pg": "^8.16.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^16.6.1",
+    "dotenv-cli": "^7.4.4",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
+    "prisma": "^7.2.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

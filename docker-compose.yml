@@ -1,0 +1,42 @@
+# docker-compose.yml (sin version - nuevo formato)
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: turn14-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: turn14user
+      POSTGRES_PASSWORD: turn14pass
+      POSTGRES_DB: turn14db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U turn14user -d turn14db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - turn14-network
+
+  adminer:
+    image: adminer:latest
+    container_name: turn14-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - turn14-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  turn14-network:
+    driver: bridge

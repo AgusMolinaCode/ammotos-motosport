@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Turn14 Brand Model
+model Brand {
+  id        String   @id
+  name      String
+  dropship  Boolean
+  logo      String?
+  aaia      String[] // Array of AAIA codes
+  pricegroups Json   // Store as JSON for flexibility
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@map("brands")
+}
+
+// Sync Control - tracks when last sync occurred
+model SyncControl {
+  id        String   @id @default(cuid())
+  entity    String   @unique // e.g., "brands"
+  lastSync  DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("sync_control")
+}

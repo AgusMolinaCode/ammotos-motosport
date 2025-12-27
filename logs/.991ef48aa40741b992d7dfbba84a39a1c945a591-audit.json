@@ -1,0 +1,25 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "C:\\Users\\urano\\OneDrive\\Escritorio\\Programacion\\turn14_ammotos\\logs\\.991ef48aa40741b992d7dfbba84a39a1c945a591-audit.json",
+    "files": [
+        {
+            "date": 1766593451040,
+            "name": "C:\\Users\\urano\\OneDrive\\Escritorio\\Programacion\\turn14_ammotos\\logs\\mcp-puppeteer-2025-12-24.log",
+            "hash": "c931c97bb895a5cf655eaa1d1b0bcc5ac58e5697f45147dfd8a9195544d85db8"
+        },
+        {
+            "date": 1766788746083,
+            "name": "C:\\Users\\urano\\OneDrive\\Escritorio\\Programacion\\turn14_ammotos\\logs\\mcp-puppeteer-2025-12-26.log",
+            "hash": "ce341cd027ffdc31711ef175a02da249c0a51e87bffda6ba0857b7b88075ca16"
+        },
+        {
+            "date": 1766810840101,
+            "name": "C:\\Users\\urano\\OneDrive\\Escritorio\\Programacion\\turn14_ammotos\\logs\\mcp-puppeteer-2025-12-27.log",
+            "hash": "fd1c4507dc6f604ca376ea9a677accccbc6d1fb17061c756e2d12c16482ff075"
+        }
+    ],
+    "hashType": "sha256"
+}
