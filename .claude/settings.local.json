@@ -11,7 +11,15 @@
       "Bash(taskkill:*)",
       "Bash(npm run dev:*)",
       "mcp__next-devtools__nextjs_index",
-      "mcp__playwright__browser_navigate"
+      "mcp__playwright__browser_navigate",
+      "dentro de la carpeta app unicamente van las carpetas que funcionan como ruta",
+      "Bash(npx prisma generate:*)",
+      "Bash(if [ -d \"app/generated\" ])",
+      "Bash(then echo \"ERROR: app/generated aún existe\")",
+      "Bash(else echo \"✅ app/generated eliminada correctamente\")",
+      "Bash(fi)",
+      "mcp__next-devtools__nextjs_call",
+      "Bash(npx tsc:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -1,7 +1,8 @@
 "use server";
 
 import { brandsSyncService } from "@/infrastructure/services/BrandsSyncService";
-import type { Brand } from "@/app/generated/prisma/client";
+import type { Brand } from "@/generated/prisma/client";
+import type { PriceGroup } from "@/domain/types/turn14/brands";
 
 /**
  * SERVER ACTION: Obtener todas las marcas
@@ -24,7 +25,7 @@ export async function getBrands() {
           name: brand.name,
           dropship: brand.dropship,
           logo: brand.logo || "",
-          pricegroups: brand.pricegroups as any,
+          pricegroups: brand.pricegroups as unknown as PriceGroup[],
           AAIA: brand.aaia,
         },
       })),
@@ -74,7 +75,7 @@ export async function getBrandById(brandId: string) {
           name: brand.name,
           dropship: brand.dropship,
           logo: brand.logo || "",
-          pricegroups: brand.pricegroups as any,
+          pricegroups: brand.pricegroups as unknown as PriceGroup[],
           AAIA: brand.aaia,
         },
       },
