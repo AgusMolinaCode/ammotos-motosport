@@ -1,20 +1,18 @@
 "use server";
 
 import { brandsSyncService } from "@/infrastructure/services/BrandsSyncService";
-import type { Brand } from "@/app/generated/prisma";
+import type { Brand } from "@/app/generated/prisma/client";
 
 /**
  * SERVER ACTION: Obtener todas las marcas
  *
- * Obtiene marcas de la base de datos local.
- * Sincroniza con Turn14 API automáticamente una vez por semana.
+ * Obtiene marcas SOLO de la base de datos local.
+ * NO sincroniza durante render para evitar errores de hidratación.
+ * La sincronización se maneja mediante el endpoint API /api/sync/brands
  */
 export async function getBrands() {
   try {
-    // Sync brands if needed (checks if 7 days have passed)
-    await brandsSyncService.syncBrands();
-
-    // Get brands from database
+    // Get brands from database ONLY - no sync during render
     const brands = await brandsSyncService.getBrands();
 
     // Transform to match original API response format
@@ -54,5 +52,45 @@ export async function forceSyncBrands() {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
     };
+  }
+}
+
+/**
+ * SERVER ACTION: Obtener brand por ID con lazy-loading
+ *
+ * Primera visita: Fetch desde Turn14 API → Cache en DB
+ * Visitas subsecuentes: Lectura directa desde DB (sin API call)
+ */
+export async function getBrandById(brandId: string) {
+  try {
+    const brand = await brandsSyncService.getBrandById(brandId);
+
+    // Transform to match API response format
+    return {
+      data: {
+        id: brand.id,
+        type: "IndividualBrand" as const,
+        attributes: {
+          name: brand.name,
+          dropship: brand.dropship,
+          logo: brand.logo || "",
+          pricegroups: brand.pricegroups as any,
+          AAIA: brand.aaia,
+        },
+      },
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
+/**
+ * SERVER ACTION: Obtener estadísticas del cache
+ */
+export async function getBrandCacheStats() {
+  try {
+    return await brandsSyncService.getBrandCacheStats();
+  } catch (error) {
+    throw error;
   }
 }

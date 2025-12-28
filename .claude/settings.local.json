@@ -2,7 +2,16 @@
   "permissions": {
     "allow": [
       "Bash(npm run test:auth:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(npm run build:*)",
+      "Bash(ls:*)",
+      "Skill(sc:troubleshoot)",
+      "Bash(cat:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(taskkill:*)",
+      "Bash(npm run dev:*)",
+      "mcp__next-devtools__nextjs_index",
+      "mcp__playwright__browser_navigate"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -2,6 +2,7 @@ import { authService } from "@/infrastructure/providers/AuthProviderFactory";
 import { env } from "@/infrastructure/config/env";
 import { prisma } from "@/infrastructure/database/prisma";
 import type { BrandsResponse } from "@/domain/types/turn14/brands";
+import type { IndividualBrandResponse } from "@/domain/types/turn14/brand-details";
 
 /**
  * Service for syncing Turn14 brands with local database
@@ -51,16 +52,17 @@ export class BrandsSyncService {
   }
 
   /**
+   * Check if sync is needed (public method for API routes)
+   */
+  async needsSync(): Promise<boolean> {
+    return await this.shouldSync();
+  }
+
+  /**
    * Sync brands from API to database
+   * WARNING: Do not call during component render to avoid hydration issues
    */
   async syncBrands(): Promise<{ synced: boolean; count: number }> {
-    const needsSync = await this.shouldSync();
-
-    if (!needsSync) {
-      const count = await prisma.brand.count();
-      return { synced: false, count };
-    }
-
     const brandsData = await this.fetchBrandsFromAPI();
 
     // Upsert all brands
@@ -73,7 +75,7 @@ export class BrandsSyncService {
             dropship: brand.attributes.dropship,
             logo: brand.attributes.logo,
             aaia: brand.attributes.AAIA || [],
-            pricegroups: brand.attributes.pricegroups,
+            pricegroups: brand.attributes.pricegroups as any,
           },
           create: {
             id: brand.id,
@@ -81,7 +83,7 @@ export class BrandsSyncService {
             dropship: brand.attributes.dropship,
             logo: brand.attributes.logo,
             aaia: brand.attributes.AAIA || [],
-            pricegroups: brand.attributes.pricegroups,
+            pricegroups: brand.attributes.pricegroups as any,
           },
         })
       )
@@ -120,6 +122,127 @@ export class BrandsSyncService {
 
     const result = await this.syncBrands();
     return { count: result.count };
+  }
+
+  /**
+   * Fetch individual brand details from Turn14 API
+   */
+  private async fetchBrandDetailsFromAPI(
+    brandId: string
+  ): Promise<IndividualBrandResponse> {
+    const authHeader = await authService.getAuthorizationHeader();
+
+    const response = await fetch(`${env.turn14.apiUrl}/brands/${brandId}`, {
+      headers: {
+        Authorization: authHeader,
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Turn14 API error for brand ${brandId}: ${response.status} - ${errorText}`
+      );
+    }
+
+    return await response.json();
+  }
+
+  /**
+   * Get brand by ID with lazy-loading (cache-on-demand)
+   *
+   * FLOW:
+   * 1. Check DB for detailsFetched=true → Return immediately (cache hit)
+   * 2. If false → Fetch API → Update DB → Mark true (cache miss)
+   * 3. Never update once cached (immutable)
+   */
+  async getBrandById(brandId: string) {
+    // Step 1: Check DB cache
+    const cachedBrand = await prisma.brand.findUnique({
+      where: { id: brandId },
+    });
+
+    // Step 2: Cache hit - return immediately (no API call)
+    if (cachedBrand?.detailsFetched) {
+      return cachedBrand;
+    }
+
+    // Step 3: Brand exists but details not cached
+    if (cachedBrand) {
+      const apiResponse = await this.fetchBrandDetailsFromAPI(brandId);
+      const brandData = apiResponse.data;
+
+      return await prisma.brand.update({
+        where: { id: brandId },
+        data: {
+          name: brandData.attributes.name,
+          dropship: brandData.attributes.dropship,
+          logo: brandData.attributes.logo,
+          aaia: brandData.attributes.AAIA || [],
+          pricegroups: brandData.attributes.pricegroups as any,
+          detailsFetched: true,
+          detailsFetchedAt: new Date(),
+        },
+      });
+    }
+
+    // Step 4: Brand doesn't exist at all (edge case)
+    // Shouldn't happen if list sync works, but handle gracefully
+    const apiResponse = await this.fetchBrandDetailsFromAPI(brandId);
+    const brandData = apiResponse.data;
+
+    return await prisma.brand.create({
+      data: {
+        id: brandData.id,
+        name: brandData.attributes.name,
+        dropship: brandData.attributes.dropship,
+        logo: brandData.attributes.logo,
+        aaia: brandData.attributes.AAIA || [],
+        pricegroups: brandData.attributes.pricegroups as any,
+        detailsFetched: true,
+        detailsFetchedAt: new Date(),
+      },
+    });
+  }
+
+  /**
+   * Force refresh brand details (admin tool - violates immutability)
+   */
+  async forceRefreshBrandDetails(brandId: string) {
+    const apiResponse = await this.fetchBrandDetailsFromAPI(brandId);
+    const brandData = apiResponse.data;
+
+    return await prisma.brand.update({
+      where: { id: brandId },
+      data: {
+        name: brandData.attributes.name,
+        dropship: brandData.attributes.dropship,
+        logo: brandData.attributes.logo,
+        aaia: brandData.attributes.AAIA || [],
+        pricegroups: brandData.attributes.pricegroups as any,
+        detailsFetched: true,
+        detailsFetchedAt: new Date(),
+      },
+    });
+  }
+
+  /**
+   * Get cache statistics (monitoring/debug)
+   */
+  async getBrandCacheStats() {
+    const [total, withDetails, withoutDetails] = await Promise.all([
+      prisma.brand.count(),
+      prisma.brand.count({ where: { detailsFetched: true } }),
+      prisma.brand.count({ where: { detailsFetched: false } }),
+    ]);
+
+    return {
+      total,
+      withDetails,
+      withoutDetails,
+      cacheHitRate: total > 0 ? (withDetails / total) * 100 : 0,
+    };
   }
 }
 

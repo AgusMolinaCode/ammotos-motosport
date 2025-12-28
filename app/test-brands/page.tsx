@@ -1,14 +1,15 @@
 import { getBrands } from "@/application/actions/brands";
+import Link from "next/link";
 
 /**
  * PÁGINA DE PRUEBA: Brands de Turn14
  *
- * Esta página ejecuta el server action getBrands() automáticamente
- * al cargar. Toda la información se muestra en la consola del servidor.
+ * Server Component que muestra las marcas desde la base de datos.
+ * La sincronización se maneja automáticamente mediante /api/sync/brands
  */
 export default async function TestBrandsPage() {
-  // Server Component - se ejecuta en el servidor
   const brandsData = await getBrands();
+  const brands = brandsData.data;
 
   return (
     <div className="min-h-screen bg-zinc-50 p-8">
@@ -17,57 +18,69 @@ export default async function TestBrandsPage() {
 
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">
-            📊 Total de marcas: {brandsData.data.length}
+            📊 Total de marcas: {brands.length}
           </h2>
           <p className="text-zinc-600">
-            ✅ Los datos completos se muestran en la consola del servidor
+            ✅ Datos cargados desde la base de datos PostgreSQL
           </p>
           <p className="text-zinc-600 mt-2">
-            Revisa tu terminal donde está corriendo <code className="bg-zinc-100 px-2 py-1 rounded">npm run dev</code>
+            🔄 Sincronización automática cada 7 días vía{" "}
+            <code className="bg-zinc-100 px-2 py-1 rounded">
+              /api/sync/brands
+            </code>
           </p>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Primeras 10 marcas:</h2>
+          <h2 className="text-xl font-semibold mb-4">Todas las marcas:</h2>
           <div className="space-y-4">
-            {brandsData.data.map((brand) => (
-              <div
-                key={brand.id}
-                className="border border-zinc-200 rounded-lg p-4 hover:border-zinc-400 transition-colors"
-              >
-                <div className="flex items-start gap-4">
-                  {brand.attributes.logo && (
-                    <img
-                      src={brand.attributes.logo}
-                      alt={brand.attributes.name}
-                      className="w-16 h-16 object-contain"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">
-                      {brand.attributes.name}
-                    </h3>
-                    <div className="mt-2 text-sm text-zinc-600 space-y-1">
-                      <p>
-                        <strong>ID:</strong> {brand.id}
-                      </p>
-                      <p>
-                        <strong>Dropship:</strong>{" "}
-                        {brand.attributes.dropship ? "✅ Sí" : "❌ No"}
-                      </p>
-                      <p>
-                        <strong>Price Groups:</strong>{" "}
-                        {brand.attributes.pricegroups.length}
-                      </p>
-                      <p>
-                        <strong>AAIA:</strong>{" "}
-                        {brand.attributes.AAIA?.join(", ") || "N/A"}
-                      </p>
+            {brands.map((brand) => {
+              const hasLogo = Boolean(brand.attributes.logo);
+              const priceGroupsCount = Array.isArray(brand.attributes.pricegroups)
+                ? brand.attributes.pricegroups.length
+                : 0;
+              const aaiaList = brand.attributes.AAIA || [];
+
+              return (
+                <div
+                  key={brand.id}
+                  className="border border-zinc-200 rounded-lg p-4 hover:border-zinc-400 transition-colors"
+                >
+                  <div className="flex items-start gap-4">
+                    {hasLogo && (
+                      <img
+                        src={brand.attributes.logo}
+                        alt={brand.attributes.name}
+                        className="w-16 h-16 object-contain"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <Link href={`/brands/${brand.id}`}>
+                        <h3 className="font-semibold text-lg hover:text-blue-600 transition-colors cursor-pointer">
+                          {brand.attributes.name}
+                        </h3>
+                      </Link>
+                      <div className="mt-2 text-sm text-zinc-600 space-y-1">
+                        <p>
+                          <strong>ID:</strong> {brand.id}
+                        </p>
+                        <p>
+                          <strong>Dropship:</strong>{" "}
+                          {brand.attributes.dropship ? "✅ Sí" : "❌ No"}
+                        </p>
+                        <p>
+                          <strong>Price Groups:</strong> {priceGroupsCount}
+                        </p>
+                        <p>
+                          <strong>AAIA:</strong>{" "}
+                          {aaiaList.length > 0 ? aaiaList.join(", ") : "N/A"}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

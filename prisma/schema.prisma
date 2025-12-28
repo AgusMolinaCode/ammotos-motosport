@@ -15,16 +15,19 @@ datasource db {
 
 // Turn14 Brand Model
 model Brand {
-  id        String   @id
-  name      String
-  dropship  Boolean
-  logo      String?
-  aaia      String[] // Array of AAIA codes
-  pricegroups Json   // Store as JSON for flexibility
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String    @id
+  name             String
+  dropship         Boolean
+  logo             String?
+  aaia             String[]  // Array of AAIA codes
+  pricegroups      Json      // Store as JSON for flexibility
+  detailsFetched   Boolean   @default(false) // Track if full details cached
+  detailsFetchedAt DateTime? // Audit trail for debugging
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   @@index([name])
+  @@index([detailsFetched])
   @@map("brands")
 }
 
