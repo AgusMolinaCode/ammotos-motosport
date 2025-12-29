@@ -82,3 +82,34 @@ model ProductPageCache {
   @@index([brandId])
   @@map("product_page_cache")
 }
+
+// Turn14 Product Pricing Model (cached on-demand)
+model ProductPrice {
+  id              String   @id @default(cuid())
+  productId       String   @unique // Foreign key to Product.id
+  purchaseCost    Float    // Distributor cost (internal use)
+  hasMap          Boolean  // Has MAP pricing policy
+  canPurchase     Boolean  // Available for purchase
+  pricelists      Json     // Store raw pricelists array from API
+  mapPrice        Float?   // Extracted MAP price for efficient queries
+
+  // Metadata
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([productId])
+  @@index([hasMap])
+  @@map("product_prices")
+}
+
+// Control de páginas de precios cacheadas por brand
+model PricePageCache {
+  id        String   @id @default(cuid())
+  brandId   Int
+  page      Int
+  cachedAt  DateTime @default(now())
+
+  @@unique([brandId, page])
+  @@index([brandId])
+  @@map("price_page_cache")
+}

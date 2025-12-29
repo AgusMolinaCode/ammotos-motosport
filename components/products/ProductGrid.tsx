@@ -10,6 +10,11 @@ interface Product {
     mfr_part_number: string;
     thumbnail: string;
   };
+  pricing?: {
+    mapPrice: number | null;
+    hasMap: boolean;
+    canPurchase: boolean;
+  } | null;
 }
 
 interface ProductGridProps {
@@ -62,6 +67,25 @@ export function ProductGrid({
             <p className="text-zinc-600 text-xs font-mono">
               {product.attributes.mfr_part_number}
             </p>
+
+            {/* Price Display */}
+            {product.pricing?.hasMap && product.pricing.mapPrice && (
+              <div className="mt-2 pt-2 border-t border-zinc-200">
+                <p className="text-sm font-semibold text-green-700">
+                  ${product.pricing.mapPrice.toFixed(2)}
+                </p>
+                <p className="text-xs text-zinc-500">MAP Price</p>
+              </div>
+            )}
+
+            {/* No Price Available */}
+            {product.pricing && !product.pricing.hasMap && (
+              <div className="mt-2 pt-2 border-t border-zinc-200">
+                <p className="text-xs text-zinc-500 italic">
+                  Price not available
+                </p>
+              </div>
+            )}
           </div>
         ))}
       </div>

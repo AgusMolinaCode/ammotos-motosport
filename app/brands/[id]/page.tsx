@@ -1,5 +1,6 @@
 import { getBrandById } from "@/application/actions/brands";
 import { getProductsByBrand } from "@/application/actions/products";
+import { getPricesByBrand } from "@/application/actions/prices";
 import Link from "next/link";
 import type { PriceGroup } from "@/domain/types/turn14/brands";
 import { InfoItem } from "@/components/brand-details/InfoItem";
@@ -24,6 +25,18 @@ export default async function BrandDetailPage({
   // Obtener productos con paginación
   const currentPage = pageParam ? parseInt(pageParam) : 1;
   const productsData = await getProductsByBrand(parseInt(id), currentPage);
+
+  // Obtener precios para los productos
+  const pricesData = await getPricesByBrand(parseInt(id), currentPage);
+
+  // Merge products con prices
+  const productsWithPrices = productsData.data.map((product) => {
+    const price = pricesData.data.find((p) => p.productId === product.id);
+    return {
+      ...product,
+      pricing: price || null,
+    };
+  });
 
   return (
     <div className="min-h-screen bg-zinc-50">
@@ -94,7 +107,7 @@ export default async function BrandDetailPage({
         <div className="mt-12">
           <h2 className="text-2xl font-bold mb-6">Productos</h2>
           <ProductGrid
-            products={productsData.data}
+            products={productsWithPrices}
             currentPage={currentPage}
             totalPages={productsData.meta.total_pages}
             brandId={parseInt(id)}

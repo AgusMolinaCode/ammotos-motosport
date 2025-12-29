@@ -198,8 +198,8 @@ export class ProductsSyncService {
       active: p.attributes.active,
       regularStock: p.attributes.regular_stock,
       thumbnail: p.attributes.thumbnail || null,
-      dimensions: p.attributes.dimensions,
-      warehouseAvailability: p.attributes.warehouse_availability,
+      dimensions: p.attributes.dimensions as any, // Cast to any for Prisma Json type
+      warehouseAvailability: p.attributes.warehouse_availability as any, // Cast to any for Prisma Json type
     }));
 
     // Usar upsert para evitar duplicados
