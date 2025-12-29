@@ -19,7 +19,14 @@
       "Bash(else echo \"✅ app/generated eliminada correctamente\")",
       "Bash(fi)",
       "mcp__next-devtools__nextjs_call",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx prisma migrate reset --force)",
+      "Bash(set PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=si)",
+      "Bash($env:PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=\"si\")",
+      "Bash(PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=si npx prisma migrate reset --force)",
+      "Bash(npx tsx:*)",
+      "Bash(curl:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -1,24 +1,33 @@
 import { getBrandById } from "@/application/actions/brands";
+import { getProductsByBrand } from "@/application/actions/products";
 import Link from "next/link";
 import type { PriceGroup } from "@/domain/types/turn14/brands";
 import { InfoItem } from "@/components/brand-details/InfoItem";
 import { PriceGroupCard } from "@/components/brand-details/PriceGroupCard";
+import { ProductGrid } from "@/components/products/ProductGrid";
 
 export default async function BrandDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const { id } = await params;
+  const { page: pageParam } = await searchParams;
 
-  // Server action - errors will be caught by error boundary
+  // Server actions - errors will be caught by error boundary
   const brandData = await getBrandById(id);
   const brand = brandData.data;
   const priceGroups = brand.attributes.pricegroups as PriceGroup[];
 
+  // Obtener productos con paginación
+  const currentPage = pageParam ? parseInt(pageParam) : 1;
+  const productsData = await getProductsByBrand(parseInt(id), currentPage);
+
   return (
     <div className="min-h-screen bg-zinc-50">
-      <div className="max-w-4xl mx-auto p-8">
+      <div className="max-w-7xl mx-auto p-8">
         {/* Header */}
         <div className="mb-6">
           <Link
@@ -40,7 +49,7 @@ export default async function BrandDetailPage({
               <img
                 src={brand.attributes.logo}
                 alt={brand.attributes.name}
-                className="max-w-xs max-h-32 object-contain"
+                className="max-w-xs max-h-28 object-contain"
               />
             </div>
           )}
@@ -79,6 +88,17 @@ export default async function BrandDetailPage({
               </div>
             </div>
           )}
+        </div>
+
+        {/* Products Section */}
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold mb-6">Productos</h2>
+          <ProductGrid
+            products={productsData.data}
+            currentPage={currentPage}
+            totalPages={productsData.meta.total_pages}
+            brandId={parseInt(id)}
+          />
         </div>
       </div>
     </div>

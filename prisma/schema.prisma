@@ -41,3 +41,44 @@ model SyncControl {
 
   @@map("sync_control")
 }
+
+// Turn14 Product Model (cached on-demand)
+model Product {
+  id                String   @id // Turn14 item_id (puede contener letras, ej: "13504G")
+  brandId           Int      // Brand ID from Turn14
+  brandName         String
+  productName       String
+  partNumber        String   // Turn14 internal part number
+  mfrPartNumber     String   // Manufacturer part number
+  partDescription   String?
+  category          String
+  subcategory       String
+  priceGroupId      Int
+  priceGroup        String
+  active            Boolean
+  regularStock      Boolean
+  thumbnail         String?  // URL de la imagen
+  dimensions        Json     // Array de Dimensions
+  warehouseAvailability Json // Array de WarehouseAvailability
+
+  // Metadata
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([brandId])
+  @@index([partNumber])
+  @@index([mfrPartNumber])
+  @@map("products")
+}
+
+// Control de páginas cacheadas por brand
+model ProductPageCache {
+  id        String   @id @default(cuid())
+  brandId   Int
+  page      Int
+  cachedAt  DateTime @default(now())
+
+  @@unique([brandId, page])
+  @@index([brandId])
+  @@map("product_page_cache")
+}
