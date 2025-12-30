@@ -32,13 +32,6 @@ export default async function BrandDetailPage({
   // Obtener precios para los productos
   const pricesData = await getPricesByBrand(parseInt(id), currentPage);
 
-  // 🔍 DEBUG: Mostrar datos de pricing en consola
-  console.log("📊 [Brand Page] Pricing data received:");
-  console.log(`   Total prices: ${pricesData.data.length}`);
-  console.log(`   Current page: ${pricesData.meta.current_page}`);
-  console.log(`   Total pages: ${pricesData.meta.total_pages}`);
-  console.log("   Sample price data:", pricesData.data[0]);
-
   // Obtener categorías únicas de esta marca
   const categories = await getBrandCategories(parseInt(id));
 
@@ -51,12 +44,6 @@ export default async function BrandDetailPage({
     };
   });
 
-  // 🔍 DEBUG: Mostrar ejemplo de producto con precio
-  console.log("🛍️ [Brand Page] Sample product with pricing:", {
-    productId: productsWithPrices[0]?.id,
-    productName: productsWithPrices[0]?.attributes.product_name,
-    pricing: productsWithPrices[0]?.pricing,
-  });
 
   return (
     <div className="min-h-screen bg-zinc-50">
