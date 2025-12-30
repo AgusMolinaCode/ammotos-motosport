@@ -4,6 +4,7 @@ import type {
   ProductsResponse,
   Product as Turn14Product,
 } from "@/domain/types/turn14/products";
+import { traducirCategoria } from "@/constants/categorias";
 
 export class ProductsSyncService {
   private static readonly CACHE_TTL_DAYS = 3; // Renovar caché cada 3 días
@@ -160,9 +161,21 @@ export class ProductsSyncService {
     // Guardar productos en DB
     await this.saveProductsToDatabase(data.data, brandId);
 
-    // Marcar página como cacheada
-    await prisma.productPageCache.create({
-      data: {
+    // Extraer y guardar categorías únicas
+    await this.saveBrandCategories(data.data, brandId);
+
+    // Marcar página como cacheada (usar upsert para evitar race conditions)
+    await prisma.productPageCache.upsert({
+      where: {
+        brandId_page: {
+          brandId,
+          page,
+        },
+      },
+      update: {
+        cachedAt: new Date(),
+      },
+      create: {
         brandId,
         page,
       },
@@ -214,6 +227,47 @@ export class ProductsSyncService {
     );
 
     console.log(`✅ Saved ${products.length} products to database`);
+  }
+
+  /**
+   * Extraer categorías únicas de productos y guardarlas en BrandCategory
+   * Solo agrega nuevas categorías, no duplica las existentes
+   */
+  private async saveBrandCategories(
+    products: Turn14Product[],
+    brandId: number
+  ) {
+    // Extraer categorías únicas de los productos
+    const uniqueCategories = new Set<string>();
+    products.forEach((product) => {
+      if (product.attributes.category) {
+        uniqueCategories.add(product.attributes.category);
+      }
+    });
+
+    // Guardar cada categoría única
+    const categoryPromises = Array.from(uniqueCategories).map((category) =>
+      prisma.brandCategory.upsert({
+        where: {
+          brandId_category: {
+            brandId,
+            category,
+          },
+        },
+        update: {}, // No actualizar nada si ya existe
+        create: {
+          brandId,
+          category,
+          categoryEs: traducirCategoria(category),
+        },
+      })
+    );
+
+    await Promise.all(categoryPromises);
+
+    console.log(
+      `📂 Saved ${uniqueCategories.size} unique categories for brand ${brandId}`
+    );
   }
 }
 

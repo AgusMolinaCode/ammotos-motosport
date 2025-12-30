@@ -1,11 +1,14 @@
 import { getBrandById } from "@/application/actions/brands";
 import { getProductsByBrand } from "@/application/actions/products";
 import { getPricesByBrand } from "@/application/actions/prices";
+import { getBrandCategories } from "@/application/actions/categories";
 import Link from "next/link";
 import type { PriceGroup } from "@/domain/types/turn14/brands";
 import { InfoItem } from "@/components/brand-details/InfoItem";
 import { PriceGroupCard } from "@/components/brand-details/PriceGroupCard";
 import { ProductGrid } from "@/components/products/ProductGrid";
+import { CategorySidebar } from "@/components/sidebar/CategorySidebar";
+import { MobileCategoryButton } from "@/components/sidebar/MobileCategoryButton";
 
 export default async function BrandDetailPage({
   params,
@@ -29,6 +32,16 @@ export default async function BrandDetailPage({
   // Obtener precios para los productos
   const pricesData = await getPricesByBrand(parseInt(id), currentPage);
 
+  // 🔍 DEBUG: Mostrar datos de pricing en consola
+  console.log("📊 [Brand Page] Pricing data received:");
+  console.log(`   Total prices: ${pricesData.data.length}`);
+  console.log(`   Current page: ${pricesData.meta.current_page}`);
+  console.log(`   Total pages: ${pricesData.meta.total_pages}`);
+  console.log("   Sample price data:", pricesData.data[0]);
+
+  // Obtener categorías únicas de esta marca
+  const categories = await getBrandCategories(parseInt(id));
+
   // Merge products con prices
   const productsWithPrices = productsData.data.map((product) => {
     const price = pricesData.data.find((p) => p.productId === product.id);
@@ -38,9 +51,16 @@ export default async function BrandDetailPage({
     };
   });
 
+  // 🔍 DEBUG: Mostrar ejemplo de producto con precio
+  console.log("🛍️ [Brand Page] Sample product with pricing:", {
+    productId: productsWithPrices[0]?.id,
+    productName: productsWithPrices[0]?.attributes.product_name,
+    pricing: productsWithPrices[0]?.pricing,
+  });
+
   return (
     <div className="min-h-screen bg-zinc-50">
-      <div className="max-w-7xl mx-auto p-8">
+      <div className="max-w-[90rem] mx-auto p-8">
         {/* Header */}
         <div className="mb-6">
           <Link
@@ -103,15 +123,32 @@ export default async function BrandDetailPage({
           )}
         </div>
 
-        {/* Products Section */}
+        {/* Products Section with Sidebar */}
         <div className="mt-12">
           <h2 className="text-2xl font-bold mb-6">Productos</h2>
-          <ProductGrid
-            products={productsWithPrices}
-            currentPage={currentPage}
-            totalPages={productsData.meta.total_pages}
-            brandId={parseInt(id)}
-          />
+
+          {/* Mobile Category Filter Button */}
+          <MobileCategoryButton categories={categories} />
+
+          {/* Layout: Sidebar + Products Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+            {/* Sidebar - Hidden on mobile, visible on large screens */}
+            <div className="hidden lg:block">
+              <div className="sticky top-6">
+                <CategorySidebar categories={categories} />
+              </div>
+            </div>
+
+            {/* Products Grid */}
+            <div>
+              <ProductGrid
+                products={productsWithPrices}
+                currentPage={currentPage}
+                totalPages={productsData.meta.total_pages}
+                brandId={parseInt(id)}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

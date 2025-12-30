@@ -164,9 +164,18 @@ export class PricingSyncService {
     // Guardar precios en DB
     await this.savePricesToDatabase(data.data);
 
-    // Marcar página como cacheada
-    await prisma.pricePageCache.create({
-      data: {
+    // Marcar página como cacheada (usar upsert para evitar race conditions)
+    await prisma.pricePageCache.upsert({
+      where: {
+        brandId_page: {
+          brandId,
+          page,
+        },
+      },
+      update: {
+        cachedAt: new Date(),
+      },
+      create: {
         brandId,
         page,
       },
@@ -179,7 +188,7 @@ export class PricingSyncService {
       hasMap: item.attributes.has_map,
       canPurchase: item.attributes.can_purchase,
       pricelists: item.attributes.pricelists,
-      mapPrice: this.extractMapPrice(item.attributes.pricelists),
+      mapPrice: this.extractRetailPrice(item.attributes.pricelists),
     }));
 
     return {
@@ -200,7 +209,7 @@ export class PricingSyncService {
       hasMap: item.attributes.has_map,
       canPurchase: item.attributes.can_purchase,
       pricelists: item.attributes.pricelists as any, // Cast to any for Prisma Json type
-      mapPrice: this.extractMapPrice(item.attributes.pricelists),
+      mapPrice: this.extractRetailPrice(item.attributes.pricelists),
     }));
 
     // Usar upsert para evitar duplicados
@@ -218,13 +227,13 @@ export class PricingSyncService {
   }
 
   /**
-   * Extraer MAP price del array de pricelists
+   * Extraer Retail price del array de pricelists
    */
-  private extractMapPrice(pricelists: Pricelist[]): number | null {
-    const mapEntry = pricelists.find(
-      (pl) => pl.name.toLowerCase() === "map"
+  private extractRetailPrice(pricelists: Pricelist[]): number | null {
+    const retailEntry = pricelists.find(
+      (pl) => pl.name.toLowerCase() === "retail"
     );
-    return mapEntry?.price ?? null;
+    return retailEntry?.price ?? null;
   }
 
   /**

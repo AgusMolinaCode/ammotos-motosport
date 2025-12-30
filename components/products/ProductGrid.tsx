@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 interface Product {
@@ -38,54 +39,121 @@ export function ProductGrid({
 
   return (
     <>
-      {/* Grid de productos */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-8">
+      {/* Lista de productos */}
+      <div className="space-y-3 mb-8">
         {products.map((product) => (
           <div
             key={product.id}
-            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4"
+            className="bg-white border-l-4 border-emerald-500 shadow-sm hover:shadow-md transition-shadow duration-200 flex"
           >
-            {/* Imagen */}
-            <div className="aspect-square mb-3 bg-zinc-100 rounded flex items-center justify-center overflow-hidden">
-              {product.attributes.thumbnail ? (
-                <img
-                  src={product.attributes.thumbnail}
-                  alt={product.attributes.product_name}
-                  className="object-contain"
-                />
-              ) : (
-                <span className="text-zinc-400 text-sm">Sin imagen</span>
-              )}
+            {/* Contenedor principal */}
+            <div className="flex flex-1 p-4 gap-4">
+              {/* Imagen */}
+              <div className="w-20 h-20 shrink-0 bg-zinc-50 rounded flex items-center justify-center overflow-hidden">
+                {product.attributes.thumbnail ? (
+                  <Image
+                    src={product.attributes.thumbnail}
+                    alt={product.attributes.product_name}
+                    className="object-contain"
+                    width={80}
+                    height={80}
+                  />
+                ) : (
+                  <span className="text-zinc-400 text-xs">Sin imagen</span>
+                )}
+              </div>
+
+              {/* Información del producto */}
+              <div className="flex-1 min-w-0">
+                {/* Part Number */}
+                <h3 className="text-xl font-normal text-cyan-600 mb-1">
+                  Part #: {product.attributes.mfr_part_number}
+                </h3>
+
+                {/* Stock - placeholder */}
+                <p className="text-sm text-green-600 mb-2">
+                  En Stock
+                </p>
+
+                {/* Detalles del producto */}
+                <div className="space-y-0.5 text-sm">
+                  <p>
+                    <span className="font-semibold">Manufacturer:</span>{" "}
+                    {product.attributes.product_name.split(" ")[0]}{" "}
+                    <span className="font-semibold ml-2">Pricing Group:</span>{" "}
+                    {product.attributes.product_name.split(" ")[0]}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Description:</span>{" "}
+                    {product.attributes.product_name}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Product Name:</span>{" "}
+                    {product.attributes.product_name}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Turn14 ID:</span>{" "}
+                    {product.id}
+                  </p>
+                </div>
+
+                {/* Botones de acción */}
+                <div className="flex gap-2 mt-3">
+                  <button className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium rounded transition-colors">
+                    Product Info
+                  </button>
+                  <button className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded transition-colors">
+                    Related Items
+                  </button>
+                  <button className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded transition-colors">
+                    Available to Promise
+                  </button>
+                </div>
+              </div>
+
+              {/* Precio y controles */}
+              <div className="shrink-0 flex flex-col items-end justify-between min-w-[200px]">
+                {/* Precios */}
+                <div className="text-right">
+                  {product.pricing?.hasMap && product.pricing.mapPrice ? (
+                    <>
+                      <div className="text-sm text-zinc-600 mb-1">
+                        <span className="font-semibold">Retail</span>
+                        <span className="ml-2 line-through">
+                          ${product.pricing.mapPrice.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="text-3xl font-bold text-orange-500 mb-1">
+                        ${(product.pricing.mapPrice * 0.65).toFixed(2)}
+                      </div>
+                      <div className="text-sm text-zinc-600 italic">
+                        Retail - 35%
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-sm text-zinc-500 italic">
+                      Precio no disponible
+                    </div>
+                  )}
+                </div>
+
+                {/* Cantidad y botón */}
+                <div className="space-y-2 w-full">
+                  <input
+                    type="number"
+                    defaultValue="1"
+                    min="1"
+                    className="w-full px-2 py-1 border-2 border-zinc-400 rounded text-center text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  />
+                  <button
+                    type="button"
+                    className="w-full px-3 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded transition-colors duration-200 shadow-sm"
+                  >
+                    Agregar
+                  </button>
+                </div>
+              </div>
             </div>
-
-            {/* Nombre del producto */}
-            <h3 className="font-semibold text-sm mb-2 line-clamp-2 min-h-[40px]">
-              {product.attributes.product_name}
-            </h3>
-
-            {/* Número de parte */}
-            <p className="text-zinc-600 text-xs font-mono">
-              {product.attributes.mfr_part_number}
-            </p>
-
-            {/* Price Display */}
-            {product.pricing?.hasMap && product.pricing.mapPrice && (
-              <div className="mt-2 pt-2 border-t border-zinc-200">
-                <p className="text-sm font-semibold text-green-700">
-                  ${product.pricing.mapPrice.toFixed(2)}
-                </p>
-                <p className="text-xs text-zinc-500">MAP Price</p>
-              </div>
-            )}
-
-            {/* No Price Available */}
-            {product.pricing && !product.pricing.hasMap && (
-              <div className="mt-2 pt-2 border-t border-zinc-200">
-                <p className="text-xs text-zinc-500 italic">
-                  Price not available
-                </p>
-              </div>
-            )}
           </div>
         ))}
       </div>

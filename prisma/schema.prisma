@@ -113,3 +113,17 @@ model PricePageCache {
   @@index([brandId])
   @@map("price_page_cache")
 }
+
+// Categorías únicas por marca (extraídas de productos)
+model BrandCategory {
+  id          String   @id @default(cuid())
+  brandId     Int
+  category    String   // Categoría en inglés (desde API)
+  categoryEs  String   // Traducción al español
+
+  createdAt   DateTime @default(now())
+
+  @@unique([brandId, category])
+  @@index([brandId])
+  @@map("brand_categories")
+}

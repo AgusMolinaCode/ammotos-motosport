@@ -31,7 +31,9 @@
       "Bash(npx tsx scripts/check-pricing-debug.ts)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(taskkill //F //PID 18884)"
+      "Bash(taskkill //F //PID 18884)",
+      "Bash(taskkill //F //PID 31504)",
+      "Bash(npx prisma studio)"
     ]
   },
   "enableAllProjectMcpServers": true,
