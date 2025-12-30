@@ -17,6 +17,8 @@ export async function getPricesByBrand(brandId: number, page: number = 1) {
       data: result.prices.map((price) => ({
         productId: price.productId,
         mapPrice: price.mapPrice,
+        retailPrice: price.retailPrice,
+        purchaseCost: price.purchaseCost,
         hasMap: price.hasMap,
         canPurchase: price.canPurchase,
       })),

@@ -41,6 +41,7 @@ export interface ProductPriceData {
   canPurchase: boolean;
   pricelists: Pricelist[];
   mapPrice: number | null; // Extracted MAP price
+  retailPrice: number | null; // Extracted Retail price
 }
 
 // Service return type with pagination

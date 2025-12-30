@@ -13,6 +13,8 @@ interface Product {
   };
   pricing?: {
     mapPrice: number | null;
+    retailPrice: number | null;
+    purchaseCost: number;
     hasMap: boolean;
     canPurchase: boolean;
   } | null;
@@ -115,19 +117,25 @@ export function ProductGrid({
               <div className="shrink-0 flex flex-col items-end justify-between min-w-[200px]">
                 {/* Precios */}
                 <div className="text-right">
-                  {product.pricing?.hasMap && product.pricing.mapPrice ? (
+                  {product.pricing ? (
                     <>
-                      <div className="text-sm text-zinc-600 mb-1">
-                        <span className="font-semibold">Retail</span>
-                        <span className="ml-2 line-through">
-                          ${product.pricing.mapPrice.toFixed(2)}
-                        </span>
-                      </div>
+                      {/* Retail Price (tachado) */}
+                      {product.pricing.retailPrice && (
+                        <div className="text-sm text-zinc-600 mb-1">
+                          <span className="font-semibold">Retail</span>
+                          <span className="ml-2 line-through">
+                            ${product.pricing.retailPrice.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Purchase Cost (precio principal) */}
                       <div className="text-3xl font-bold text-orange-500 mb-1">
-                        ${(product.pricing.mapPrice * 0.65).toFixed(2)}
+                        ${product.pricing.purchaseCost.toFixed(2)}
                       </div>
+
                       <div className="text-sm text-zinc-600 italic">
-                        Retail - 35%
+                        Purchase Cost
                       </div>
                     </>
                   ) : (

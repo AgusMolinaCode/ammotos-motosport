@@ -120,6 +120,7 @@ export class PricingSyncService {
       canPurchase: p.canPurchase,
       pricelists: p.pricelists as unknown as Pricelist[],
       mapPrice: p.mapPrice,
+      retailPrice: this.extractRetailPrice(p.pricelists as unknown as Pricelist[]),
     }));
 
     return {
@@ -188,7 +189,8 @@ export class PricingSyncService {
       hasMap: item.attributes.has_map,
       canPurchase: item.attributes.can_purchase,
       pricelists: item.attributes.pricelists,
-      mapPrice: this.extractRetailPrice(item.attributes.pricelists),
+      mapPrice: this.extractMapPrice(item.attributes.pricelists),
+      retailPrice: this.extractRetailPrice(item.attributes.pricelists),
     }));
 
     return {
@@ -209,7 +211,7 @@ export class PricingSyncService {
       hasMap: item.attributes.has_map,
       canPurchase: item.attributes.can_purchase,
       pricelists: item.attributes.pricelists as any, // Cast to any for Prisma Json type
-      mapPrice: this.extractRetailPrice(item.attributes.pricelists),
+      mapPrice: this.extractMapPrice(item.attributes.pricelists),
     }));
 
     // Usar upsert para evitar duplicados
@@ -224,6 +226,16 @@ export class PricingSyncService {
     );
 
     console.log(`✅ Saved ${pricingItems.length} prices to database`);
+  }
+
+  /**
+   * Extraer MAP price del array de pricelists
+   */
+  private extractMapPrice(pricelists: Pricelist[]): number | null {
+    const mapEntry = pricelists.find(
+      (pl) => pl.name.toLowerCase() === "map"
+    );
+    return mapEntry?.price ?? null;
   }
 
   /**
