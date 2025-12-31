@@ -1,6 +1,6 @@
 import { getBrandById } from "@/application/actions/brands";
 import { getProductsByBrand } from "@/application/actions/products";
-import { getPricesByBrand } from "@/application/actions/prices";
+import { getPricesByProductIds } from "@/application/actions/prices";
 import { getBrandCategories } from "@/application/actions/categories";
 import Link from "next/link";
 import type { PriceGroup } from "@/domain/types/turn14/brands";
@@ -29,15 +29,18 @@ export default async function BrandDetailPage({
   const currentPage = pageParam ? parseInt(pageParam) : 1;
   const productsData = await getProductsByBrand(parseInt(id), currentPage);
 
-  // Obtener precios para los productos
-  const pricesData = await getPricesByBrand(parseInt(id), currentPage);
+  // Extraer IDs de productos
+  const productIds = productsData.data.map((product) => product.id);
+
+  // Obtener precios para esos productos específicos
+  const pricesData = await getPricesByProductIds(productIds);
 
   // Obtener categorías únicas de esta marca
   const categories = await getBrandCategories(parseInt(id));
 
   // Merge products con prices
   const productsWithPrices = productsData.data.map((product) => {
-    const price = pricesData.data.find((p) => p.productId === product.id);
+    const price = pricesData.find((p) => p.productId === product.id);
     return {
       ...product,
       pricing: price || null,

@@ -1,7 +1,9 @@
+import { ProductSkeleton } from "@/components/products/ProductSkeleton";
+
 export default function BrandDetailLoading() {
   return (
     <div className="min-h-screen bg-zinc-50">
-      <div className="max-w-4xl mx-auto p-8">
+      <div className="max-w-[90rem] mx-auto p-8">
         <div className="animate-pulse">
           {/* Back link skeleton */}
           <div className="h-6 bg-zinc-300 rounded w-48 mb-2"></div>
@@ -55,6 +57,30 @@ export default function BrandDetailLoading() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Products section skeleton */}
+        <div className="mt-12">
+          <div className="h-8 bg-zinc-300 rounded w-48 mb-6 animate-pulse" />
+
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+            {/* Sidebar skeleton */}
+            <div className="hidden lg:block">
+              <div className="bg-white rounded-lg shadow p-4 sticky top-6 animate-pulse">
+                <div className="h-6 bg-zinc-300 rounded mb-4" />
+                <div className="space-y-2">
+                  {[...Array(8)].map((_, i) => (
+                    <div key={i} className="h-4 bg-zinc-200 rounded" />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Products skeleton */}
+            <div>
+              <ProductSkeleton />
             </div>
           </div>
         </div>

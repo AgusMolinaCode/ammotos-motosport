@@ -13,6 +13,114 @@ export class PricingSyncService {
   private static readonly CACHE_TTL_DAYS = 3; // Renovar caché cada 3 días
 
   /**
+   * Obtener precios para una lista específica de product IDs
+   * Este método es más eficiente que la paginación cuando ya tienes los IDs de productos
+   */
+  async getPricesByProductIds(
+    productIds: string[]
+  ): Promise<ProductPriceData[]> {
+    if (productIds.length === 0) return [];
+
+    // Buscar precios existentes en la DB
+    const existingPrices = await prisma.productPrice.findMany({
+      where: {
+        productId: { in: productIds },
+      },
+    });
+
+    const existingPriceIds = new Set(existingPrices.map((p) => p.productId));
+    const missingPriceIds = productIds.filter((id) => !existingPriceIds.has(id));
+
+    // Si hay IDs faltantes, obtenerlos de la API
+    if (missingPriceIds.length > 0) {
+      console.log(`🌐 Fetching ${missingPriceIds.length} missing prices from API`);
+      await this.fetchMissingPrices(missingPriceIds);
+
+      // Volver a obtener todos los precios ahora que están completos
+      const allPrices = await prisma.productPrice.findMany({
+        where: {
+          productId: { in: productIds },
+        },
+      });
+
+      return this.convertPricesToServiceFormat(allPrices);
+    }
+
+    return this.convertPricesToServiceFormat(existingPrices);
+  }
+
+  /**
+   * Obtener precios individuales de la API para productos faltantes
+   */
+  private async fetchMissingPrices(productIds: string[]): Promise<void> {
+    // Fetch en paralelo con límite de concurrencia
+    const BATCH_SIZE = 10; // Procesar 10 a la vez para no sobrecargar la API
+
+    for (let i = 0; i < productIds.length; i += BATCH_SIZE) {
+      const batch = productIds.slice(i, i + BATCH_SIZE);
+
+      await Promise.all(
+        batch.map(async (productId) => {
+          try {
+            const url = `${env.turn14.apiUrl}/pricing/${productId}`;
+            const response = await fetch(url, {
+              headers: {
+                Authorization: await authService.getAuthorizationHeader(),
+              },
+            });
+
+            if (!response.ok) {
+              console.error(`❌ Failed to fetch price for product ${productId}: ${response.status}`);
+              return;
+            }
+
+            const data: { data: PricingItem } = await response.json();
+
+            // Guardar en DB
+            await prisma.productPrice.upsert({
+              where: { productId },
+              update: {
+                purchaseCost: data.data.attributes.purchase_cost,
+                hasMap: data.data.attributes.has_map,
+                canPurchase: data.data.attributes.can_purchase,
+                pricelists: data.data.attributes.pricelists as any,
+                mapPrice: this.extractMapPrice(data.data.attributes.pricelists),
+              },
+              create: {
+                productId,
+                purchaseCost: data.data.attributes.purchase_cost,
+                hasMap: data.data.attributes.has_map,
+                canPurchase: data.data.attributes.can_purchase,
+                pricelists: data.data.attributes.pricelists as any,
+                mapPrice: this.extractMapPrice(data.data.attributes.pricelists),
+              },
+            });
+
+            console.log(`✅ Fetched and saved price for product ${productId}`);
+          } catch (error) {
+            console.error(`❌ Error fetching price for product ${productId}:`, error);
+          }
+        })
+      );
+    }
+  }
+
+  /**
+   * Convertir precios de DB a formato de servicio
+   */
+  private convertPricesToServiceFormat(prices: any[]): ProductPriceData[] {
+    return prices.map((p) => ({
+      productId: p.productId,
+      purchaseCost: p.purchaseCost,
+      hasMap: p.hasMap,
+      canPurchase: p.canPurchase,
+      pricelists: p.pricelists as unknown as Pricelist[],
+      mapPrice: p.mapPrice,
+      retailPrice: this.extractRetailPrice(p.pricelists as unknown as Pricelist[]),
+    }));
+  }
+
+  /**
    * Obtener precios con sistema de caché lazy-loading + TTL
    * 1. Si la página está cacheada y < 3 días → leer desde DB
    * 2. Si la página está cacheada pero > 3 días → renovar desde API

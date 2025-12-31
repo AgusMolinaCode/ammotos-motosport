@@ -1,7 +1,5 @@
-"use client";
-
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { ProductPagination } from "./ProductPagination";
 
 interface Product {
   id: string;
@@ -33,12 +31,6 @@ export function ProductGrid({
   totalPages,
   brandId,
 }: ProductGridProps) {
-  const router = useRouter();
-
-  const handlePageChange = (page: number) => {
-    router.push(`/brands/${brandId}?page=${page}`);
-  };
-
   return (
     <>
       {/* Lista de productos */}
@@ -166,30 +158,12 @@ export function ProductGrid({
         ))}
       </div>
 
-      {/* Paginación básica */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="px-4 py-2 bg-white border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-50 transition-colors"
-          >
-            ← Anterior
-          </button>
-
-          <span className="px-4 py-2 text-sm">
-            Página {currentPage} de {totalPages}
-          </span>
-
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-white border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-50 transition-colors"
-          >
-            Siguiente →
-          </button>
-        </div>
-      )}
+      {/* Paginación con shadcn/ui */}
+      <ProductPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        brandId={brandId}
+      />
     </>
   );
 }

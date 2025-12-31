@@ -8,20 +8,34 @@ import { traducirCategoria } from "@/constants/categorias";
 
 export class ProductsSyncService {
   private static readonly CACHE_TTL_DAYS = 3; // Renovar caché cada 3 días
+  private static readonly PAGE_SIZE = 25; // Productos por página mostrados al usuario
+  private static readonly API_PAGE_SIZE = 100; // La API de Turn14 devuelve ~100 productos por página
+  private static readonly USER_PAGES_PER_API_PAGE = 4; // 100 / 25 = 4 páginas de usuario por página de API
 
   /**
    * Obtener productos con sistema de caché lazy-loading + TTL
    * 1. Si la página está cacheada y < 3 días → leer desde DB
    * 2. Si la página está cacheada pero > 3 días → renovar desde API
    * 3. Si no está cacheada → llamar API y guardar en DB
+   *
+   * PAGINACIÓN: El usuario solicita páginas de 25 productos, pero la API devuelve ~100.
+   * Mapeamos páginas de usuario a páginas de API:
+   * - Página usuario 1-4 → API página 1 (productos 1-100)
+   * - Página usuario 5-8 → API página 2 (productos 101-200)
    */
-  async getProductsByBrandPaginated(brandId: number, page: number = 1) {
-    // Verificar si esta página ya está cacheada
+  async getProductsByBrandPaginated(brandId: number, userPage: number = 1) {
+    // Calcular qué página de API necesitamos
+    const apiPage = Math.ceil(userPage / ProductsSyncService.USER_PAGES_PER_API_PAGE);
+
+    // Calcular offset dentro de la página de API
+    const offsetWithinApiPage = ((userPage - 1) % ProductsSyncService.USER_PAGES_PER_API_PAGE) * ProductsSyncService.PAGE_SIZE;
+
+    // Verificar si esta página de API ya está cacheada
     const cachedPage = await prisma.productPageCache.findUnique({
       where: {
         brandId_page: {
           brandId,
-          page,
+          page: apiPage,
         },
       },
     });
@@ -34,24 +48,24 @@ export class ProductsSyncService {
       // Caché válido (< 3 días)
       if (daysSinceCache < ProductsSyncService.CACHE_TTL_DAYS) {
         console.log(
-          `📦 Cache HIT: Brand ${brandId}, Page ${page} (${daysSinceCache.toFixed(1)} días)`
+          `📦 Cache HIT: Brand ${brandId}, User Page ${userPage}, API Page ${apiPage} (${daysSinceCache.toFixed(1)} días)`
         );
-        return this.getProductsFromDatabase(brandId, page);
+        return this.getProductsFromDatabase(brandId, apiPage, offsetWithinApiPage, userPage);
       }
 
       // Caché expirado (> 3 días) - Renovar
       console.log(
-        `♻️  Cache STALE: Brand ${brandId}, Page ${page} (${daysSinceCache.toFixed(1)} días) - Renovando...`
+        `♻️  Cache STALE: Brand ${brandId}, User Page ${userPage}, API Page ${apiPage} (${daysSinceCache.toFixed(1)} días) - Renovando...`
       );
-      await this.invalidateCache(brandId, page);
-      return this.fetchAndCacheProducts(brandId, page);
+      await this.invalidateCache(brandId, apiPage);
+      return this.fetchAndCacheProducts(brandId, apiPage, offsetWithinApiPage, userPage);
     }
 
     // Si no está cacheada, llamar API y guardar
     console.log(
-      `🌐 Cache MISS: Fetching from API - Brand ${brandId}, Page ${page}`
+      `🌐 Cache MISS: Fetching from API - Brand ${brandId}, User Page ${userPage}, API Page ${apiPage}`
     );
-    return this.fetchAndCacheProducts(brandId, page);
+    return this.fetchAndCacheProducts(brandId, apiPage, offsetWithinApiPage, userPage);
   }
 
   /**
@@ -73,27 +87,40 @@ export class ProductsSyncService {
 
   /**
    * Leer productos desde la base de datos (página ya cacheada)
+   * @param brandId - ID de la marca
+   * @param apiPage - Página de API (100 productos)
+   * @param offsetWithinApiPage - Offset dentro de la página de API (0, 25, 50, 75)
+   * @param userPage - Página solicitada por el usuario (25 productos)
    */
-  private async getProductsFromDatabase(brandId: number, page: number) {
-    // Calcular offset para la paginación (asumiendo ~100 productos por página)
-    // Esto es aproximado, ajustaremos según necesites
-    const pageSize = 100;
-    const skip = (page - 1) * pageSize;
-
-    const products = await prisma.product.findMany({
+  private async getProductsFromDatabase(
+    brandId: number,
+    apiPage: number,
+    offsetWithinApiPage: number,
+    userPage: number
+  ) {
+    // Obtener los ~100 productos de la página de API desde la DB
+    // Estos productos ya están guardados cuando se hizo el fetch de la API
+    const apiPageProducts = await prisma.product.findMany({
       where: { brandId },
-      skip,
-      take: pageSize,
+      skip: (apiPage - 1) * ProductsSyncService.API_PAGE_SIZE,
+      take: ProductsSyncService.API_PAGE_SIZE,
       orderBy: { id: "asc" },
     });
 
-    // Obtener total de páginas cacheadas para este brand
-    const totalCachedPages = await prisma.productPageCache.count({
+    // Aplicar el offset dentro de la página de API para obtener los 25 productos correctos
+    const userPageProducts = apiPageProducts.slice(
+      offsetWithinApiPage,
+      offsetWithinApiPage + ProductsSyncService.PAGE_SIZE
+    );
+
+    // Calcular total de páginas basado en el total de productos
+    const totalProducts = await prisma.product.count({
       where: { brandId },
     });
+    const totalPages = Math.ceil(totalProducts / ProductsSyncService.PAGE_SIZE);
 
     // Convertir de formato DB a formato Turn14
-    const turn14Products: Turn14Product[] = products.map((p) => ({
+    const turn14Products: Turn14Product[] = userPageProducts.map((p) => ({
       id: p.id,
       type: "Item" as const,
       attributes: {
@@ -129,8 +156,8 @@ export class ProductsSyncService {
 
     return {
       products: turn14Products,
-      totalPages: totalCachedPages,
-      currentPage: page,
+      totalPages,
+      currentPage: userPage,
       links: {
         self: "",
         first: "",
@@ -141,10 +168,19 @@ export class ProductsSyncService {
 
   /**
    * Llamar API y guardar productos en DB
+   * @param brandId - ID de la marca
+   * @param apiPage - Página de API (100 productos)
+   * @param offsetWithinApiPage - Offset dentro de la página de API (0, 25, 50, 75)
+   * @param userPage - Página solicitada por el usuario (25 productos)
    */
-  private async fetchAndCacheProducts(brandId: number, page: number) {
+  private async fetchAndCacheProducts(
+    brandId: number,
+    apiPage: number,
+    offsetWithinApiPage: number,
+    userPage: number
+  ) {
     const response = await fetch(
-      `https://api.turn14.com/v1/items/brand/${brandId}?page=${page}`,
+      `https://api.turn14.com/v1/items/brand/${brandId}?page=${apiPage}`,
       {
         headers: {
           Authorization: await authService.getAuthorizationHeader(),
@@ -164,12 +200,12 @@ export class ProductsSyncService {
     // Extraer y guardar categorías únicas
     await this.saveBrandCategories(data.data, brandId);
 
-    // Marcar página como cacheada (usar upsert para evitar race conditions)
+    // Marcar página de API como cacheada (usar upsert para evitar race conditions)
     await prisma.productPageCache.upsert({
       where: {
         brandId_page: {
           brandId,
-          page,
+          page: apiPage,
         },
       },
       update: {
@@ -177,14 +213,27 @@ export class ProductsSyncService {
       },
       create: {
         brandId,
-        page,
+        page: apiPage,
       },
     });
 
+    // Aplicar offset dentro de la página de API para obtener los 25 productos correctos
+    // La API devuelve ~100 productos, aplicamos slice según la página de usuario
+    const userPageProducts = data.data.slice(
+      offsetWithinApiPage,
+      offsetWithinApiPage + ProductsSyncService.PAGE_SIZE
+    );
+
+    // Calcular total de páginas ajustado al nuevo pageSize
+    // Si la API tiene 10 páginas de 100 productos = 1000 productos
+    // Con pageSize de 25 = 40 páginas (1000 / 25)
+    const estimatedTotalProducts = data.meta.total_pages * ProductsSyncService.API_PAGE_SIZE;
+    const adjustedTotalPages = Math.ceil(estimatedTotalProducts / ProductsSyncService.PAGE_SIZE);
+
     return {
-      products: data.data,
-      totalPages: data.meta.total_pages,
-      currentPage: page,
+      products: userPageProducts,
+      totalPages: adjustedTotalPages,
+      currentPage: userPage,
       links: data.links,
     };
   }

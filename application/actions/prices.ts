@@ -2,6 +2,35 @@
 
 import { pricingSyncService } from "@/infrastructure/services/PricingSyncService";
 
+/**
+ * Obtener precios para productos específicos por sus IDs
+ * Esta es la función preferida para obtener precios de productos ya cargados
+ */
+export async function getPricesByProductIds(productIds: string[]) {
+  try {
+    console.log(`🔍 [getPricesByProductIds] Fetching prices for ${productIds.length} products`);
+
+    const prices = await pricingSyncService.getPricesByProductIds(productIds);
+
+    console.log(`✅ [getPricesByProductIds] Got ${prices.length} prices`);
+
+    return prices.map((price) => ({
+      productId: price.productId,
+      mapPrice: price.mapPrice,
+      retailPrice: price.retailPrice,
+      purchaseCost: price.purchaseCost,
+      hasMap: price.hasMap,
+      canPurchase: price.canPurchase,
+    }));
+  } catch (error) {
+    console.error(`❌ [getPricesByProductIds] Error:`, error);
+    return [];
+  }
+}
+
+/**
+ * @deprecated Use getPricesByProductIds instead for better performance and accuracy
+ */
 export async function getPricesByBrand(brandId: number, page: number = 1) {
   try {
     console.log(`🔍 [getPricesByBrand] Fetching prices for brand ${brandId}, page ${page}`);
