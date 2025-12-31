@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "d5otzd52uv6zz.cloudfront.net",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "t14livenews.s3.amazonaws.com",
         pathname: "/**",
       },
