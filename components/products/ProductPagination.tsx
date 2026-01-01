@@ -1,12 +1,4 @@
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import Link from "next/link";
 
 interface ProductPaginationProps {
   currentPage: number;
@@ -21,76 +13,96 @@ export function ProductPagination({
 }: ProductPaginationProps) {
   if (totalPages <= 1) return null;
 
-  // Generar array de páginas a mostrar
-  const getPageNumbers = () => {
-    const pages: (number | "ellipsis")[] = [];
-    const showEllipsis = totalPages > 7;
+  // Calcular ventana de 5 páginas deslizante
+  const getPageNumbers = (): number[] => {
+    const WINDOW_SIZE = 5;
+    const pages: number[] = [];
 
-    if (!showEllipsis) {
-      // Mostrar todas las páginas si son 7 o menos
+    // Si hay menos de 5 páginas totales, mostrar todas
+    if (totalPages <= WINDOW_SIZE) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
-    } else {
-      // Lógica para mostrar páginas con elipsis
-      if (currentPage <= 3) {
-        // Inicio: 1 2 3 4 ... last
-        pages.push(1, 2, 3, 4, "ellipsis", totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        // Final: 1 ... last-3 last-2 last-1 last
-        pages.push(1, "ellipsis", totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-      } else {
-        // Medio: 1 ... current-1 current current+1 ... last
-        pages.push(1, "ellipsis", currentPage - 1, currentPage, currentPage + 1, "ellipsis", totalPages);
-      }
+      return pages;
+    }
+
+    // Calcular inicio de la ventana (bloques de 5)
+    // Páginas 1-5 → inicio en 1
+    // Páginas 6-10 → inicio en 6
+    // Páginas 11-15 → inicio en 11
+    const windowStart = Math.floor((currentPage - 1) / WINDOW_SIZE) * WINDOW_SIZE + 1;
+
+    // Final de la ventana limitado por totalPages
+    // Si estamos en páginas 6-8 y solo hay 8 totales, muestra [6, 7, 8]
+    const windowEnd = Math.min(windowStart + WINDOW_SIZE - 1, totalPages);
+
+    for (let i = windowStart; i <= windowEnd; i++) {
+      pages.push(i);
     }
 
     return pages;
   };
 
   const pageNumbers = getPageNumbers();
+  const isFirstPage = currentPage === 1;
+  const isLastPage = currentPage === totalPages;
 
   return (
-    <Pagination>
-      <PaginationContent>
-        {/* Previous button */}
-        <PaginationItem>
-          {currentPage > 1 ? (
-            <PaginationPrevious href={`/brands/${brandId}?page=${currentPage - 1}`} />
-          ) : (
-            <span className="inline-flex items-center justify-center gap-1 pl-2.5 h-9 px-4 py-2 text-sm font-medium text-zinc-400 cursor-not-allowed">
-              Anterior
-            </span>
-          )}
-        </PaginationItem>
+    <div className="flex items-center justify-center gap-2 mt-8">
+      {/* Previous button */}
+      {isFirstPage ? (
+        <button
+          disabled
+          className="px-4 py-2 text-sm font-semibold text-gray-400 bg-gray-200 rounded cursor-not-allowed"
+        >
+          ← Anterior
+        </button>
+      ) : (
+        <Link
+          href={`/brands/${brandId}?page=${currentPage - 1}`}
+          className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+        >
+          ← Anterior
+        </Link>
+      )}
 
-        {/* Page numbers */}
-        {pageNumbers.map((page, index) => (
-          <PaginationItem key={index}>
-            {page === "ellipsis" ? (
-              <PaginationEllipsis />
-            ) : (
-              <PaginationLink
-                href={`/brands/${brandId}?page=${page}`}
-                isActive={currentPage === page}
-              >
-                {page}
-              </PaginationLink>
-            )}
-          </PaginationItem>
+      {/* Page numbers */}
+      <div className="flex gap-1">
+        {pageNumbers.map((page) => (
+          <Link
+            key={page}
+            href={`/brands/${brandId}?page=${page}`}
+            className={`
+              min-w-[40px] h-10 flex items-center justify-center
+              text-sm font-semibold rounded transition-colors
+              ${
+                currentPage === page
+                  ? "bg-orange-500 text-white shadow-md"
+                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+              }
+            `}
+          >
+            {page}
+          </Link>
         ))}
+      </div>
 
-        {/* Next button */}
-        <PaginationItem>
-          {currentPage < totalPages ? (
-            <PaginationNext href={`/brands/${brandId}?page=${currentPage + 1}`} />
-          ) : (
-            <span className="inline-flex items-center justify-center gap-1 pr-2.5 h-9 px-4 py-2 text-sm font-medium text-zinc-400 cursor-not-allowed">
-              Siguiente
-            </span>
-          )}
-        </PaginationItem>
-      </PaginationContent>
-    </Pagination>
+      {/* Next button */}
+      {isLastPage ? (
+        <button
+          disabled
+          className="px-4 py-2 text-sm font-semibold text-gray-400 bg-gray-200 rounded cursor-not-allowed"
+        >
+          Siguiente →
+        </button>
+      ) : (
+        <Link
+          href={`/brands/${brandId}?page=${currentPage + 1}`}
+          className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+        >
+          Siguiente →
+        </Link>
+      )}
+    </div>
   );
 }

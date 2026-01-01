@@ -9,7 +9,8 @@ import { inventorySyncService } from "@/infrastructure/services/InventorySyncSer
  * Retorna estadísticas del sistema de caché de inventario:
  * - Total de marcas cacheadas
  * - Total de items de inventario
- * - Edad del caché más antiguo/nuevo
+ * - Edad del caché más antiguo/nuevo (en días)
+ * - TTL configurado (2 días)
  */
 export async function GET() {
   try {
@@ -20,9 +21,9 @@ export async function GET() {
       stats: {
         totalCachedBrands: stats.totalCachedBrands,
         totalInventoryItems: stats.totalInventoryItems,
-        oldestCacheAgeHours: stats.oldestCacheAge,
-        newestCacheAgeHours: stats.newestCacheAge,
-        cacheTtlHours: 1, // Informativo: TTL configurado
+        oldestCacheAgeDays: stats.oldestCacheAgeDays,
+        newestCacheAgeDays: stats.newestCacheAgeDays,
+        cacheTtlDays: 2, // Informativo: TTL configurado
       },
       message: "Inventory cache statistics retrieved successfully",
     });

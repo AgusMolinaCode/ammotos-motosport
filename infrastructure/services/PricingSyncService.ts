@@ -10,7 +10,7 @@ import type {
 import { env } from "@/infrastructure/config/env";
 
 export class PricingSyncService {
-  private static readonly CACHE_TTL_DAYS = 3; // Renovar caché cada 3 días
+  private static readonly CACHE_TTL_DAYS = 5; // Renovar caché cada 5 días
 
   /**
    * Obtener precios para una lista específica de product IDs
@@ -51,57 +51,58 @@ export class PricingSyncService {
 
   /**
    * Obtener precios individuales de la API para productos faltantes
+   * ULTRA CONSERVADOR: 1 request por vez con delay de 1 segundo para evitar 429
    */
   private async fetchMissingPrices(productIds: string[]): Promise<void> {
-    // Fetch en paralelo con límite de concurrencia
-    const BATCH_SIZE = 10; // Procesar 10 a la vez para no sobrecargar la API
+    const DELAY_BETWEEN_REQUESTS_MS = 1000; // 1 segundo entre requests
 
-    for (let i = 0; i < productIds.length; i += BATCH_SIZE) {
-      const batch = productIds.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < productIds.length; i++) {
+      const productId = productIds[i];
 
-      await Promise.all(
-        batch.map(async (productId) => {
-          try {
-            const url = `${env.turn14.apiUrl}/pricing/${productId}`;
-            const response = await fetch(url, {
-              headers: {
-                Authorization: await authService.getAuthorizationHeader(),
-              },
-            });
+      try {
+        const url = `${env.turn14.apiUrl}/pricing/${productId}`;
+        const response = await fetch(url, {
+          headers: {
+            Authorization: await authService.getAuthorizationHeader(),
+          },
+        });
 
-            if (!response.ok) {
-              console.error(`❌ Failed to fetch price for product ${productId}: ${response.status}`);
-              return;
-            }
+        if (!response.ok) {
+          console.error(`❌ Failed to fetch price for product ${productId}: ${response.status}`);
+          continue; // Continuar con el siguiente
+        }
 
-            const data: { data: PricingItem } = await response.json();
+        const data: { data: PricingItem } = await response.json();
 
-            // Guardar en DB
-            await prisma.productPrice.upsert({
-              where: { productId },
-              update: {
-                purchaseCost: data.data.attributes.purchase_cost,
-                hasMap: data.data.attributes.has_map,
-                canPurchase: data.data.attributes.can_purchase,
-                pricelists: data.data.attributes.pricelists as any,
-                mapPrice: this.extractMapPrice(data.data.attributes.pricelists),
-              },
-              create: {
-                productId,
-                purchaseCost: data.data.attributes.purchase_cost,
-                hasMap: data.data.attributes.has_map,
-                canPurchase: data.data.attributes.can_purchase,
-                pricelists: data.data.attributes.pricelists as any,
-                mapPrice: this.extractMapPrice(data.data.attributes.pricelists),
-              },
-            });
+        // Guardar en DB
+        await prisma.productPrice.upsert({
+          where: { productId },
+          update: {
+            purchaseCost: data.data.attributes.purchase_cost,
+            hasMap: data.data.attributes.has_map,
+            canPurchase: data.data.attributes.can_purchase,
+            pricelists: data.data.attributes.pricelists as any,
+            mapPrice: this.extractMapPrice(data.data.attributes.pricelists),
+          },
+          create: {
+            productId,
+            purchaseCost: data.data.attributes.purchase_cost,
+            hasMap: data.data.attributes.has_map,
+            canPurchase: data.data.attributes.can_purchase,
+            pricelists: data.data.attributes.pricelists as any,
+            mapPrice: this.extractMapPrice(data.data.attributes.pricelists),
+          },
+        });
 
-            console.log(`✅ Fetched and saved price for product ${productId}`);
-          } catch (error) {
-            console.error(`❌ Error fetching price for product ${productId}:`, error);
-          }
-        })
-      );
+        console.log(`✅ Fetched and saved price for product ${productId} (${i + 1}/${productIds.length})`);
+      } catch (error) {
+        console.error(`❌ Error fetching price for product ${productId}:`, error);
+      }
+
+      // Delay entre requests (excepto después del último)
+      if (i < productIds.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_REQUESTS_MS));
+      }
     }
   }
 
@@ -122,8 +123,8 @@ export class PricingSyncService {
 
   /**
    * Obtener precios con sistema de caché lazy-loading + TTL
-   * 1. Si la página está cacheada y < 3 días → leer desde DB
-   * 2. Si la página está cacheada pero > 3 días → renovar desde API
+   * 1. Si la página está cacheada y < 5 días → leer desde DB
+   * 2. Si la página está cacheada pero > 5 días → renovar desde API
    * 3. Si no está cacheada → llamar API y guardar en DB
    */
   async getPricesByBrandPaginated(
@@ -145,7 +146,7 @@ export class PricingSyncService {
       const daysSinceCache =
         (Date.now() - cachedPage.cachedAt.getTime()) / (1000 * 60 * 60 * 24);
 
-      // Caché válido (< 3 días)
+      // Caché válido (< 5 días)
       if (daysSinceCache < PricingSyncService.CACHE_TTL_DAYS) {
         console.log(
           `📦 Price Cache HIT: Brand ${brandId}, Page ${page} (${daysSinceCache.toFixed(1)} días)`
@@ -153,7 +154,7 @@ export class PricingSyncService {
         return this.getPricesFromDatabase(brandId, page);
       }
 
-      // Caché expirado (> 3 días) - Renovar
+      // Caché expirado (> 5 días) - Renovar
       console.log(
         `♻️  Price Cache STALE: Brand ${brandId}, Page ${page} (${daysSinceCache.toFixed(1)} días) - Renovando...`
       );
@@ -215,8 +216,17 @@ export class PricingSyncService {
       orderBy: { productId: "asc" },
     });
 
-    // Obtener total de páginas cacheadas para este brand
-    const totalCachedPages = await prisma.pricePageCache.count({
+    // Usar totalApiPages del caché más reciente para detectar nuevas páginas
+    const latestCache = await prisma.pricePageCache.findFirst({
+      where: {
+        brandId,
+        totalApiPages: { not: null }
+      },
+      orderBy: { cachedAt: 'desc' },
+      select: { totalApiPages: true }
+    });
+
+    const totalPages = latestCache?.totalApiPages || await prisma.pricePageCache.count({
       where: { brandId },
     });
 
@@ -273,7 +283,7 @@ export class PricingSyncService {
     // Guardar precios en DB
     await this.savePricesToDatabase(data.data);
 
-    // Marcar página como cacheada (usar upsert para evitar race conditions)
+    // Marcar página como cacheada y guardar totalApiPages para detectar nuevas páginas
     await prisma.pricePageCache.upsert({
       where: {
         brandId_page: {
@@ -283,10 +293,12 @@ export class PricingSyncService {
       },
       update: {
         cachedAt: new Date(),
+        totalApiPages: data.meta.total_pages, // Actualizar total de páginas de la API
       },
       create: {
         brandId,
         page,
+        totalApiPages: data.meta.total_pages, // Guardar total de páginas de la API
       },
     });
 

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { ProductPagination } from "./ProductPagination";
+import { EmptyPageMessage } from "./EmptyPageMessage";
 
 interface Product {
   id: string;
@@ -40,6 +41,11 @@ export function ProductGrid({
   totalPages,
   brandId,
 }: ProductGridProps) {
+  // Si no hay productos, mostrar mensaje de página vacía
+  if (products.length === 0) {
+    return <EmptyPageMessage brandId={brandId} currentPage={currentPage} />;
+  }
+
   return (
     <>
       {/* Lista de productos */}

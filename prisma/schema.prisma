@@ -60,6 +60,7 @@ model Product {
   thumbnail         String?  // URL de la imagen
   dimensions        Json     // Array de Dimensions
   warehouseAvailability Json // Array de WarehouseAvailability
+  apiPage           Int?     // Página de API Turn14 de donde proviene (para sparse cache)
 
   // Metadata
   createdAt         DateTime @default(now())
@@ -68,15 +69,17 @@ model Product {
   @@index([brandId])
   @@index([partNumber])
   @@index([mfrPartNumber])
+  @@index([brandId, apiPage]) // Para queries eficientes por página
   @@map("products")
 }
 
 // Control de páginas cacheadas por brand
 model ProductPageCache {
-  id        String   @id @default(cuid())
-  brandId   Int
-  page      Int
-  cachedAt  DateTime @default(now())
+  id            String   @id @default(cuid())
+  brandId       Int
+  page          Int
+  totalApiPages Int?     // Total de páginas reportado por la API Turn14 (para detectar nuevas páginas)
+  cachedAt      DateTime @default(now())
 
   @@unique([brandId, page])
   @@index([brandId])
@@ -104,10 +107,11 @@ model ProductPrice {
 
 // Control de páginas de precios cacheadas por brand
 model PricePageCache {
-  id        String   @id @default(cuid())
-  brandId   Int
-  page      Int
-  cachedAt  DateTime @default(now())
+  id            String   @id @default(cuid())
+  brandId       Int
+  page          Int
+  totalApiPages Int?     // Total de páginas reportado por la API Turn14 (para detectar nuevas páginas)
+  cachedAt      DateTime @default(now())
 
   @@unique([brandId, page])
   @@index([brandId])

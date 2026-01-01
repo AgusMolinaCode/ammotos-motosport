@@ -37,7 +37,8 @@
       "Bash(npx shadcn@latest add:*)",
       "Bash(npm install:*)",
       "Bash(node -e:*)",
-      "Bash(npx prisma:*)"
+      "Bash(npx prisma:*)",
+      "Bash(if exist .next rd /s /q .next)"
     ]
   },
   "enableAllProjectMcpServers": true,

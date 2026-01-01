@@ -10,13 +10,13 @@ import type {
  *
  * Implementa sistema de caché lazy-loading + TTL para inventarios:
  * 1. Primera llamada: Fetch desde Turn14 API → Cache en DB
- * 2. Llamadas subsecuentes: Lectura desde DB (si caché < 1 hora)
+ * 2. Llamadas subsecuentes: Lectura desde DB (si caché < 2 días)
  * 3. Caché expirado: Re-fetch desde API y actualizar DB
  *
- * El inventario cambia frecuentemente, por lo que usamos TTL corto (1 hora)
+ * El inventario cambia periódicamente, por lo que usamos TTL de 2 días
  */
 export class InventorySyncService {
-  private static readonly CACHE_TTL_HOURS = 1; // Renovar caché cada 1 hora
+  private static readonly CACHE_TTL_DAYS = 2; // Renovar caché cada 2 días
 
   /**
    * Obtener inventario de una marca con sistema de caché
@@ -33,20 +33,20 @@ export class InventorySyncService {
       });
 
       if (cacheControl) {
-        const hoursSinceCache =
-          (Date.now() - cacheControl.cachedAt.getTime()) / (1000 * 60 * 60);
+        const daysSinceCache =
+          (Date.now() - cacheControl.cachedAt.getTime()) / (1000 * 60 * 60 * 24);
 
-        // Caché válido (< 1 hora)
-        if (hoursSinceCache < InventorySyncService.CACHE_TTL_HOURS) {
+        // Caché válido (< 2 días)
+        if (daysSinceCache < InventorySyncService.CACHE_TTL_DAYS) {
           console.log(
-            `📦 Inventory Cache HIT: Brand ${brandId} (${hoursSinceCache.toFixed(1)}h old)`
+            `📦 Inventory Cache HIT: Brand ${brandId} (${daysSinceCache.toFixed(1)} días old)`
           );
           return this.getInventoryFromDatabase(brandId);
         }
 
-        // Caché expirado (> 1 hora) - Renovar
+        // Caché expirado (> 2 días) - Renovar
         console.log(
-          `♻️  Inventory Cache STALE: Brand ${brandId} (${hoursSinceCache.toFixed(1)}h old) - Refreshing...`
+          `♻️  Inventory Cache STALE: Brand ${brandId} (${daysSinceCache.toFixed(1)} días old) - Refreshing...`
         );
         await this.invalidateCache(brandId);
       } else {
@@ -312,11 +312,11 @@ export class InventorySyncService {
     return {
       totalCachedBrands,
       totalInventoryItems,
-      oldestCacheAge: oldestCache
-        ? Math.floor((Date.now() - oldestCache.cachedAt.getTime()) / (1000 * 60 * 60))
+      oldestCacheAgeDays: oldestCache
+        ? Math.floor((Date.now() - oldestCache.cachedAt.getTime()) / (1000 * 60 * 60 * 24))
         : null,
-      newestCacheAge: newestCache
-        ? Math.floor((Date.now() - newestCache.cachedAt.getTime()) / (1000 * 60 * 60))
+      newestCacheAgeDays: newestCache
+        ? Math.floor((Date.now() - newestCache.cachedAt.getTime()) / (1000 * 60 * 60 * 24))
         : null,
     };
   }
