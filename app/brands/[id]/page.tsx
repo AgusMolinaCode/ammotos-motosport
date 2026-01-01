@@ -2,6 +2,7 @@ import { getBrandById } from "@/application/actions/brands";
 import { getProductsByBrand } from "@/application/actions/products";
 import { getPricesByProductIds } from "@/application/actions/prices";
 import { getBrandCategories } from "@/application/actions/categories";
+import { getInventoryByBrand } from "@/application/actions/inventory";
 import Link from "next/link";
 import type { PriceGroup } from "@/domain/types/turn14/brands";
 import { InfoItem } from "@/components/brand-details/InfoItem";
@@ -38,12 +39,17 @@ export default async function BrandDetailPage({
   // Obtener categorías únicas de esta marca
   const categories = await getBrandCategories(parseInt(id));
 
-  // Merge products con prices
+  // Obtener inventario de la marca
+  const inventory = await getInventoryByBrand(parseInt(id));
+
+  // Merge products con prices e inventory
   const productsWithPrices = productsData.data.map((product) => {
     const price = pricesData.find((p) => p.productId === product.id);
+    const stock = inventory[product.id] || null;
     return {
       ...product,
       pricing: price || null,
+      inventory: stock,
     };
   });
 

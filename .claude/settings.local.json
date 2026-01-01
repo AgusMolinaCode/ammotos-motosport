@@ -35,7 +35,9 @@
       "Bash(taskkill //F //PID 31504)",
       "Bash(npx prisma studio)",
       "Bash(npx shadcn@latest add:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(node -e:*)",
+      "Bash(npx prisma:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

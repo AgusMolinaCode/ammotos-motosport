@@ -127,3 +127,36 @@ model BrandCategory {
   @@index([brandId])
   @@map("brand_categories")
 }
+
+// Turn14 Inventory Model (cached by brand with TTL)
+model BrandInventory {
+  id              String   @id @default(cuid())
+  brandId         Int
+  itemId          String   // Product/Item ID from Turn14
+  totalStock      Int      // Calculated total stock across all warehouses
+  inventory       Json     // Warehouse inventory map: {"01": 5, "02": 10, ...}
+  manufacturerStock Int?   // Stock at manufacturer (optional)
+  manufacturerEsd String?  // Estimated Ship Date from manufacturer (optional)
+
+  // Cache metadata
+  cachedAt        DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([brandId, itemId])
+  @@index([brandId])
+  @@index([itemId])
+  @@index([cachedAt]) // For TTL queries
+  @@map("brand_inventory")
+}
+
+// Control de caché de inventario por brand
+model InventoryCache {
+  id        String   @id @default(cuid())
+  brandId   Int      @unique
+  cachedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([brandId])
+  @@index([cachedAt]) // For TTL queries
+  @@map("inventory_cache")
+}

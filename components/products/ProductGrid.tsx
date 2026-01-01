@@ -16,6 +16,15 @@ interface Product {
     hasMap: boolean;
     canPurchase: boolean;
   } | null;
+  inventory?: {
+    totalStock: number;
+    hasStock: boolean;
+    inventory: Record<string, number>;
+    manufacturer: {
+      stock: number;
+      esd: string;
+    } | null;
+  } | null;
 }
 
 interface ProductGridProps {
@@ -64,10 +73,27 @@ export function ProductGrid({
                   Part #: {product.attributes.mfr_part_number}
                 </h3>
 
-                {/* Stock - placeholder */}
-                <p className="text-sm text-green-600 mb-2">
-                  En Stock
-                </p>
+                {/* Stock - Real inventory data */}
+                {product.inventory ? (
+                  product.inventory.hasStock ? (
+                    <p className="text-sm text-green-600 mb-2">
+                      ✅ En Stock ({product.inventory.totalStock} disponibles)
+                    </p>
+                  ) : (
+                    <p className="text-sm text-red-600 mb-2">
+                      ❌ Sin Stock
+                      {product.inventory.manufacturer && product.inventory.manufacturer.stock > 0 && (
+                        <span className="text-orange-600 ml-2">
+                          (Fabricante: {product.inventory.manufacturer.stock} - ESD: {product.inventory.manufacturer.esd})
+                        </span>
+                      )}
+                    </p>
+                  )
+                ) : (
+                  <p className="text-sm text-zinc-400 mb-2">
+                    Stock no disponible
+                  </p>
+                )}
 
                 {/* Detalles del producto */}
                 <div className="space-y-0.5 text-sm">
