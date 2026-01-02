@@ -133,6 +133,32 @@ model BrandCategory {
   @@map("brand_categories")
 }
 
+// Subcategorías únicas por marca (extraídas de productos)
+model BrandSubcategory {
+  id           String   @id @default(cuid())
+  brandId      Int
+  subcategory  String   // Subcategoría en inglés (desde API)
+
+  createdAt    DateTime @default(now())
+
+  @@unique([brandId, subcategory])
+  @@index([brandId])
+  @@map("brand_subcategories")
+}
+
+// Product Names únicos por marca (extraídas de productos)
+model BrandProductName {
+  id           String   @id @default(cuid())
+  brandId      Int
+  productName  String   // Product Name desde API
+
+  createdAt    DateTime @default(now())
+
+  @@unique([brandId, productName])
+  @@index([brandId])
+  @@map("brand_product_names")
+}
+
 // Turn14 Inventory Model (cached by brand with TTL)
 model BrandInventory {
   id              String   @id @default(cuid())

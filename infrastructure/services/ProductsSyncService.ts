@@ -244,8 +244,12 @@ export class ProductsSyncService {
     // Guardar productos en DB con su apiPage
     await this.saveProductsToDatabase(data.data, brandId, apiPage);
 
-    // Extraer y guardar categorías únicas
-    await this.saveBrandCategories(data.data, brandId);
+    // Extraer y guardar categorías, subcategorías y product names únicos
+    await Promise.all([
+      this.saveBrandCategories(data.data, brandId),
+      this.saveBrandSubcategories(data.data, brandId),
+      this.saveBrandProductNames(data.data, brandId),
+    ]);
 
     // Marcar página de API como cacheada y guardar totalApiPages para detectar nuevas páginas
     await prisma.productPageCache.upsert({
@@ -385,6 +389,86 @@ export class ProductsSyncService {
 
     console.log(
       `📂 Saved ${uniqueCategories.size} unique categories for brand ${brandId}`
+    );
+  }
+
+  /**
+   * Extraer subcategorías únicas de productos y guardarlas en BrandSubcategory
+   * Solo agrega nuevas subcategorías, no duplica las existentes
+   */
+  private async saveBrandSubcategories(
+    products: Turn14Product[],
+    brandId: number
+  ) {
+    // Extraer subcategorías únicas de los productos
+    const uniqueSubcategories = new Set<string>();
+    products.forEach((product) => {
+      if (product.attributes.subcategory) {
+        uniqueSubcategories.add(product.attributes.subcategory);
+      }
+    });
+
+    // Guardar cada subcategoría única
+    const subcategoryPromises = Array.from(uniqueSubcategories).map((subcategory) =>
+      prisma.brandSubcategory.upsert({
+        where: {
+          brandId_subcategory: {
+            brandId,
+            subcategory,
+          },
+        },
+        update: {}, // No actualizar nada si ya existe
+        create: {
+          brandId,
+          subcategory,
+        },
+      })
+    );
+
+    await Promise.all(subcategoryPromises);
+
+    console.log(
+      `📂 Saved ${uniqueSubcategories.size} unique subcategories for brand ${brandId}`
+    );
+  }
+
+  /**
+   * Extraer product names únicos de productos y guardarlos en BrandProductName
+   * Solo agrega nuevos product names, no duplica los existentes
+   */
+  private async saveBrandProductNames(
+    products: Turn14Product[],
+    brandId: number
+  ) {
+    // Extraer product names únicos de los productos
+    const uniqueProductNames = new Set<string>();
+    products.forEach((product) => {
+      if (product.attributes.product_name) {
+        uniqueProductNames.add(product.attributes.product_name);
+      }
+    });
+
+    // Guardar cada product name único
+    const productNamePromises = Array.from(uniqueProductNames).map((productName) =>
+      prisma.brandProductName.upsert({
+        where: {
+          brandId_productName: {
+            brandId,
+            productName,
+          },
+        },
+        update: {}, // No actualizar nada si ya existe
+        create: {
+          brandId,
+          productName,
+        },
+      })
+    );
+
+    await Promise.all(productNamePromises);
+
+    console.log(
+      `📂 Saved ${uniqueProductNames.size} unique product names for brand ${brandId}`
     );
   }
 }

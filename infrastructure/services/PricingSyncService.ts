@@ -51,59 +51,86 @@ export class PricingSyncService {
 
   /**
    * Obtener precios individuales de la API para productos faltantes
-   * ULTRA CONSERVADOR: 1 request por vez con delay de 1 segundo para evitar 429
+   * OPTIMIZADO: Fetch paralelo con rate limiting conservador (2 concurrent requests)
+   * Balance entre velocidad y respeto al rate limit de Turn14 API
    */
   private async fetchMissingPrices(productIds: string[]): Promise<void> {
-    const DELAY_BETWEEN_REQUESTS_MS = 1000; // 1 segundo entre requests
+    const CONCURRENT_REQUESTS = 2; // Requests simultáneos por chunk (reducido para evitar 429)
+    const DELAY_BETWEEN_CHUNKS_MS = 500; // Delay entre chunks (aumentado para estabilidad)
 
-    for (let i = 0; i < productIds.length; i++) {
-      const productId = productIds[i];
+    // Dividir en chunks para rate limiting
+    const chunks = this.chunkArray(productIds, CONCURRENT_REQUESTS);
 
-      try {
-        const url = `${env.turn14.apiUrl}/pricing/${productId}`;
-        const response = await fetch(url, {
-          headers: {
-            Authorization: await authService.getAuthorizationHeader(),
-          },
-        });
+    console.log(`🚀 Fetching ${productIds.length} prices in ${chunks.length} chunks (${CONCURRENT_REQUESTS} concurrent, ${DELAY_BETWEEN_CHUNKS_MS}ms delay)`);
 
-        if (!response.ok) {
-          console.error(`❌ Failed to fetch price for product ${productId}: ${response.status}`);
-          continue; // Continuar con el siguiente
-        }
+    for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+      const chunk = chunks[chunkIndex];
 
-        const data: { data: PricingItem } = await response.json();
+      // Fetch paralelo dentro del chunk
+      await Promise.all(
+        chunk.map(async (productId) => {
+          try {
+            const url = `${env.turn14.apiUrl}/pricing/${productId}`;
+            const response = await fetch(url, {
+              headers: {
+                Authorization: await authService.getAuthorizationHeader(),
+              },
+            });
 
-        // Guardar en DB
-        await prisma.productPrice.upsert({
-          where: { productId },
-          update: {
-            purchaseCost: data.data.attributes.purchase_cost,
-            hasMap: data.data.attributes.has_map,
-            canPurchase: data.data.attributes.can_purchase,
-            pricelists: data.data.attributes.pricelists as any,
-            mapPrice: this.extractMapPrice(data.data.attributes.pricelists),
-          },
-          create: {
-            productId,
-            purchaseCost: data.data.attributes.purchase_cost,
-            hasMap: data.data.attributes.has_map,
-            canPurchase: data.data.attributes.can_purchase,
-            pricelists: data.data.attributes.pricelists as any,
-            mapPrice: this.extractMapPrice(data.data.attributes.pricelists),
-          },
-        });
+            if (!response.ok) {
+              console.error(`❌ Failed to fetch price for product ${productId}: ${response.status}`);
+              return;
+            }
 
-        console.log(`✅ Fetched and saved price for product ${productId} (${i + 1}/${productIds.length})`);
-      } catch (error) {
-        console.error(`❌ Error fetching price for product ${productId}:`, error);
-      }
+            const data: { data: PricingItem } = await response.json();
 
-      // Delay entre requests (excepto después del último)
-      if (i < productIds.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_REQUESTS_MS));
+            // Guardar en DB
+            await prisma.productPrice.upsert({
+              where: { productId },
+              update: {
+                purchaseCost: data.data.attributes.purchase_cost,
+                hasMap: data.data.attributes.has_map,
+                canPurchase: data.data.attributes.can_purchase,
+                pricelists: data.data.attributes.pricelists as any,
+                mapPrice: this.extractMapPrice(data.data.attributes.pricelists),
+              },
+              create: {
+                productId,
+                purchaseCost: data.data.attributes.purchase_cost,
+                hasMap: data.data.attributes.has_map,
+                canPurchase: data.data.attributes.can_purchase,
+                pricelists: data.data.attributes.pricelists as any,
+                mapPrice: this.extractMapPrice(data.data.attributes.pricelists),
+              },
+            });
+
+            console.log(`✅ Price fetched: ${productId}`);
+          } catch (error) {
+            console.error(`❌ Error fetching price for product ${productId}:`, error);
+          }
+        })
+      );
+
+      console.log(`📦 Chunk ${chunkIndex + 1}/${chunks.length} completed (${chunk.length} prices)`);
+
+      // Delay entre chunks (excepto después del último)
+      if (chunkIndex < chunks.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_CHUNKS_MS));
       }
     }
+
+    console.log(`✅ All ${productIds.length} prices fetched successfully`);
+  }
+
+  /**
+   * Dividir array en chunks para rate limiting
+   */
+  private chunkArray<T>(array: T[], chunkSize: number): T[][] {
+    const chunks: T[][] = [];
+    for (let i = 0; i < array.length; i += chunkSize) {
+      chunks.push(array.slice(i, i + chunkSize));
+    }
+    return chunks;
   }
 
   /**

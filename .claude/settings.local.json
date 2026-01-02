@@ -12,7 +12,6 @@
       "Bash(npm run dev:*)",
       "mcp__next-devtools__nextjs_index",
       "mcp__playwright__browser_navigate",
-      "dentro de la carpeta app unicamente van las carpetas que funcionan como ruta",
       "Bash(npx prisma generate:*)",
       "Bash(if [ -d \"app/generated\" ])",
       "Bash(then echo \"ERROR: app/generated aún existe\")",

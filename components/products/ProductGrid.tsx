@@ -72,20 +72,20 @@ export function ProductGrid({
                   {/* Stock - Real inventory data */}
                   {product.inventory ? (
                     product.inventory.hasStock ? (
-                      <p className="text-lg text-green-600 mb-2">
+                      <p className="text-xl text-green-600 mb-2">
                         ✅ En Stock ({product.inventory.totalStock} disponibles)
                       </p>
                     ) : product.inventory.manufacturer && product.inventory.manufacturer.stock > 0 ? (
-                      <p className="text-lg text-orange-600 mb-2">
+                      <p className="text-xl text-orange-600 mb-2">
                         ⚠️ Pedido especial ({product.inventory.manufacturer.stock} - ESD: {product.inventory.manufacturer.esd})
                       </p>
                     ) : (
-                      <p className="text-lg text-red-600 mb-2">
+                      <p className="text-xl text-red-600 mb-2">
                         ❌ Sin Stock
                       </p>
                     )
                   ) : (
-                    <p className="text-sm text-zinc-400 mb-2">
+                    <p className="text-xl text-zinc-400 mb-2">
                       Stock no disponible
                     </p>
                   )}

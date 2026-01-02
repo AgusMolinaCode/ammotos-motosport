@@ -1,14 +1,14 @@
 import { getBrandById } from "@/application/actions/brands";
 import { getProductsByBrand } from "@/application/actions/products";
-import { getPricesByProductIds } from "@/application/actions/prices";
-import { getBrandCategories } from "@/application/actions/categories";
-import { getInventoryByBrand } from "@/application/actions/inventory";
+import { getBrandCategories, getBrandSubcategories, getBrandProductNames } from "@/application/actions/categories";
 import Link from "next/link";
+import { Suspense } from "react";
 import type { PriceGroup } from "@/domain/types/turn14/brands";
 import { InfoItem } from "@/components/brand-details/InfoItem";
 import { PriceGroupCard } from "@/components/brand-details/PriceGroupCard";
-import { ProductGrid } from "@/components/products/ProductGrid";
-import { CategorySidebar } from "@/components/sidebar/CategorySidebar";
+import { ProductGridInstant } from "@/components/products/ProductGridInstant";
+import { ProductsWithData } from "@/components/products/ProductsWithData";
+import { CategorySidebarAccordion } from "@/components/sidebar/CategorySidebarAccordion";
 import { MobileCategoryButton } from "@/components/sidebar/MobileCategoryButton";
 
 export default async function BrandDetailPage({
@@ -20,39 +20,25 @@ export default async function BrandDetailPage({
 }) {
   const { id } = await params;
   const { page: pageParam } = await searchParams;
+  const currentPage = pageParam ? parseInt(pageParam) : 1;
 
-  // Server actions - errors will be caught by error boundary
-  const brandData = await getBrandById(id);
+  // ⚡ OPTIMIZACIÓN: Paralelizar llamadas independientes + Carga Progresiva
+  // Solo cargamos Brand, Productos y datos del Sidebar primero (datos esenciales)
+  // Precios e Inventario se cargan después con Suspense (carga diferida)
+  const [brandData, productsData, categories, subcategories, productNames] = await Promise.all([
+    getBrandById(id),
+    getProductsByBrand(parseInt(id), currentPage),
+    getBrandCategories(parseInt(id)),
+    getBrandSubcategories(parseInt(id)),
+    getBrandProductNames(parseInt(id)),
+  ]);
+
   const brand = brandData.data;
   const priceGroups = brand.attributes.pricegroups as PriceGroup[];
 
-  // Obtener productos con paginación
-  const currentPage = pageParam ? parseInt(pageParam) : 1;
-  const productsData = await getProductsByBrand(parseInt(id), currentPage);
-
-  // Extraer IDs de productos
-  const productIds = productsData.data.map((product) => product.id);
-
-  // Obtener precios para esos productos específicos
-  const pricesData = await getPricesByProductIds(productIds);
-
-  // Obtener categorías únicas de esta marca
-  const categories = await getBrandCategories(parseInt(id));
-
-  // Obtener inventario de la marca
-  const inventory = await getInventoryByBrand(parseInt(id));
-
-  // Merge products con prices e inventory
-  const productsWithPrices = productsData.data.map((product) => {
-    const price = pricesData.find((p) => p.productId === product.id);
-    const stock = inventory[product.id] || null;
-    return {
-      ...product,
-      pricing: price || null,
-      inventory: stock,
-    };
-  });
-
+  // ⚡ OPTIMIZACIÓN: Verificar si hay página siguiente para prefetch
+  const hasNextPage = currentPage < productsData.meta.total_pages;
+  const nextPage = currentPage + 1;
 
   return (
     <div className="min-h-screen bg-zinc-50">
@@ -131,22 +117,62 @@ export default async function BrandDetailPage({
             {/* Sidebar - Hidden on mobile, visible on large screens */}
             <div className="hidden lg:block">
               <div className="sticky top-6">
-                <CategorySidebar categories={categories} />
+                <CategorySidebarAccordion
+                  categories={categories}
+                  subcategories={subcategories}
+                  productNames={productNames}
+                />
               </div>
             </div>
 
-            {/* Products Grid */}
+            {/* Products Grid con carga ultra-progresiva */}
             <div>
-              <ProductGrid
-                products={productsWithPrices}
-                currentPage={currentPage}
-                totalPages={productsData.meta.total_pages}
-                brandId={parseInt(id)}
-              />
+              {/*
+                ⚡ CARGA ULTRA-PROGRESIVA:
+                1. Usuario ve productos INMEDIATAMENTE (1-2s) con skeleton en precios
+                2. Suspense carga precios/inventario en background (6-12s)
+                3. Grid se actualiza cuando los precios están listos
+                4. Usuario NO espera - puede explorar productos mientras cargan precios
+
+                Flujo:
+                - Render 1: ProductGridInstant sin datos → Skeleton en precios ⚡
+                - Render 2: ProductsWithData con datos → Precios reales ✅
+
+                UX: Productos visibles en 1-2s, precios en 6-12s (NO bloqueante)
+              */}
+              <Suspense
+                fallback={
+                  <ProductGridInstant
+                    products={productsData.data}
+                    brandId={parseInt(id)}
+                    currentPage={currentPage}
+                    totalPages={productsData.meta.total_pages}
+                  />
+                }
+              >
+                <ProductsWithData
+                  products={productsData.data}
+                  brandId={parseInt(id)}
+                  currentPage={currentPage}
+                  totalPages={productsData.meta.total_pages}
+                />
+              </Suspense>
             </div>
           </div>
         </div>
       </div>
+
+      {/* ⚡ PREFETCH: Cargar siguiente página en background */}
+      {hasNextPage && (
+        <Link
+          href={`/brands/${id}?page=${nextPage}`}
+          prefetch={true}
+          className="hidden"
+          aria-hidden="true"
+        >
+          Prefetch página {nextPage}
+        </Link>
+      )}
     </div>
   );
 }
