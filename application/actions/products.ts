@@ -11,15 +11,7 @@ export async function getProductsByBrand(brandId: number, page: number = 1) {
     );
 
     return {
-      data: result.products.map((product) => ({
-        id: product.id,
-        type: product.type,
-        attributes: {
-          product_name: product.attributes.product_name,
-          mfr_part_number: product.attributes.mfr_part_number,
-          thumbnail: product.attributes.thumbnail,
-        },
-      })),
+      data: result.products,
       meta: {
         total_pages: result.totalPages,
         current_page: result.currentPage,

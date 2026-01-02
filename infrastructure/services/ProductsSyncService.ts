@@ -183,13 +183,13 @@ export class ProductsSyncService {
         price_group: p.priceGroup,
         active: p.active,
         regular_stock: p.regularStock,
+        clearance_item: p.clearanceItem,
         thumbnail: p.thumbnail || "",
         dimensions: p.dimensions as any,
         warehouse_availability: p.warehouseAvailability as any,
         // Campos que no guardamos pero que la interfaz requiere (valores por defecto)
         born_on_date: "",
         powersports_indicator: false,
-        clearance_item: false,
         dropship_controller_id: 0,
         air_freight_prohibited: false,
         ltl_freight_required: false,
@@ -326,6 +326,7 @@ export class ProductsSyncService {
       priceGroup: p.attributes.price_group,
       active: p.attributes.active,
       regularStock: p.attributes.regular_stock,
+      clearanceItem: p.attributes.clearance_item,
       thumbnail: p.attributes.thumbnail || null,
       dimensions: p.attributes.dimensions as any, // Cast to any for Prisma Json type
       warehouseAvailability: p.attributes.warehouse_availability as any, // Cast to any for Prisma Json type

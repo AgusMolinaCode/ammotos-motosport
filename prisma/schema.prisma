@@ -57,6 +57,7 @@ model Product {
   priceGroup        String
   active            Boolean
   regularStock      Boolean
+  clearanceItem     Boolean  @default(false) // Item en liquidación
   thumbnail         String?  // URL de la imagen
   dimensions        Json     // Array de Dimensions
   warehouseAvailability Json // Array de WarehouseAvailability
