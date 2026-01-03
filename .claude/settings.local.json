@@ -39,7 +39,11 @@
       "Bash(npx prisma:*)",
       "Bash(if exist .next rd /s /q .next)",
       "mcp__prisma-local__migrate-status",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(if exist scriptspopulate-subcategory-translations.ts del scriptspopulate-subcategory-translations.ts)",
+      "Bash(if exist scriptsadd-subcategory-es-column.sql del scriptsadd-subcategory-es-column.sql)",
+      "Bash(if exist scriptsupdate-subcategories.sql del scriptsupdate-subcategories.sql)",
+      "Bash(del:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

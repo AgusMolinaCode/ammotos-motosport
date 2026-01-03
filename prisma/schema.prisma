@@ -135,11 +135,12 @@ model BrandCategory {
 
 // Subcategorías únicas por marca (extraídas de productos)
 model BrandSubcategory {
-  id           String   @id @default(cuid())
-  brandId      Int
-  subcategory  String   // Subcategoría en inglés (desde API)
+  id             String   @id @default(cuid())
+  brandId        Int
+  subcategory    String   // Subcategoría en inglés (desde API)
+  subcategoryEs  String   @default("") // Traducción al español
 
-  createdAt    DateTime @default(now())
+  createdAt      DateTime @default(now())
 
   @@unique([brandId, subcategory])
   @@index([brandId])

@@ -14,6 +14,7 @@ interface BrandCategory {
 
 interface BrandSubcategory {
   subcategory: string;
+  subcategoryEs: string;
 }
 
 interface BrandProductName {
@@ -40,7 +41,7 @@ export function CategorySidebarAccordion({
   productNames,
 }: CategorySidebarAccordionProps) {
   return (
-    <aside className="w-full bg-white rounded-lg shadow-sm border border-zinc-200">
+    <aside className="w-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-xl shadow-lg border-2 border-indigo-200">
       <Accordion
         type="single"
         collapsible
@@ -49,28 +50,30 @@ export function CategorySidebarAccordion({
       >
         {/* Categorías - Abierto por defecto */}
         <AccordionItem value="categories">
-          <AccordionTrigger className="px-4 text-sm font-medium text-zinc-900 hover:no-underline hover:bg-zinc-50">
-            Categorías
-            <span className="ml-2 text-xs text-zinc-500">({categories.length})</span>
+          <AccordionTrigger className="px-6 py-4 text-lg font-semibold text-indigo-900 hover:no-underline hover:bg-white/50 rounded-t-xl flex-col items-start">
+            <div className="flex items-center gap-2">
+              Categorías
+              <span className="text-base text-indigo-600 font-medium">({categories.length})</span>
+            </div>
           </AccordionTrigger>
           <AccordionContent>
             {categories.length > 0 ? (
-              <ul className="space-y-1 max-h-[400px] overflow-y-auto">
+              <ul className="space-y-2 max-h-[500px] overflow-y-auto px-2">
                 {categories.map(({ category, categoryEs }) => (
                   <li key={category}>
                     <button
-                      className="w-full px-4 py-2.5 text-left text-sm transition-colors text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
+                      className="w-full px-5 py-3.5 text-left text-base font-medium transition-all text-indigo-800 hover:bg-white/70 hover:text-indigo-950 rounded-lg shadow-sm hover:shadow-md"
                     >
                       {categoryEs}
-                      <span className="ml-2 text-xs text-zinc-400">({category})</span>
+                      <span className="text-md text-indigo-500/80 font-normal flex">({category})</span>
                     </button>
                   </li>
                 ))}
               </ul>
             ) : (
-              <div className="px-4 py-6 text-center">
-                <p className="text-sm text-zinc-500">No hay categorías disponibles</p>
-                <p className="text-xs text-zinc-400 mt-1">
+              <div className="px-6 py-8 text-center">
+                <p className="text-base text-indigo-600 font-medium">No hay categorías disponibles</p>
+                <p className="text-sm text-indigo-400 mt-2">
                   Las categorías aparecerán después de cargar productos
                 </p>
               </div>
@@ -80,27 +83,30 @@ export function CategorySidebarAccordion({
 
         {/* Subcategorías - Cerrado por defecto */}
         <AccordionItem value="subcategories">
-          <AccordionTrigger className="px-4 text-sm font-medium text-zinc-900 hover:no-underline hover:bg-zinc-50">
-            Subcategorías
-            <span className="ml-2 text-xs text-zinc-500">({subcategories.length})</span>
+          <AccordionTrigger className="px-6 py-4 text-lg font-semibold text-indigo-900 hover:no-underline hover:bg-white/50 flex-col items-start">
+            <div className="flex items-center gap-2">
+              Subcategorías
+              <span className="text-base text-indigo-600 font-medium">({subcategories.length})</span>
+            </div>
           </AccordionTrigger>
           <AccordionContent>
             {subcategories.length > 0 ? (
-              <ul className="space-y-1 max-h-[400px] overflow-y-auto">
-                {subcategories.map(({ subcategory }) => (
+              <ul className="space-y-2 max-h-[500px] overflow-y-auto px-2">
+                {subcategories.map(({ subcategory, subcategoryEs }) => (
                   <li key={subcategory}>
                     <button
-                      className="w-full px-4 py-2.5 text-left text-sm transition-colors text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
+                      className="w-full px-5 py-3.5 text-left text-base font-medium transition-all text-indigo-800 hover:bg-white/70 hover:text-indigo-950 rounded-lg shadow-sm hover:shadow-md"
                     >
-                      {subcategory}
+                      {subcategoryEs}
+                      <span className="text-md text-indigo-500/80 font-normal flex">({subcategory})</span>
                     </button>
                   </li>
                 ))}
               </ul>
             ) : (
-              <div className="px-4 py-6 text-center">
-                <p className="text-sm text-zinc-500">No hay subcategorías disponibles</p>
-                <p className="text-xs text-zinc-400 mt-1">
+              <div className="px-6 py-8 text-center">
+                <p className="text-base text-indigo-600 font-medium">No hay subcategorías disponibles</p>
+                <p className="text-sm text-indigo-400 mt-2">
                   Las subcategorías aparecerán después de cargar productos
                 </p>
               </div>
@@ -110,17 +116,19 @@ export function CategorySidebarAccordion({
 
         {/* Product Names - Cerrado por defecto */}
         <AccordionItem value="productNames">
-          <AccordionTrigger className="px-4 text-sm font-medium text-zinc-900 hover:no-underline hover:bg-zinc-50">
-            Productos
-            <span className="ml-2 text-xs text-zinc-500">({productNames.length})</span>
+          <AccordionTrigger className="px-6 py-4 text-lg font-semibold text-indigo-900 hover:no-underline hover:bg-white/50 rounded-b-xl flex-col items-start">
+            <div className="flex items-center gap-2">
+              Productos
+              <span className="text-base text-indigo-600 font-medium">({productNames.length})</span>
+            </div>
           </AccordionTrigger>
           <AccordionContent>
             {productNames.length > 0 ? (
-              <ul className="space-y-1 max-h-[400px] overflow-y-auto">
+              <ul className="space-y-2 max-h-[500px] overflow-y-auto px-2">
                 {productNames.map(({ productName }) => (
                   <li key={productName}>
                     <button
-                      className="w-full px-4 py-2.5 text-left text-sm transition-colors text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 truncate"
+                      className="w-full px-5 py-3.5 text-left text-base font-medium transition-all text-indigo-800 hover:bg-white/70 hover:text-indigo-950 rounded-lg shadow-sm hover:shadow-md truncate"
                       title={productName}
                     >
                       {productName}
@@ -129,9 +137,9 @@ export function CategorySidebarAccordion({
                 ))}
               </ul>
             ) : (
-              <div className="px-4 py-6 text-center">
-                <p className="text-sm text-zinc-500">No hay productos disponibles</p>
-                <p className="text-xs text-zinc-400 mt-1">
+              <div className="px-6 py-8 text-center">
+                <p className="text-base text-indigo-600 font-medium">No hay productos disponibles</p>
+                <p className="text-sm text-indigo-400 mt-2">
                   Los productos aparecerán después de cargar datos
                 </p>
               </div>
@@ -141,11 +149,11 @@ export function CategorySidebarAccordion({
       </Accordion>
 
       {/* Footer Info */}
-      <div className="p-4 bg-zinc-50 border-t border-zinc-200">
-        <p className="text-xs text-zinc-500 text-center">
+      <div className="p-5 bg-gradient-to-r from-indigo-100 to-purple-100 border-t-2 border-indigo-200 rounded-b-xl">
+        <p className="text-sm text-indigo-700 font-medium text-center">
           Total: {categories.length} categorías, {subcategories.length} subcategorías, {productNames.length} productos
         </p>
-        <p className="text-xs text-zinc-400 text-center mt-1">
+        <p className="text-sm text-indigo-500 text-center mt-2">
           Las listas se actualizan automáticamente al navegar páginas
         </p>
       </div>

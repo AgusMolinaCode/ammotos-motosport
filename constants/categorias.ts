@@ -255,3 +255,145 @@ export const NOMBRES_GRUPOS = {
   accesorios: "Accesorios y Equipamiento",
   otros: "Otros",
 } as const;
+
+/**
+ * Diccionario de traducciones de subcategorías
+ * Se irá expandiendo a medida que se descubran nuevas subcategorías
+ */
+export const SUBCATEGORIAS: Record<string, string> = {
+  // Truck Bed Accessories
+  "Bed Bars": "Barras de Caja",
+  "Bed Steps": "Escalones de Caja",
+  "Brackets": "Soportes",
+  "Fuel Caps": "Tapas de Combustible",
+  "Hardware - Singles": "Herrajes - Individuales",
+  "Running Boards": "Pisaderas",
+  "Wiring Connectors": "Conectores Eléctricos",
+
+  // Body & Exterior (Carrocería y Exterior)
+  "Doors": "Puertas",
+  "Hoods": "Capós",
+  "Fenders": "Guardabarros",
+  "Trunks": "Maleteros",
+  "Roofs": "Techos",
+  "Spoilers": "Alerones",
+  "Side Skirts": "Faldones Laterales",
+  "Lips & Splitters": "Labios y Divisores",
+  "Window Louvers": "Persianas de Ventana",
+  "Diffusers": "Difusores",
+  "Grilles": "Parrillas",
+  "Bumper Covers - Front": "Cubiertas de Paragolpes - Delantero",
+  "Bumper Covers - Rear": "Cubiertas de Paragolpes - Trasero",
+  "Hood Vents": "Ventilaciones de Capó",
+  "Radiator Cooling Plates": "Placas de Enfriamiento del Radiador",
+  "Engine Covers": "Cubiertas de Motor",
+  "Carbon Accessories": "Accesorios de Carbono",
+
+  // Suspension & Steering
+  "Coil Springs": "Resortes Helicoidales",
+  "Control Arms": "Brazos de Control",
+  "Shocks": "Amortiguadores",
+  "Struts": "Puntales",
+  "Sway Bars": "Barras Estabilizadoras",
+  "Leveling Kits": "Kits de Nivelación",
+  "Lift Kits": "Kits de Elevación",
+
+  // Wheels & Tires
+  "Wheels": "Ruedas",
+  "Tires": "Neumáticos",
+  "Wheel Spacers": "Espaciadores de Rueda",
+  "Lug Nuts": "Tuercas de Rueda",
+
+  // Exhaust
+  "Mufflers": "Silenciadores",
+  "Cat-Back Exhaust": "Escape Cat-Back",
+  "Headers": "Colectores",
+  "Tips": "Puntas de Escape",
+  "Powersports Exhausts": "Escapes Powersports",
+  "Spark Arrestors": "Arrestachispas",
+
+  // Lighting
+  "LED Light Bars": "Barras LED",
+  "Headlights": "Faros Delanteros",
+  "Tail Lights": "Luces Traseras",
+  "Fog Lights": "Luces de Niebla",
+  "Work Lights": "Luces de Trabajo",
+
+  // Body & Exterior
+  "Bumpers": "Paragolpes",
+  "Bumpers - Steel": "Paragolpes - Acero",
+  "Grilles": "Parrillas",
+  "Fender Flares": "Extensiones de Guardabarros",
+  "Side Steps": "Estribos Laterales",
+  "Tonneau Covers": "Cubiertas de Caja",
+  "Bed Liners": "Protectores de Caja",
+
+  // Engine & Performance
+  "Air Filters": "Filtros de Aire",
+  "Cold Air Intakes": "Admisiones de Aire Frío",
+  "Throttle Bodies": "Cuerpos de Aceleración",
+  "Fuel Injectors": "Inyectores de Combustible",
+  "Spark Plugs": "Bujías",
+  "Water Pumps": "Bombas de Agua",
+  "Pulleys - Crank, Underdrive": "Poleas - Cigüeñal, Subimpulsión",
+  "Belts - Timing, Accessory": "Correas - Distribución, Accesorios",
+  "Gasket Kits": "Kits de Juntas",
+  "O-Rings": "Juntas Tóricas",
+
+  // Fuel Delivery System
+  "Fuel Tanks": "Tanques de Combustible",
+  "Fuel Systems": "Sistemas de Combustible",
+  "Fuel Pumps": "Bombas de Combustible",
+  "Fuel Pressure Regulators": "Reguladores de Presión de Combustible",
+  "Fuel Filters": "Filtros de Combustible",
+  "Fuel Rails": "Rieles de Combustible",
+  "Fuel Manifolds": "Colectores de Combustible",
+  "Fuel Components Misc": "Componentes de Combustible Varios",
+
+  // Hardware & Accessories
+  "Fittings": "Acopladores",
+  "Valves": "Válvulas",
+  "Wiring Harnesses": "Arneses de Cableado",
+  "Hoses": "Mangueras",
+  "Clamps": "Abrazaderas",
+  "Gauges": "Medidores",
+  "Marketing": "Marketing",
+  "Stickers/Decals/Banners": "Calcomanías/Adhesivos/Banners",
+
+  // Interior
+  "Floor Mats": "Alfombrillas",
+  "Seat Covers": "Fundas de Asientos",
+  "Cargo Liners": "Protectores de Carga",
+  "Dash Kits": "Kits de Tablero",
+
+  // Electronics & Audio
+  "Speakers": "Parlantes",
+  "Subwoofers": "Subwoofers",
+  "Amplifiers": "Amplificadores",
+  "Head Units": "Unidades Principales",
+
+  // Recovery & Towing
+  "Winches": "Cabrestantes",
+  "Hitches": "Enganches",
+  "Recovery Straps": "Correas de Recuperación",
+  "D-Rings": "Anillos D",
+  "Shackles": "Grilletes",
+};
+
+/**
+ * Helper para traducir una subcategoría
+ * @param subcategory - Subcategoría en inglés
+ * @returns Subcategoría traducida al español, o la subcategoría original si no existe traducción
+ *
+ * NOTA: Si no encuentra traducción, registra en consola para agregarlo al diccionario
+ */
+export function traducirSubcategoria(subcategory: string): string {
+  const traduccion = SUBCATEGORIAS[subcategory];
+
+  // Si no hay traducción, registrar en consola para agregarla después
+  if (!traduccion && typeof window === 'undefined') {
+    console.log(`⚠️ Subcategoría sin traducción: "${subcategory}"`);
+  }
+
+  return traduccion || subcategory;
+}

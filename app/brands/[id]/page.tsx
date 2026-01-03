@@ -46,7 +46,7 @@ export default async function BrandDetailPage({
 
   return (
     <div className="min-h-screen bg-zinc-50">
-      <div className="max-w-[90rem] mx-auto p-8">
+      <div className="max-w-[110rem] mx-auto p-8">
         {/* Header */}
         <div className="mb-6">
           <Link
@@ -117,7 +117,7 @@ export default async function BrandDetailPage({
           <MobileCategoryButton categories={categories} />
 
           {/* Layout: Sidebar + Products Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-8">
             {/* Sidebar - Hidden on mobile, visible on large screens */}
             <div className="hidden lg:block">
               <div className="sticky top-6">

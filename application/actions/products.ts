@@ -13,7 +13,7 @@ export interface ProductsWithFiltersResult {
   };
   filterData: {
     categories: { category: string; categoryEs: string }[];
-    subcategories: { subcategory: string }[];
+    subcategories: { subcategory: string; subcategoryEs: string }[];
     productNames: { productName: string }[];
   };
 }

@@ -4,12 +4,12 @@ import type {
   ProductsResponse,
   Product as Turn14Product,
 } from "@/domain/types/turn14/products";
-import { traducirCategoria } from "@/constants/categorias";
+import { traducirCategoria, traducirSubcategoria } from "@/constants/categorias";
 
 // Tipo para datos de filtros de marca (categorías, subcategorías, productNames)
 export interface BrandFilterData {
   categories: { category: string; categoryEs: string }[];
-  subcategories: { subcategory: string }[];
+  subcategories: { subcategory: string; subcategoryEs: string }[];
   productNames: { productName: string }[];
 }
 
@@ -246,8 +246,8 @@ export class ProductsSyncService {
       }),
       prisma.brandSubcategory.findMany({
         where: { brandId },
-        orderBy: { subcategory: "asc" },
-        select: { subcategory: true },
+        orderBy: { subcategoryEs: "asc" },
+        select: { subcategory: true, subcategoryEs: true },
       }),
       prisma.brandProductName.findMany({
         where: { brandId },
@@ -264,7 +264,7 @@ export class ProductsSyncService {
    */
   private extractFilterDataFromProducts(products: Turn14Product[]): BrandFilterData {
     const uniqueCategories = new Map<string, string>();
-    const uniqueSubcategories = new Set<string>();
+    const uniqueSubcategories = new Map<string, string>();
     const uniqueProductNames = new Set<string>();
 
     for (const product of products) {
@@ -273,7 +273,7 @@ export class ProductsSyncService {
         uniqueCategories.set(attr.category, traducirCategoria(attr.category));
       }
       if (attr.subcategory) {
-        uniqueSubcategories.add(attr.subcategory);
+        uniqueSubcategories.set(attr.subcategory, traducirSubcategoria(attr.subcategory));
       }
       if (attr.product_name) {
         uniqueProductNames.add(attr.product_name);
@@ -285,7 +285,10 @@ export class ProductsSyncService {
         category,
         categoryEs,
       })),
-      subcategories: Array.from(uniqueSubcategories).map((subcategory) => ({ subcategory })),
+      subcategories: Array.from(uniqueSubcategories.entries()).map(([subcategory, subcategoryEs]) => ({
+        subcategory,
+        subcategoryEs,
+      })),
       productNames: Array.from(uniqueProductNames).map((productName) => ({ productName })),
     };
   }
@@ -501,6 +504,7 @@ export class ProductsSyncService {
         create: {
           brandId,
           subcategory,
+          subcategoryEs: traducirSubcategoria(subcategory),
         },
       })
     );
