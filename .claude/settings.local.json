@@ -37,7 +37,9 @@
       "Bash(npm install:*)",
       "Bash(node -e:*)",
       "Bash(npx prisma:*)",
-      "Bash(if exist .next rd /s /q .next)"
+      "Bash(if exist .next rd /s /q .next)",
+      "mcp__prisma-local__migrate-status",
+      "Bash(dir:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -50,17 +50,30 @@ export function ProductGridInstant({
         {products.map((product) => {
           const isClearance = product.attributes.clearance_item ?? false;
 
-          // Border color básico (se actualizará cuando cargue el stock)
-          const borderColor = isClearance
-            ? "border-yellow-500 bg-yellow-100/20"
-            : "border-zinc-300 bg-white";
+          // Extraer datos de inventario si están disponibles
+          const productInventory = inventory?.[product.id] || null;
+          const hasStock = productInventory?.hasStock ?? false;
+          const manufacturerStock = productInventory?.manufacturer?.stock ?? 0;
+
+          // Función de color de borde (igual que ProductGrid.tsx)
+          const getBorderColor = () => {
+            if (isClearance) {
+              return "border-yellow-500 bg-yellow-100/20";
+            } else if (hasStock) {
+              return "border-green-600 bg-green-100/20";
+            } else if (manufacturerStock > 0) {
+              return "border-orange-600 bg-orange-100/20";
+            } else {
+              return "border-red-600 bg-red-100/20";
+            }
+          };
 
           return (
             <div
               key={product.id}
               className={`
                 border-l-8 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 flex h-64
-                ${borderColor}
+                ${getBorderColor()}
               `}
             >
               {/* Contenedor principal */}

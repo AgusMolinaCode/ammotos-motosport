@@ -1,6 +1,5 @@
 import { getBrandById } from "@/application/actions/brands";
 import { getProductsByBrand } from "@/application/actions/products";
-import { getBrandCategories, getBrandSubcategories, getBrandProductNames } from "@/application/actions/categories";
 import Link from "next/link";
 import { Suspense } from "react";
 import type { PriceGroup } from "@/domain/types/turn14/brands";
@@ -22,16 +21,21 @@ export default async function BrandDetailPage({
   const { page: pageParam } = await searchParams;
   const currentPage = pageParam ? parseInt(pageParam) : 1;
 
-  // ⚡ OPTIMIZACIÓN: Paralelizar llamadas independientes + Carga Progresiva
-  // Solo cargamos Brand, Productos y datos del Sidebar primero (datos esenciales)
+  // ⚡ OPTIMIZACIÓN: Paralelizar llamadas independientes
+  // Solo cargamos Brand y Productos primero (datos esenciales)
   // Precios e Inventario se cargan después con Suspense (carga diferida)
-  const [brandData, productsData, categories, subcategories, productNames] = await Promise.all([
+  // Las categorías, subcategorías y productNames vienen directamente del resultado de getProductsByBrand
+  const [brandData, productsData] = await Promise.all([
     getBrandById(id),
     getProductsByBrand(parseInt(id), currentPage),
-    getBrandCategories(parseInt(id)),
-    getBrandSubcategories(parseInt(id)),
-    getBrandProductNames(parseInt(id)),
   ]);
+
+  // Extraer filterData directamente del resultado de productos
+  const { categories, subcategories, productNames } = productsData.filterData || {
+    categories: [],
+    subcategories: [],
+    productNames: [],
+  };
 
   const brand = brandData.data;
   const priceGroups = brand.attributes.pricegroups as PriceGroup[];
@@ -127,19 +131,7 @@ export default async function BrandDetailPage({
 
             {/* Products Grid con carga ultra-progresiva */}
             <div>
-              {/*
-                ⚡ CARGA ULTRA-PROGRESIVA:
-                1. Usuario ve productos INMEDIATAMENTE (1-2s) con skeleton en precios
-                2. Suspense carga precios/inventario en background (6-12s)
-                3. Grid se actualiza cuando los precios están listos
-                4. Usuario NO espera - puede explorar productos mientras cargan precios
-
-                Flujo:
-                - Render 1: ProductGridInstant sin datos → Skeleton en precios ⚡
-                - Render 2: ProductsWithData con datos → Precios reales ✅
-
-                UX: Productos visibles en 1-2s, precios en 6-12s (NO bloqueante)
-              */}
+              
               <Suspense
                 fallback={
                   <ProductGridInstant

@@ -270,7 +270,7 @@ export class PricingSyncService {
 
     return {
       prices: priceData,
-      totalPages: totalCachedPages,
+      totalPages: totalPages,
       currentPage: page,
       links: {
         self: "",

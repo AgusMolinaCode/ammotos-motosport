@@ -6,6 +6,26 @@ import type {
 } from "@/domain/types/turn14/products";
 import { traducirCategoria } from "@/constants/categorias";
 
+// Tipo para datos de filtros de marca (categorías, subcategorías, productNames)
+export interface BrandFilterData {
+  categories: { category: string; categoryEs: string }[];
+  subcategories: { subcategory: string }[];
+  productNames: { productName: string }[];
+}
+
+// Tipo de retorno para productos con datos de filtros
+interface ProductsResult {
+  products: Turn14Product[];
+  totalPages: number;
+  currentPage: number;
+  links: {
+    self: string;
+    first: string;
+    last: string;
+  };
+  filterData: BrandFilterData;
+}
+
 export class ProductsSyncService {
   private static readonly CACHE_TTL_DAYS = 5; // Renovar caché cada 5 días (actualizado para consistencia)
   private static readonly PAGE_SIZE = 25; // Productos por página mostrados al usuario
@@ -210,6 +230,63 @@ export class ProductsSyncService {
         first: "",
         last: "",
       },
+      filterData: await this.getFilterDataFromDatabase(brandId),
+    };
+  }
+
+  /**
+   * Obtener datos de filtros desde la base de datos
+   */
+  private async getFilterDataFromDatabase(brandId: number): Promise<BrandFilterData> {
+    const [categories, subcategories, productNames] = await Promise.all([
+      prisma.brandCategory.findMany({
+        where: { brandId },
+        orderBy: { categoryEs: "asc" },
+        select: { category: true, categoryEs: true },
+      }),
+      prisma.brandSubcategory.findMany({
+        where: { brandId },
+        orderBy: { subcategory: "asc" },
+        select: { subcategory: true },
+      }),
+      prisma.brandProductName.findMany({
+        where: { brandId },
+        orderBy: { productName: "asc" },
+        select: { productName: true },
+      }),
+    ]);
+
+    return { categories, subcategories, productNames };
+  }
+
+  /**
+   * Extraer datos de filtros desde los productos de la API
+   */
+  private extractFilterDataFromProducts(products: Turn14Product[]): BrandFilterData {
+    const uniqueCategories = new Map<string, string>();
+    const uniqueSubcategories = new Set<string>();
+    const uniqueProductNames = new Set<string>();
+
+    for (const product of products) {
+      const attr = product.attributes;
+      if (attr.category) {
+        uniqueCategories.set(attr.category, traducirCategoria(attr.category));
+      }
+      if (attr.subcategory) {
+        uniqueSubcategories.add(attr.subcategory);
+      }
+      if (attr.product_name) {
+        uniqueProductNames.add(attr.product_name);
+      }
+    }
+
+    return {
+      categories: Array.from(uniqueCategories.entries()).map(([category, categoryEs]) => ({
+        category,
+        categoryEs,
+      })),
+      subcategories: Array.from(uniqueSubcategories).map((subcategory) => ({ subcategory })),
+      productNames: Array.from(uniqueProductNames).map((productName) => ({ productName })),
     };
   }
 
@@ -245,6 +322,8 @@ export class ProductsSyncService {
     await this.saveProductsToDatabase(data.data, brandId, apiPage);
 
     // Extraer y guardar categorías, subcategorías y product names únicos
+    // ⚡ IMPORTANTE: Extraemos filterData ANTES de guardar para retornarlo inmediatamente
+    const filterData = this.extractFilterDataFromProducts(data.data);
     await Promise.all([
       this.saveBrandCategories(data.data, brandId),
       this.saveBrandSubcategories(data.data, brandId),
@@ -302,6 +381,7 @@ export class ProductsSyncService {
       totalPages,
       currentPage: userPage,
       links: data.links,
+      filterData,
     };
   }
 
