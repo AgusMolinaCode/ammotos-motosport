@@ -303,6 +303,8 @@ export const SUBCATEGORIAS: Record<string, string> = {
   "Tires": "Neumáticos",
   "Wheel Spacers": "Espaciadores de Rueda",
   "Lug Nuts": "Tuercas de Rueda",
+  "Automotive/UTV Tires - Off Road": "Neumáticos Automotrices/UTV - Todoterreno",
+  "Automotive/UTV Tires - On Road": "Neumáticos Automotrices/UTV - Carretera",
 
   // Exhaust
   "Mufflers": "Silenciadores",
@@ -322,7 +324,6 @@ export const SUBCATEGORIAS: Record<string, string> = {
   // Body & Exterior
   "Bumpers": "Paragolpes",
   "Bumpers - Steel": "Paragolpes - Acero",
-  "Grilles": "Parrillas",
   "Fender Flares": "Extensiones de Guardabarros",
   "Side Steps": "Estribos Laterales",
   "Tonneau Covers": "Cubiertas de Caja",
@@ -376,8 +377,26 @@ export const SUBCATEGORIAS: Record<string, string> = {
   "Winches": "Cabrestantes",
   "Hitches": "Enganches",
   "Recovery Straps": "Correas de Recuperación",
-  "D-Rings": "Anillos D",
+  "D-Rings": "Aros D",
   "Shackles": "Grilletes",
+
+  // Pistons & Connecting Rods (Pistones y Bielas)
+  "Piston Sets - Forged - 4cyl": "Conjuntos de Pistones - Forjados - 4cil",
+  "Pistons - Forged - Single": "Pistones - Forjados - Individual",
+  "Piston Sets - Forged - 6cyl": "Conjuntos de Pistones - Forjados - 6cil",
+  "Piston Pins": "Pernos de Pistón",
+  "Piston Pin Locks": "Seguros de Perno de Pistón",
+  "Piston Rings": "Aros de Pistón",
+  "Piston Sets - Forged - 8cyl": "Conjuntos de Pistones - Forjados - 8cil",
+  "Connecting Rod Bushings": "Bujes de Biela",
+  "Piston Sets - Diesel": "Conjuntos de Pistones - Diésel",
+  "Piston Coating": "Recubrimiento de Pistones",
+  "Piston Sets - Powersports": "Conjuntos de Pistones - Powersports",
+  "Piston Sets - Custom": "Conjuntos de Pistones - Personalizados",
+  "Piston Sets - Forged - 5cyl": "Conjuntos de Pistones - Forjados - 5cil",
+  "Connecting Rods - 4Cyl": "Bielas - 4Cil",
+  "Connecting Rods": "Bielas",
+  "Connecting Rods - 6Cyl": "Bielas - 6Cil",
 };
 
 /**

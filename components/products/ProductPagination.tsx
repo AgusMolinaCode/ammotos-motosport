@@ -1,3 +1,6 @@
+"use client";
+
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 interface ProductPaginationProps {
@@ -11,6 +14,15 @@ export function ProductPagination({
   totalPages,
   brandId,
 }: ProductPaginationProps) {
+  const searchParams = useSearchParams();
+
+  // Construir URL con página preservando filtros activos
+  const buildPageUrl = (page: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", page.toString());
+    return `/brands/${brandId}?${params.toString()}`;
+  };
+
   if (totalPages <= 1) return null;
 
   // Calcular ventana de 5 páginas deslizante
@@ -27,13 +39,9 @@ export function ProductPagination({
     }
 
     // Calcular inicio de la ventana (bloques de 5)
-    // Páginas 1-5 → inicio en 1
-    // Páginas 6-10 → inicio en 6
-    // Páginas 11-15 → inicio en 11
     const windowStart = Math.floor((currentPage - 1) / WINDOW_SIZE) * WINDOW_SIZE + 1;
 
     // Final de la ventana limitado por totalPages
-    // Si estamos en páginas 6-8 y solo hay 8 totales, muestra [6, 7, 8]
     const windowEnd = Math.min(windowStart + WINDOW_SIZE - 1, totalPages);
 
     for (let i = windowStart; i <= windowEnd; i++) {
@@ -59,7 +67,7 @@ export function ProductPagination({
         </button>
       ) : (
         <Link
-          href={`/brands/${brandId}?page=${currentPage - 1}`}
+          href={buildPageUrl(currentPage - 1)}
           className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
         >
           ← Anterior
@@ -71,7 +79,7 @@ export function ProductPagination({
         {pageNumbers.map((page) => (
           <Link
             key={page}
-            href={`/brands/${brandId}?page=${page}`}
+            href={buildPageUrl(page)}
             className={`
               min-w-[40px] h-10 flex items-center justify-center
               text-sm font-semibold rounded transition-colors
@@ -97,7 +105,7 @@ export function ProductPagination({
         </button>
       ) : (
         <Link
-          href={`/brands/${brandId}?page=${currentPage + 1}`}
+          href={buildPageUrl(currentPage + 1)}
           className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
         >
           Siguiente →

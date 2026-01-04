@@ -4,6 +4,7 @@ import { EmptyPageMessage } from "./EmptyPageMessage";
 import { ProductPriceAndStock } from "./ProductPriceAndStock";
 import { ProductPriceSkeleton } from "./ProductPriceSkeleton";
 import type { Product } from "@/domain/types/turn14/products";
+import { traducirCategoria, traducirSubcategoria } from "@/constants/categorias";
 
 interface ProductGridInstantProps {
   products: Product[];
@@ -124,6 +125,18 @@ export function ProductGridInstant({
                     <p>
                       <span className="font-semibold">Turn14 ID:</span>{" "}
                       {product.id}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Categoría:</span>{" "}
+                      <span className="text-gray-700">
+                        {traducirCategoria(product.attributes.category)}
+                      </span>
+                    </p>
+                    <p>
+                      <span className="font-semibold">Subcategoría:</span>{" "}
+                      <span className="text-gray-700">
+                        {traducirSubcategoria(product.attributes.subcategory)}
+                      </span>
                     </p>
                     {isClearance && (
                       <p className="text-yellow-600 font-bold">

@@ -2,6 +2,7 @@ import Image from "next/image";
 import { ProductPagination } from "./ProductPagination";
 import { EmptyPageMessage } from "./EmptyPageMessage";
 import type { ProductWithDetails, ProductGridProps } from "@/domain/types/components/productGrid";
+import { traducirCategoria, traducirSubcategoria } from "@/constants/categorias";
 
 export function ProductGrid({
   products,
@@ -23,7 +24,8 @@ export function ProductGrid({
           const manufacturerStock = product.inventory?.manufacturer?.stock ?? 0;
           const isClearance = product.attributes.clearance_item ?? false;
 
-          console.log(product.attributes.clearance_item);
+          // Debug: descomentar si necesitas verificar los datos
+          // console.log('🔍 Product:', product.id, product.attributes.category, product.attributes.subcategory);
 
           const getBorderColor = () => {
             if (isClearance) {
@@ -119,6 +121,22 @@ export function ProductGrid({
                         Turn14 ID:
                       </span>{" "}
                       {product.id}
+                    </p>
+                    <p>
+                      <span className="font-semibold">
+                        Categoría:
+                      </span>{" "}
+                      <span className="text-gray-700">
+                        {traducirCategoria(product.attributes.category)}
+                      </span>
+                    </p>
+                    <p>
+                      <span className="font-semibold">
+                        Subcategoría:
+                      </span>{" "}
+                      <span className="text-gray-700">
+                        {traducirSubcategoria(product.attributes.subcategory)}
+                      </span>
                     </p>
                     {isClearance && (
                       <p className="text-yellow-600 font-bold">

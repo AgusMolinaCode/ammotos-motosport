@@ -1,5 +1,8 @@
 import { getBrandById } from "@/application/actions/brands";
-import { getProductsByBrand } from "@/application/actions/products";
+import {
+  getProductsByBrand,
+  type ProductFilters,
+} from "@/application/actions/products";
 import Link from "next/link";
 import { Suspense } from "react";
 import type { PriceGroup } from "@/domain/types/turn14/brands";
@@ -9,17 +12,40 @@ import { ProductGridInstant } from "@/components/products/ProductGridInstant";
 import { ProductsWithData } from "@/components/products/ProductsWithData";
 import { CategorySidebarAccordion } from "@/components/sidebar/CategorySidebarAccordion";
 import { MobileCategoryButton } from "@/components/sidebar/MobileCategoryButton";
+import { ActiveFilters } from "@/components/filters/ActiveFilters";
+import {
+  traducirCategoria,
+  traducirSubcategoria,
+} from "@/constants/categorias";
 
 export default async function BrandDetailPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    category?: string;
+    subcategory?: string;
+    productName?: string;
+  }>;
 }) {
   const { id } = await params;
-  const { page: pageParam } = await searchParams;
-  const currentPage = pageParam ? parseInt(pageParam) : 1;
+  const {
+    page: pageParam,
+    category,
+    subcategory,
+    productName,
+  } = await searchParams;
+  const currentPage = pageParam ? Math.max(1, parseInt(pageParam)) : 1; // Nunca permitir página 0 o negativa
+
+  // Construir objeto de filtros
+  const filters: ProductFilters = {};
+  if (category) filters.category = decodeURIComponent(category);
+  if (subcategory) filters.subcategory = decodeURIComponent(subcategory);
+  if (productName) filters.productName = decodeURIComponent(productName);
+
+  const hasActiveFilters = !!(category || subcategory || productName);
 
   // ⚡ OPTIMIZACIÓN: Paralelizar llamadas independientes
   // Solo cargamos Brand y Productos primero (datos esenciales)
@@ -27,18 +53,30 @@ export default async function BrandDetailPage({
   // Las categorías, subcategorías y productNames vienen directamente del resultado de getProductsByBrand
   const [brandData, productsData] = await Promise.all([
     getBrandById(id),
-    getProductsByBrand(parseInt(id), currentPage),
+    getProductsByBrand(parseInt(id), currentPage, filters),
   ]);
 
   // Extraer filterData directamente del resultado de productos
-  const { categories, subcategories, productNames } = productsData.filterData || {
-    categories: [],
-    subcategories: [],
-    productNames: [],
-  };
+  const { categories, subcategories, productNames } =
+    productsData.filterData || {
+      categories: [],
+      subcategories: [],
+      productNames: [],
+    };
 
   const brand = brandData.data;
   const priceGroups = brand.attributes.pricegroups as PriceGroup[];
+
+  // Preparar datos de filtros activos con traducciones
+  const activeFiltersData = {
+    category: filters.category,
+    categoryEs: filters.category ? traducirCategoria(filters.category) : undefined,
+    subcategory: filters.subcategory,
+    subcategoryEs: filters.subcategory
+      ? subcategories.find(s => s.subcategory === filters.subcategory)?.subcategoryEs || traducirSubcategoria(filters.subcategory)
+      : undefined,
+    productName: filters.productName,
+  };
 
   // ⚡ OPTIMIZACIÓN: Verificar si hay página siguiente para prefetch
   const hasNextPage = currentPage < productsData.meta.total_pages;
@@ -55,9 +93,7 @@ export default async function BrandDetailPage({
           >
             ← Volver a todas las marcas
           </Link>
-          <h1 className="text-3xl font-bold mt-2">
-            {brand.attributes.name}
-          </h1>
+          <h1 className="text-3xl font-bold mt-2">{brand.attributes.name}</h1>
         </div>
 
         {/* Details Card */}
@@ -97,9 +133,7 @@ export default async function BrandDetailPage({
           {/* Price Groups Detail */}
           {priceGroups.length > 0 && (
             <div className="mt-6 border-t pt-6">
-              <h2 className="text-xl font-semibold mb-4">
-                Grupos de Precio
-              </h2>
+              <h2 className="text-xl font-semibold mb-4">Grupos de Precio</h2>
               <div className="space-y-4">
                 {priceGroups.map((pg) => (
                   <PriceGroupCard key={pg.pricegroup_id} priceGroup={pg} />
@@ -111,7 +145,17 @@ export default async function BrandDetailPage({
 
         {/* Products Section with Sidebar */}
         <div className="mt-12">
-          <h2 className="text-2xl font-bold mb-6">Productos</h2>
+          <h2 className="text-2xl font-bold mb-6">
+            Productos
+            {productsData.meta.total_matches && hasActiveFilters && (
+              <span className="text-lg font-normal text-gray-600 ml-2">
+                ({productsData.meta.total_matches} coincidencias)
+              </span>
+            )}
+          </h2>
+
+          {/* Indicador de filtros activos */}
+          <ActiveFilters brandId={parseInt(id)} filters={activeFiltersData} />
 
           {/* Mobile Category Filter Button */}
           <MobileCategoryButton categories={categories} />
@@ -125,13 +169,14 @@ export default async function BrandDetailPage({
                   categories={categories}
                   subcategories={subcategories}
                   productNames={productNames}
+                  brandId={parseInt(id)}
+                  activeFilters={filters}
                 />
               </div>
             </div>
 
             {/* Products Grid con carga ultra-progresiva */}
             <div>
-              
               <Suspense
                 fallback={
                   <ProductGridInstant

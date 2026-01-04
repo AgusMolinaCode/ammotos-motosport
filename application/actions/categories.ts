@@ -9,6 +9,7 @@ export interface BrandCategoryData {
 
 export interface BrandSubcategoryData {
   subcategory: string;
+  subcategoryEs: string;
 }
 
 export interface BrandProductNameData {
@@ -52,9 +53,10 @@ export async function getBrandSubcategories(
   try {
     const subcategories = await prisma.brandSubcategory.findMany({
       where: { brandId },
-      orderBy: { subcategory: "asc" },
+      orderBy: { subcategoryEs: "asc" },
       select: {
         subcategory: true,
+        subcategoryEs: true,
       },
     });
 

@@ -71,6 +71,12 @@ model Product {
   @@index([partNumber])
   @@index([mfrPartNumber])
   @@index([brandId, apiPage]) // Para queries eficientes por página
+  // Índices compuestos para filtrado optimizado
+  @@index([brandId, category])
+  @@index([brandId, subcategory])
+  @@index([brandId, productName])
+  @@index([brandId, category, subcategory])
+  @@index([brandId, category, apiPage])
   @@map("products")
 }
 

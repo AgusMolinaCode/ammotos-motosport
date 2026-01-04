@@ -26,6 +26,27 @@ interface ProductsResult {
   filterData: BrandFilterData;
 }
 
+// Tipo para filtros de productos
+export interface ProductFilters {
+  category?: string;
+  subcategory?: string;
+  productName?: string;
+}
+
+// Tipo de retorno para productos filtrados con total de coincidencias
+interface FilteredProductsResult {
+  products: Turn14Product[];
+  totalPages: number;
+  currentPage: number;
+  totalMatches: number;
+  links: {
+    self: string;
+    first: string;
+    last: string;
+  };
+  filterData: BrandFilterData;
+}
+
 export class ProductsSyncService {
   private static readonly CACHE_TTL_DAYS = 5; // Renovar caché cada 5 días (actualizado para consistencia)
   private static readonly PAGE_SIZE = 25; // Productos por página mostrados al usuario
@@ -500,7 +521,9 @@ export class ProductsSyncService {
             subcategory,
           },
         },
-        update: {}, // No actualizar nada si ya existe
+        update: {
+          subcategoryEs: traducirSubcategoria(subcategory), // Actualizar traducción si existe
+        },
         create: {
           brandId,
           subcategory,
@@ -554,6 +577,245 @@ export class ProductsSyncService {
     console.log(
       `📂 Saved ${uniqueProductNames.size} unique product names for brand ${brandId}`
     );
+  }
+
+  /**
+   * === FILTRADO DE PRODUCTOS CON AUTO-FETCH ===
+   * Obtener productos filtrados por categoría, subcategoría y/o productName
+   * Auto-fetch: Busca en múltiples páginas hasta completar 25 productos filtrados
+   */
+
+  async getProductsByBrandFiltered(
+    brandId: number,
+    userPage: number = 1,
+    filters: ProductFilters = {}
+  ): Promise<FilteredProductsResult> {
+    console.log(`🔍 FILTERED QUERY: brand=${brandId}, page=${userPage}, filters=`, filters);
+
+    // Construir WHERE clause
+    const whereClause = this.buildFilterWhereClause(brandId, filters);
+
+    // Contar productos cacheados que coinciden
+    const cachedCount = await prisma.product.count({ where: whereClause });
+    const requiredProducts = userPage * ProductsSyncService.PAGE_SIZE;
+
+    console.log(`📊 Cached products: ${cachedCount}, Required: ${requiredProducts}`);
+
+    // Si no hay suficientes productos cacheados, ejecutar auto-fetch
+    if (cachedCount < requiredProducts) {
+      console.log(`⚡ AUTO-FETCH: Insufficient cached products, fetching more...`);
+      await this.autoFetchFilteredProducts(brandId, filters, requiredProducts);
+    }
+
+    // Consultar y paginar productos filtrados
+    return this.getFilteredProductsFromDatabase(brandId, userPage, filters);
+  }
+
+  /**
+   * Construir WHERE clause de Prisma con filtros opcionales
+   */
+  private buildFilterWhereClause(brandId: number, filters: ProductFilters) {
+    const where: any = {
+      brandId,
+      apiPage: { not: null }, // Solo productos cacheados
+    };
+
+    if (filters.category) {
+      where.category = filters.category;
+    }
+
+    if (filters.subcategory) {
+      where.subcategory = filters.subcategory;
+    }
+
+    if (filters.productName) {
+      where.productName = filters.productName;
+    }
+
+    return where;
+  }
+
+  /**
+   * Auto-Fetch: Iterar páginas de API hasta encontrar suficientes productos filtrados
+   * Límites de seguridad para prevenir runaway queries
+   */
+  private async autoFetchFilteredProducts(
+    brandId: number,
+    filters: ProductFilters,
+    targetCount: number
+  ) {
+    const MAX_API_PAGES = 20; // Máximo 2000 productos
+    const MAX_EMPTY_STREAK = 3; // Detener tras 3 páginas vacías consecutivas
+    const TIMEOUT_MS = 30000; // 30 segundos timeout
+
+    const startTime = Date.now();
+    let emptyStreak = 0;
+
+    // Obtener última página cacheada
+    const lastCached = await prisma.productPageCache.findFirst({
+      where: { brandId },
+      orderBy: { page: 'desc' },
+      select: { page: true, totalApiPages: true },
+    });
+
+    const startPage = (lastCached?.page || 0) + 1;
+    const apiTotalPages = lastCached?.totalApiPages || Infinity;
+
+    console.log(
+      `🔍 AUTO-FETCH START: startPage=${startPage}, maxPages=${Math.min(apiTotalPages, MAX_API_PAGES)}`
+    );
+
+    for (
+      let apiPage = startPage;
+      apiPage <= Math.min(apiTotalPages, MAX_API_PAGES);
+      apiPage++
+    ) {
+      // Check timeout
+      if (Date.now() - startTime > TIMEOUT_MS) {
+        console.warn(`⚠️  Auto-fetch timeout after ${TIMEOUT_MS}ms`);
+        break;
+      }
+
+      try {
+        // Fetch página (reutiliza método existente)
+        const result = await this.fetchAndCacheProducts(brandId, apiPage, 0, 1);
+
+        // Contar productos que coinciden con filtros
+        const matchingCount = result.products.filter((p) =>
+          this.productMatchesFilters(p, filters)
+        ).length;
+
+        console.log(
+          `📄 Page ${apiPage}: ${matchingCount}/${result.products.length} match filters`
+        );
+
+        // Track páginas vacías consecutivas
+        if (matchingCount === 0) {
+          emptyStreak++;
+          if (emptyStreak >= MAX_EMPTY_STREAK) {
+            console.log(
+              `🛑 Stopping: ${MAX_EMPTY_STREAK} consecutive empty pages`
+            );
+            break;
+          }
+        } else {
+          emptyStreak = 0;
+        }
+
+        // Verificar si ya tenemos suficientes
+        const currentCount = await prisma.product.count({
+          where: this.buildFilterWhereClause(brandId, filters),
+        });
+
+        if (currentCount >= targetCount) {
+          console.log(`✅ AUTO-FETCH COMPLETE: ${currentCount} products cached`);
+          break;
+        }
+      } catch (error) {
+        console.error(`❌ Error fetching page ${apiPage}:`, error);
+        // Continuar a siguiente página si falla una
+        continue;
+      }
+    }
+  }
+
+  /**
+   * Verificar si un producto coincide con los filtros especificados
+   */
+  private productMatchesFilters(
+    product: Turn14Product,
+    filters: ProductFilters
+  ): boolean {
+    if (filters.category && product.attributes.category !== filters.category) {
+      return false;
+    }
+    if (
+      filters.subcategory &&
+      product.attributes.subcategory !== filters.subcategory
+    ) {
+      return false;
+    }
+    if (
+      filters.productName &&
+      product.attributes.product_name !== filters.productName
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Consultar productos filtrados de la base de datos con paginación
+   */
+  private async getFilteredProductsFromDatabase(
+    brandId: number,
+    userPage: number,
+    filters: ProductFilters
+  ): Promise<FilteredProductsResult> {
+    const whereClause = this.buildFilterWhereClause(brandId, filters);
+
+    // Total de coincidencias
+    const totalMatches = await prisma.product.count({ where: whereClause });
+
+    // Paginación
+    const skip = (userPage - 1) * ProductsSyncService.PAGE_SIZE;
+    const totalPages = Math.ceil(totalMatches / ProductsSyncService.PAGE_SIZE);
+
+    // Query productos
+    const products = await prisma.product.findMany({
+      where: whereClause,
+      orderBy: { id: 'asc' },
+      skip,
+      take: ProductsSyncService.PAGE_SIZE,
+    });
+
+    console.log(
+      `📦 Returning ${products.length} products (page ${userPage}/${totalPages}, total: ${totalMatches})`
+    );
+
+    // Convertir a formato Turn14Product (reutilizar lógica existente)
+    const turn14Products: Turn14Product[] = products.map((p) => ({
+      id: p.id,
+      type: 'Item' as const,
+      attributes: {
+        product_name: p.productName,
+        part_number: p.partNumber,
+        mfr_part_number: p.mfrPartNumber,
+        part_description: p.partDescription || '',
+        category: p.category,
+        subcategory: p.subcategory,
+        brand_id: p.brandId,
+        brand: p.brandName,
+        price_group_id: p.priceGroupId,
+        price_group: p.priceGroup,
+        active: p.active,
+        regular_stock: p.regularStock,
+        clearance_item: p.clearanceItem,
+        thumbnail: p.thumbnail || '',
+        dimensions: p.dimensions as any,
+        warehouse_availability: p.warehouseAvailability as any,
+        // Campos por defecto
+        born_on_date: '',
+        powersports_indicator: false,
+        dropship_controller_id: 0,
+        air_freight_prohibited: false,
+        ltl_freight_required: false,
+        units_per_sku: 1,
+        not_carb_approved: false,
+        carb_acknowledgement_required: false,
+        prop_65: 'Unknown',
+        epa: 'Unknown',
+      },
+    }));
+
+    return {
+      products: turn14Products,
+      totalPages,
+      currentPage: userPage,
+      totalMatches,
+      links: { self: '', first: '', last: '' },
+      filterData: await this.getFilterDataFromDatabase(brandId),
+    };
   }
 }
 
