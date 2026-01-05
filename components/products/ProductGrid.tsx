@@ -3,6 +3,17 @@ import { ProductPagination } from "./ProductPagination";
 import { EmptyPageMessage } from "./EmptyPageMessage";
 import type { ProductWithDetails, ProductGridProps } from "@/domain/types/components/productGrid";
 import { traducirCategoria, traducirSubcategoria } from "@/constants/categorias";
+import { formatDateSpanish } from "./ProductPriceAndStock";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { useState } from "react";
+import { X } from "lucide-react";
 
 export function ProductGrid({
   products,
@@ -10,6 +21,8 @@ export function ProductGrid({
   totalPages,
   brandId,
 }: ProductGridProps) {
+  const [selectedProduct, setSelectedProduct] = useState<ProductWithDetails | null>(null);
+
   // Si no hay productos, mostrar mensaje de página vacía
   if (products.length === 0) {
     return <EmptyPageMessage brandId={brandId} currentPage={currentPage} />;
@@ -49,8 +62,11 @@ export function ProductGrid({
             >
               {/* Contenedor principal */}
               <div className="flex flex-1 p-4 gap-4">
-                {/* Imagen */}
-                <div className="w-28 h-28 shrink-0 bg-zinc-50 rounded flex items-center justify-center overflow-hidden">
+                {/* Imagen - Clickable */}
+                <button
+                  onClick={() => setSelectedProduct(product)}
+                  className="w-28 h-28 shrink-0 bg-zinc-50 rounded flex items-center justify-center overflow-hidden hover:bg-zinc-100 transition-colors cursor-pointer"
+                >
                   {product.attributes.thumbnail ? (
                     <Image
                       src={product.attributes.thumbnail}
@@ -62,14 +78,17 @@ export function ProductGrid({
                   ) : (
                     <span className="text-zinc-400 text-xs">Sin imagen</span>
                   )}
-                </div>
+                </button>
 
                 {/* Información del producto */}
                 <div className="flex-1 min-w-0">
-                  {/* Part Number */}
-                  <h3 className="text-xl md:text-3xl font-medium text-cyan-600 mb-1">
+                  {/* Part Number - Clickable */}
+                  <button
+                    onClick={() => setSelectedProduct(product)}
+                    className="text-xl md:text-3xl font-medium text-cyan-600 mb-1 hover:text-cyan-700 transition-colors cursor-pointer"
+                  >
                     Pieza #: {product.attributes.mfr_part_number}
-                  </h3>
+                  </button>
 
                   {/* Stock - Real inventory data */}
                   {product.inventory ? (
@@ -206,6 +225,186 @@ export function ProductGrid({
         totalPages={totalPages}
         brandId={brandId}
       />
+
+      {/* Dialog con detalles del producto */}
+      <Dialog open={!!selectedProduct} onOpenChange={(open) => !open && setSelectedProduct(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Detalles del Producto</DialogTitle>
+            <DialogClose className="absolute right-4 top-4">
+              <X className="h-4 w-4" />
+            </DialogClose>
+          </DialogHeader>
+
+          {selectedProduct && (
+            <div className="space-y-4 mt-4">
+              {/* Imagen grande */}
+              <div className="flex justify-center bg-zinc-50 rounded-lg p-4">
+                {selectedProduct.attributes.thumbnail ? (
+                  <Image
+                    src={selectedProduct.attributes.thumbnail}
+                    alt={selectedProduct.attributes.product_name}
+                    className="object-contain max-h-64"
+                    width={300}
+                    height={256}
+                  />
+                ) : (
+                  <span className="text-zinc-400">Sin imagen</span>
+                )}
+              </div>
+
+              {/* Información principal */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-zinc-500">Pieza #</p>
+                  <p className="text-lg font-medium text-cyan-600">
+                    {selectedProduct.attributes.mfr_part_number}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-zinc-500">Turn14 ID</p>
+                  <p className="text-lg">{selectedProduct.id}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-sm font-semibold text-zinc-500">Nombre del Producto</p>
+                  <p className="text-lg">{selectedProduct.attributes.product_name}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-sm font-semibold text-zinc-500">Descripción</p>
+                  <p className="text-gray-700">
+                    {selectedProduct.attributes.part_description || "Sin descripción"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Sección de precios */}
+              {selectedProduct.pricing && (
+                <div className="bg-zinc-50 rounded-lg p-4 space-y-2">
+                  <h4 className="font-semibold text-zinc-700">Información de Precios</h4>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <p className="text-xs text-zinc-500">Retail</p>
+                      <p className="text-lg text-zinc-600 line-through">
+                        ${selectedProduct.pricing.retailPrice?.toFixed(2) || "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-500">MAP</p>
+                      <p className="text-lg text-zinc-600">
+                        ${selectedProduct.pricing.mapPrice?.toFixed(2) || "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-500">Tu Precio</p>
+                      <p className="text-2xl font-bold text-orange-500">
+                        ${selectedProduct.pricing.purchaseCost.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sección de inventario */}
+              {selectedProduct.inventory && (
+                <div className="bg-zinc-50 rounded-lg p-4 space-y-2">
+                  <h4 className="font-semibold text-zinc-700">Inventario</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-zinc-500">Stock Total</p>
+                      <p className={`text-lg font-medium ${
+                        selectedProduct.inventory.hasStock
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}>
+                        {selectedProduct.inventory.hasStock
+                          ? `${selectedProduct.inventory.totalStock} unidades`
+                          : "Sin stock"}
+                      </p>
+                    </div>
+                    {selectedProduct.inventory.manufacturer && (
+                      <div>
+                        <p className="text-sm text-zinc-500">Stock del Fabricante</p>
+                        <p className="text-lg text-orange-600">
+                          {selectedProduct.inventory.manufacturer.stock} unidades
+                          {selectedProduct.inventory.manufacturer.esd && (
+                            <span className="text-sm text-zinc-500 ml-2">
+                              (ESD: {formatDateSpanish(selectedProduct.inventory.manufacturer.esd)})
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Información adicional */}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="font-semibold text-zinc-500">Fabricante</p>
+                  <p>{selectedProduct.attributes.brand}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-zinc-500">Pricing Group</p>
+                  <p>{selectedProduct.attributes.price_group}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-zinc-500">Categoría</p>
+                  <p>{traducirCategoria(selectedProduct.attributes.category)}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-zinc-500">Subcategoría</p>
+                  <p>{traducirSubcategoria(selectedProduct.attributes.subcategory)}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-zinc-500">Peso</p>
+                  <p>{selectedProduct.attributes.dimensions[0]?.weight || "-"} lbs</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-zinc-500">Dimensiones</p>
+                  <p>
+                    {selectedProduct.attributes.dimensions[0]
+                      ? `${selectedProduct.attributes.dimensions[0].length}" x ${selectedProduct.attributes.dimensions[0].width}" x ${selectedProduct.attributes.dimensions[0].height}"`
+                      : "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="font-semibold text-zinc-500">Part Number Alterno</p>
+                  <p>{selectedProduct.attributes.alternate_part_number || "-"}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-zinc-500">Barcode</p>
+                  <p>{selectedProduct.attributes.barcode || "-"}</p>
+                </div>
+              </div>
+
+              {/* Certificaciones */}
+              <div className="flex flex-wrap gap-2">
+                {selectedProduct.attributes.clearance_item && (
+                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
+                    Liquidación
+                  </span>
+                )}
+                {selectedProduct.attributes.not_carb_approved && (
+                  <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded">
+                    No CARB
+                  </span>
+                )}
+                {selectedProduct.attributes.carb_acknowledgement_required && (
+                  <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded">
+                    Requiere CARB
+                  </span>
+                )}
+                {selectedProduct.attributes.prop_65 === "Y" && (
+                  <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">
+                    Prop 65
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

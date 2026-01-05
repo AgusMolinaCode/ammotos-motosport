@@ -198,3 +198,18 @@ model InventoryCache {
   @@index([cachedAt]) // For TTL queries
   @@map("inventory_cache")
 }
+
+// Product Detail - Datos extendidos de productos (imágenes adicionales, descripciones largas, documentos)
+model ProductDetail {
+  id              String   @id // Turn14 item_id
+  files           Json     // Array de ProductFile (imágenes, PDFs, etc.)
+  descriptions    Json     // Array de ProductDescription (descripciones detalladas)
+  vehicleFitments String?  // URL para obtener fitment de vehículos
+
+  // Cache metadata
+  cachedAt        DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([id])
+  @@map("product_details")
+}

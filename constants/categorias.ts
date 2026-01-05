@@ -261,6 +261,9 @@ export const NOMBRES_GRUPOS = {
  * Se irá expandiendo a medida que se descubran nuevas subcategorías
  */
 export const SUBCATEGORIAS: Record<string, string> = {
+  // Fuel Delivery System
+  "Carburetor Jets": "Chicles de Carburador",
+
   // Truck Bed Accessories
   "Bed Bars": "Barras de Caja",
   "Bed Steps": "Escalones de Caja",
@@ -418,6 +421,119 @@ export const SUBCATEGORIAS: Record<string, string> = {
   "Connecting Rods - 4Cyl": "Bielas - 4Cil",
   "Connecting Rods": "Bielas",
   "Connecting Rods - 6Cyl": "Bielas - 6Cil",
+
+  // Exterior Styling - Additional subcategories
+  "Bed Caps": "Tapas de Caja",
+  "Body Armor & Rock Rails": "Protección de Carrocería y Rieles de Roca",
+  "Exterior Trim": "Molduras Exteriores",
+  "Hardware Kits - Other": "Kits de Herrajes - Otros",
+  "Light Accessories and Wiring": "Accesorios de Iluminación y Cableado",
+  "Mud Flaps": "Guardabarros",
+  "Roof Rack": "Portaequipajes de Techo",
+  "Tailgate Caps": "Tapas de Compuerta",
+
+  // Electronics & Tuning (Electrónica y Afinación)
+  "Programmers & Tuners": "Programadores y Afinadores",
+  "Programmer Accessories": "Accesorios para Programadores",
+  "Launch Controllers": "Controladores de Lanzamiento",
+  "Throttle Controllers": "Controladores de Acelerador",
+
+  // Drivetrain - Clutch (Transmisión - Embrague)
+  "Clutch Kits - Single": "Kits de Embrague - Individual",
+  "Clutch Rebuild Kits": "Kits de Reconstrucción de Embrague",
+  "Pressure Plates": "Platos de Presión",
+  "Shifters": "Palancas de Cambio",
+
+  // Air Intake (Admisión de Aire)
+  "Air Intake Components": "Componentes de Admisión de Aire",
+  "Silicone Couplers & Hoses": "Acopladores y Mangueras de Silicona",
+
+  // Ignition (Encendido)
+  "Ignition Coils - Upgrade": "Bobinas de Encendido - Mejora",
+
+  // Marketing & Display
+  "POP Displays": "Exhibidores POP",
+
+  // Safety & Apparel (Seguridad e Indumentaria)
+  "Helmets and Accessories": "Cascos y Accesorios",
+  "Racing Suits": "Trajes de Carrera",
+
+  // Air Filters & Intakes (Filtros de Aire y Admisiones)
+  "Air Filters - Direct Fit": "Filtros de Aire - Ajuste Directo",
+  "Short Ram Air Intakes": "Admisiones de Aire Ram Corto",
+
+  // Engine Components (Componentes del Motor)
+  "Camshafts": "Árboles de Levas",
+  "Connecting Pipes": "Tubos de Conexión",
+  "Dipsticks": "Varillas de Medición",
+  "Engine Mounts": "Soportes de Motor",
+  "Intake Manifolds": "Múltiples de Admisión",
+
+  // Cooling System (Sistema de Refrigeración)
+  "Cooling Packages": "Paquetes de Refrigeración",
+  "Expansion Tanks": "Tanques de Expansión",
+  "Radiators": "Radiadores",
+
+  // Oil System (Sistema de Aceite)
+  "Oil Caps": "Tapas de Aceite",
+  "Oil Coolers": "Enfriadores de Aceite",
+  "Oil Filter Other": "Filtro de Aceite - Otros",
+  "Oil Line Kits": "Kits de Líneas de Aceite",
+  "Oil Pans": "Cárteres de Aceite",
+  "Oil Separators": "Separadores de Aceite",
+
+  // Fuel System (Sistema de Combustible)
+  "Flex Fuel Kit": "Kit de Combustible Flexible",
+  "Fuel Lines": "Líneas de Combustible",
+  "Injection Pump Components": "Componentes de Bomba de Inyección",
+
+  // Forced Induction (Inducción Forzada)
+  "Intercooler Kits": "Kits de Intercooler",
+  "Intercooler Pipe Kits": "Kits de Tuberías de Intercooler",
+  "Intercoolers": "Intercoolers",
+  "Turbo Kits": "Kits Turbo",
+  "Turbo Upgrade Components": "Componentes de Mejora Turbo",
+
+  // Exhaust System (Sistema de Escape)
+  "Downpipes": "Bajantes de Escape",
+
+  // Drivetrain & Transmission (Transmisión)
+  "Clutch Lines": "Líneas de Embrague",
+  "Clutch Master Cylinder": "Cilindro Maestro de Embrague",
+  "Differentials": "Diferenciales",
+  "Diff Covers": "Tapas de Diferencial",
+  "Flywheels": "Volantes de Motor",
+  "Shift Knobs": "Perillas de Cambio",
+  "Shifter Bushings": "Bujes de Palanca de Cambio",
+  "Transmission Coolers": "Enfriadores de Transmisión",
+  "Transmission Filters": "Filtros de Transmisión",
+
+  // Brakes (Frenos)
+  "Brake Kits - Performance Drill": "Kits de Frenos - Perforados de Rendimiento",
+  "Brake Line Kits": "Kits de Líneas de Freno",
+  "Line Locks": "Bloqueadores de Línea",
+
+  // Suspension & Chassis (Suspensión y Chasis)
+  "Suspension Arms & Components": "Brazos y Componentes de Suspensión",
+  "Sway Bar Endlinks": "Enlaces de Barra Estabilizadora",
+
+  // Exterior & Accessories (Exterior y Accesorios)
+  "Bumper Accessories": "Accesorios para Paragolpes",
+
+  // Sensors & Electronics (Sensores y Electrónica)
+  "Mass Air Flow Sensors": "Sensores de Flujo de Aire Másico",
+
+  // Hardware & Fasteners (Herrajes y Sujetadores)
+  "Bolts": "Pernos",
+  "Main Stud & Bolt Kits": "Kits de Espárragos y Pernos Principales",
+
+  // Safety & Racing (Seguridad y Carreras) - Nuevas traducciones
+  "Gloves": "Guantes",
+  "Horn Accessories": "Accesorios de Bocina",
+  "Seat Belts & Harnesses": "Cinturones de Seguridad y Arneses",
+  "Steering Wheel Hubs": "Mazas de Volante",
+  "Steering Wheels": "Volantes de Dirección",
+  "Tow Straps": "Correas de Remolque",
 };
 
 /**

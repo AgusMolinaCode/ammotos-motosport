@@ -82,7 +82,7 @@ export function ProductPagination({
   const isLoading = isPending || navigating;
 
   return (
-    <div className="flex items-center justify-center gap-2 mt-8">
+    <div className="flex items-center justify-center gap-2">
       {/* Previous button */}
       <button
         onClick={() => !isFirstPage && handleNavigate(currentPage - 1)}
@@ -92,11 +92,11 @@ export function ProductPagination({
           ${
             isFirstPage || isLoading
               ? "text-gray-400 bg-gray-200 cursor-not-allowed"
-              : "text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
+              : "text-white bg-blue-500 hover:bg-blue-500/80 cursor-pointer"
           }
         `}
       >
-        {isLoading ? "Cargando..." : "← Anterior"}
+        {isLoading ? "Cargando..." : "<<"}
       </button>
 
       {/* Page numbers */}
@@ -132,11 +132,11 @@ export function ProductPagination({
           ${
             isLastPage || isLoading
               ? "text-gray-400 bg-gray-200 cursor-not-allowed"
-              : "text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
+              : "text-white bg-blue-500 hover:bg-blue-500/80 cursor-pointer"
           }
         `}
       >
-        {isLoading ? "Cargando..." : "Siguiente →"}
+        {isLoading ? "Cargando..." : ">>"}
       </button>
     </div>
   );

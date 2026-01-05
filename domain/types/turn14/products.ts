@@ -92,3 +92,54 @@ export interface KitContent {
   item_id: number;
   quantity: number;
 }
+
+// === Tipos para /v1/items/data API ===
+
+export interface ProductDataResponse {
+  meta: {
+    total_pages: number;
+  };
+  data: ProductData[];
+  links: {
+    self: string;
+    first: string;
+    prev?: string;
+    next?: string;
+    last: string;
+  };
+}
+
+export interface ProductData {
+  id: string;
+  type: "ProductData";
+  files: ProductFile[];
+  descriptions: ProductDescription[];
+  relationships: {
+    vehicle_fitments?: {
+      links: {
+        self: string;
+      };
+    };
+  };
+}
+
+export interface ProductFile {
+  id: number;
+  type: "Image" | "Other" | "PDF";
+  file_extension: string;
+  media_content: string;
+  generic: boolean;
+  links: ProductFileLink[];
+}
+
+export interface ProductFileLink {
+  url: string;
+  height?: number;
+  width?: number;
+  size?: "S" | "M" | "L";
+}
+
+export interface ProductDescription {
+  type: "Market Description" | "Product Description - Long" | string;
+  description: string;
+}

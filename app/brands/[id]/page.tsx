@@ -13,6 +13,7 @@ import { ProductsWithData } from "@/components/products/ProductsWithData";
 import { CategorySidebarAccordion } from "@/components/sidebar/CategorySidebarAccordion";
 import { MobileCategoryButton } from "@/components/sidebar/MobileCategoryButton";
 import { ActiveFilters } from "@/components/filters/ActiveFilters";
+import { ProductPagination } from "@/components/products/ProductPagination";
 import { prefetchAdjacentPages } from "@/lib/prefetch/productPrefetch";
 import {
   traducirCategoria,
@@ -91,6 +92,7 @@ export default async function BrandDetailPage({
   // ⚡ OPTIMIZACIÓN: Verificar si hay página siguiente para prefetch visual
   const hasNextPage = currentPage < productsData.meta.total_pages;
   const nextPage = currentPage + 1;
+  const totalPages = productsData.meta.total_pages;
 
   return (
     <div className="min-h-screen bg-zinc-50">
@@ -155,18 +157,27 @@ export default async function BrandDetailPage({
 
         {/* Products Section with Sidebar */}
         <div className="mt-12">
-          <h2 className="text-2xl font-bold mb-6">
-            Productos
-            {hasActiveFilters ? (
-              <span className="text-lg font-normal text-gray-600 ml-2">
-                ({productsData.meta.total_matches} coincidencias de {productsData.meta.total_products} totales)
-              </span>
-            ) : (
-              <span className="text-lg font-normal text-gray-600 ml-2">
-                ({productsData.meta.total_products} productos)
-              </span>
-            )}
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <h2 className="text-2xl font-bold">
+              Productos
+              {hasActiveFilters ? (
+                <span className="text-lg font-normal text-gray-600 ml-2">
+                  ({productsData.meta.total_matches} coincidencias de {productsData.meta.total_products} totales)
+                </span>
+              ) : (
+                <span className="text-lg font-normal text-gray-600 ml-2">
+                  ({productsData.meta.total_products} productos)
+                </span>
+              )}
+            </h2>
+            <ProductPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              brandId={parseInt(brand.id)}
+            />
+          </div>
+
+          
 
           {/* Indicador de filtros activos */}
           <ActiveFilters brandId={parseInt(id)} filters={activeFiltersData} />

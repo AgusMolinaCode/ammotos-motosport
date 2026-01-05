@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { traducirCategoria, traducirSubcategoria } from "@/constants/categorias";
 
 interface BrandCategory {
   category: string;
@@ -9,6 +10,7 @@ interface BrandCategory {
 
 interface BrandSubcategory {
   subcategory: string;
+  subcategoryEs?: string;
 }
 
 interface BrandProductName {
@@ -83,16 +85,19 @@ export function CategorySidebarEnhanced({
         {activeSection === "categories" && (
           categories.length > 0 ? (
             <ul className="py-2 space-y-1">
-              {categories.map(({ category, categoryEs }) => (
-                <li key={category}>
-                  <button
-                    className="w-full px-4 py-2.5 text-left text-sm transition-colors text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
-                  >
-                    {categoryEs}
-                    <span className="ml-2 text-xs text-zinc-400">({category})</span>
-                  </button>
-                </li>
-              ))}
+              {categories.map(({ category, categoryEs }) => {
+                const traduccion = categoryEs || traducirCategoria(category);
+                return (
+                  <li key={category}>
+                    <button
+                      className="w-full px-4 py-2.5 text-left text-sm transition-colors text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
+                    >
+                      {traduccion}
+                      <span className="ml-2 text-xs text-zinc-400">({category})</span>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <div className="p-8 text-center">
@@ -108,15 +113,19 @@ export function CategorySidebarEnhanced({
         {activeSection === "subcategories" && (
           subcategories.length > 0 ? (
             <ul className="py-2 space-y-1">
-              {subcategories.map(({ subcategory }) => (
-                <li key={subcategory}>
-                  <button
-                    className="w-full px-4 py-2.5 text-left text-sm transition-colors text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
-                  >
-                    {subcategory}
-                  </button>
-                </li>
-              ))}
+              {subcategories.map(({ subcategory, subcategoryEs }) => {
+                const traduccion = subcategoryEs || traducirSubcategoria(subcategory);
+                return (
+                  <li key={subcategory}>
+                    <button
+                      className="w-full px-4 py-2.5 text-left text-sm transition-colors text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
+                    >
+                      {traduccion}
+                      <span className="ml-2 text-xs text-zinc-400">({subcategory})</span>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <div className="p-8 text-center">

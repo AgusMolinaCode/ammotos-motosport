@@ -2,6 +2,7 @@
 
 import { productsSyncService } from "@/infrastructure/services/ProductsSyncService";
 import { prisma } from "@/infrastructure/database/prisma";
+import type { ProductData } from "@/domain/types/turn14/products";
 
 // Tipo para filtros de productos
 export interface ProductFilters {
@@ -76,6 +77,20 @@ export async function getProductsByBrand(
     };
   } catch (error) {
     console.error("Error fetching products:", error);
+    throw error;
+  }
+}
+
+/**
+ * Obtener datos de un producto específico por ID (con caché en DB)
+ * 1. Primero busca en DB
+ * 2. Si no está o tiene más de 7 días, fetch desde API y guarda en DB
+ */
+export async function getProductDataById(itemId: string): Promise<ProductData | null> {
+  try {
+    return await productsSyncService.getProductDataById(itemId);
+  } catch (error) {
+    console.error(`Error fetching product data for ${itemId}:`, error);
     throw error;
   }
 }

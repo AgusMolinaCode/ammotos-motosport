@@ -7,8 +7,12 @@ import { EmptyPageMessage } from "./EmptyPageMessage";
 import { ProductPriceAndStock } from "./ProductPriceAndStock";
 import { ProductPriceSkeleton } from "./ProductPriceSkeleton";
 import { ProductGridSkeleton } from "./ProductGridSkeleton";
+import { ProductDetailDialog } from "./ProductDetailDialog";
 import type { Product } from "@/domain/types/turn14/products";
-import { traducirCategoria, traducirSubcategoria } from "@/constants/categorias";
+import {
+  traducirCategoria,
+  traducirSubcategoria,
+} from "@/constants/categorias";
 
 interface ProductGridInstantProps {
   products: Product[];
@@ -21,14 +25,17 @@ interface ProductGridInstantProps {
     retailPrice: number | null;
     mapPrice: number | null;
   }> | null;
-  inventory?: Record<string, {
-    hasStock: boolean;
-    totalStock: number;
-    manufacturer: {
-      stock: number;
-      esd: string;
-    } | null;
-  }> | null;
+  inventory?: Record<
+    string,
+    {
+      hasStock: boolean;
+      totalStock: number;
+      manufacturer: {
+        stock: number;
+        esd: string;
+      } | null;
+    }
+  > | null;
 }
 
 /**
@@ -44,6 +51,7 @@ export function ProductGridInstant({
   inventory = null,
 }: ProductGridInstantProps) {
   const [isNavigating, setIsNavigating] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // Callback para cuando se navega
   const handleNavigate = () => {
@@ -78,6 +86,7 @@ export function ProductGridInstant({
   return (
     <>
       {/* Lista de productos */}
+
       <div className="space-y-3 mb-8">
         {products.map((product) => {
           const isClearance = product.attributes.clearance_item ?? false;
@@ -110,8 +119,11 @@ export function ProductGridInstant({
             >
               {/* Contenedor principal */}
               <div className="flex flex-1 p-4 gap-4">
-                {/* Imagen */}
-                <div className="w-28 h-28 shrink-0 bg-zinc-50 rounded flex items-center justify-center overflow-hidden">
+                {/* Imagen - Clickable */}
+                <button
+                  onClick={() => setSelectedProduct(product)}
+                  className="w-28 h-28 shrink-0 bg-zinc-50 rounded flex items-center justify-center overflow-hidden hover:bg-zinc-100 transition-colors cursor-pointer"
+                >
                   {product.attributes.thumbnail ? (
                     <Image
                       src={product.attributes.thumbnail}
@@ -123,14 +135,17 @@ export function ProductGridInstant({
                   ) : (
                     <span className="text-zinc-400 text-xs">Sin imagen</span>
                   )}
-                </div>
+                </button>
 
                 {/* Información del producto */}
                 <div className="flex-1 min-w-0">
-                  {/* Part Number */}
-                  <h3 className="text-xl md:text-3xl font-medium text-cyan-600 mb-1">
+                  {/* Part Number - Clickable */}
+                  <button
+                    onClick={() => setSelectedProduct(product)}
+                    className="text-xl md:text-3xl font-medium text-cyan-600 mb-1 hover:text-cyan-700 transition-colors cursor-pointer text-left"
+                  >
                     Pieza #: {product.attributes.mfr_part_number}
-                  </h3>
+                  </button>
 
                   {/* Detalles del producto */}
                   <div className="space-y-0.5 text-md text-gray-800">
@@ -182,7 +197,9 @@ export function ProductGridInstant({
                 {pricesData && inventory ? (
                   <ProductPriceAndStock
                     productId={product.id}
-                    pricing={pricesData.find((p) => p.productId === product.id) || null}
+                    pricing={
+                      pricesData.find((p) => p.productId === product.id) || null
+                    }
                     inventory={inventory[product.id] || null}
                   />
                 ) : (
@@ -195,11 +212,23 @@ export function ProductGridInstant({
       </div>
 
       {/* Paginación */}
-      <ProductPagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        brandId={brandId}
-        onNavigate={handleNavigate}
+
+      <div className="flex justify-end">
+        <ProductPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          brandId={brandId}
+          onNavigate={handleNavigate}
+        />
+      </div>
+
+      {/* Dialog con detalles del producto */}
+      <ProductDetailDialog
+        product={selectedProduct}
+        open={!!selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+        pricesData={pricesData}
+        inventory={inventory}
       />
     </>
   );

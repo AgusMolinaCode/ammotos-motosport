@@ -16,6 +16,20 @@ interface ProductPriceAndStockProps {
 }
 
 /**
+ * Formatea una fecha en formato español (DD/MM/YYYY)
+ */
+export function formatDateSpanish(dateString: string): string {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+  return date.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
+
+/**
  * ⚡ COMPONENTE ESTÁTICO: Muestra precios e inventario pre-fetched
  * Los datos ya fueron cargados por el componente padre
  */
@@ -67,7 +81,9 @@ export function ProductPriceAndStock({
             <p className="text-lg text-orange-600">
               ⚠️ Pedido: {stock.manufacturer.stock}
               <br />
-              <span className="text-lg">Fecha estimada: {stock.manufacturer.esd}</span>
+              <span className="text-lg">
+                Fecha estimada: {formatDateSpanish(stock.manufacturer.esd)}
+              </span>
             </p>
           ) : (
             <p className="text-lg text-red-600">❌ Sin Stock</p>

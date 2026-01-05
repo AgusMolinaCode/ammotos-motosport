@@ -43,7 +43,13 @@
       "Bash(if exist scriptspopulate-subcategory-translations.ts del scriptspopulate-subcategory-translations.ts)",
       "Bash(if exist scriptsadd-subcategory-es-column.sql del scriptsadd-subcategory-es-column.sql)",
       "Bash(if exist scriptsupdate-subcategories.sql del scriptsupdate-subcategories.sql)",
-      "Bash(del:*)"
+      "Bash(del:*)",
+      "Bash(npx shadcn@latest:*)",
+      "Bash(npm ls:*)",
+      "mcp__prisma-local__migrate-dev",
+      "mcp__prisma-local__migrate-reset",
+      "mcp__playwright__browser_take_screenshot",
+      "Bash(timeout:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

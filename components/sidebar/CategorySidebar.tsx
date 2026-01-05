@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { traducirCategoria } from "@/constants/categorias";
 
 interface BrandCategory {
   category: string;
@@ -55,7 +56,7 @@ export function CategorySidebar({
             Filtrando:{" "}
             <span className="font-medium">
               {categories.find((c) => c.category === selectedCategory)
-                ?.categoryEs || selectedCategory}
+                ?.categoryEs || traducirCategoria(selectedCategory)}
             </span>
           </p>
         )}
@@ -67,6 +68,7 @@ export function CategorySidebar({
           <ul className="py-2 space-y-1">
             {categories.map(({ category, categoryEs }) => {
               const isSelected = selectedCategory === category;
+              const traduccion = categoryEs || traducirCategoria(category);
 
               return (
                 <li key={category}>
@@ -78,7 +80,7 @@ export function CategorySidebar({
                         : "text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
                     }`}
                   >
-                    {categoryEs}
+                    {traduccion}
                   </button>
                 </li>
               );

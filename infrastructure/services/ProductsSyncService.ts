@@ -3,6 +3,8 @@ import { prisma } from "@/infrastructure/database/prisma";
 import type {
   ProductsResponse,
   Product as Turn14Product,
+  ProductDataResponse,
+  ProductData,
 } from "@/domain/types/turn14/products";
 import { traducirCategoria, traducirSubcategoria } from "@/constants/categorias";
 
@@ -845,6 +847,106 @@ export class ProductsSyncService {
       links: { self: '', first: '', last: '' },
       filterData: await this.getFilterDataFromDatabase(brandId),
     };
+  }
+
+  /**
+   * Obtener datos extendidos de un producto específico con caché en DB
+   *
+   * FLUJO:
+   * 1. Busca en tabla `product_details` de la DB
+   * 2. Si existe y tiene < 7 días → retorna desde DB (NO hace fetch a API)
+   * 3. Si no existe o expiró → fetch desde API Turn14 y guarda en DB
+   *
+   * Una vez guardado en DB, las siguientes lecturas usan la DB directamente.
+   */
+  async getProductDataById(itemId: string): Promise<ProductData | null> {
+    // 1. Verificar caché en DB
+    const cachedDetail = await prisma.productDetail.findUnique({
+      where: { id: itemId },
+    });
+
+    if (cachedDetail) {
+      const daysSinceCache =
+        (Date.now() - cachedDetail.cachedAt.getTime()) / (1000 * 60 * 60 * 24);
+
+      // Caché válido (< 7 días)
+      if (daysSinceCache < 7) {
+        console.log(`💾 Cache HIT: ProductDetail ${itemId} (${daysSinceCache.toFixed(1)} días)`);
+        return {
+          id: cachedDetail.id,
+          type: "ProductData",
+          files: cachedDetail.files as any,
+          descriptions: cachedDetail.descriptions as any,
+          relationships: {
+            vehicle_fitments: cachedDetail.vehicleFitments
+              ? { links: { self: cachedDetail.vehicleFitments } }
+              : undefined,
+          },
+        };
+      }
+
+      // Caché expirado - renovación silenciosa en background
+      console.log(
+        `♻️  Cache STALE: ProductDetail ${itemId} (${daysSinceCache.toFixed(1)} días) - Renovando...`
+      );
+    }
+
+    // 2. Fetch desde API
+    console.log(`🌐 Cache MISS: Fetching from API - ProductDetail ${itemId}`);
+    const data = await this.fetchAndCacheProductData(itemId);
+
+    return data;
+  }
+
+  /**
+   * Fetch desde API y guardar en DB
+   */
+  private async fetchAndCacheProductData(itemId: string): Promise<ProductData | null> {
+    const response = await fetch(
+      `https://api.turn14.com/v1/items/data/${itemId}`,
+      {
+        headers: {
+          Authorization: await authService.getAuthorizationHeader(),
+        },
+      }
+    );
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error(`Failed to fetch product data for ${itemId}: ${response.status}`);
+    }
+
+    const apiData = await response.json();
+    // La API devuelve data como array, necesitamos acceder al primer elemento
+    const productData = apiData.data?.[0] as ProductData | null | undefined;
+
+    if (productData) {
+      // Guardar en DB (usando arrays vacíos como fallback si undefined)
+      const files = productData.files || [];
+      const descriptions = productData.descriptions || [];
+
+      await prisma.productDetail.upsert({
+        where: { id: itemId },
+        update: {
+          files: files as any,
+          descriptions: descriptions as any,
+          vehicleFitments: productData.relationships?.vehicle_fitments?.links?.self || null,
+          cachedAt: new Date(),
+        },
+        create: {
+          id: itemId,
+          files: files as any,
+          descriptions: descriptions as any,
+          vehicleFitments: productData.relationships?.vehicle_fitments?.links?.self || null,
+        },
+      });
+
+      console.log(`✅ ProductDetail ${itemId} saved to database`);
+    }
+
+    return productData || null;
   }
 }
 
