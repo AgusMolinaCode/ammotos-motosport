@@ -13,6 +13,7 @@ import { ProductsWithData } from "@/components/products/ProductsWithData";
 import { CategorySidebarAccordion } from "@/components/sidebar/CategorySidebarAccordion";
 import { MobileCategoryButton } from "@/components/sidebar/MobileCategoryButton";
 import { ActiveFilters } from "@/components/filters/ActiveFilters";
+import { prefetchAdjacentPages } from "@/lib/prefetch/productPrefetch";
 import {
   traducirCategoria,
   traducirSubcategoria,
@@ -78,7 +79,16 @@ export default async function BrandDetailPage({
     productName: filters.productName,
   };
 
-  // ⚡ OPTIMIZACIÓN: Verificar si hay página siguiente para prefetch
+  // ⚡ OPTIMIZACIÓN: Prefetch inteligente de páginas adyacentes en background
+  // Esto hace que navegar a la siguiente página sea instantáneo
+  prefetchAdjacentPages(
+    parseInt(id),
+    currentPage,
+    productsData.meta.total_pages,
+    filters
+  );
+
+  // ⚡ OPTIMIZACIÓN: Verificar si hay página siguiente para prefetch visual
   const hasNextPage = currentPage < productsData.meta.total_pages;
   const nextPage = currentPage + 1;
 
@@ -147,9 +157,13 @@ export default async function BrandDetailPage({
         <div className="mt-12">
           <h2 className="text-2xl font-bold mb-6">
             Productos
-            {productsData.meta.total_matches && hasActiveFilters && (
+            {hasActiveFilters ? (
               <span className="text-lg font-normal text-gray-600 ml-2">
-                ({productsData.meta.total_matches} coincidencias)
+                ({productsData.meta.total_matches} coincidencias de {productsData.meta.total_products} totales)
+              </span>
+            ) : (
+              <span className="text-lg font-normal text-gray-600 ml-2">
+                ({productsData.meta.total_products} productos)
               </span>
             )}
           </h2>

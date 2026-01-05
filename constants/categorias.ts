@@ -306,13 +306,21 @@ export const SUBCATEGORIAS: Record<string, string> = {
   "Automotive/UTV Tires - Off Road": "Neumáticos Automotrices/UTV - Todoterreno",
   "Automotive/UTV Tires - On Road": "Neumáticos Automotrices/UTV - Carretera",
 
-  // Exhaust
+  // Exhaust (Escape)
   "Mufflers": "Silenciadores",
+  "Muffler": "Silenciador",
   "Cat-Back Exhaust": "Escape Cat-Back",
   "Headers": "Colectores",
+  "Headers & Manifolds": "Colectores y Múltiples",
   "Tips": "Puntas de Escape",
   "Powersports Exhausts": "Escapes Powersports",
   "Spark Arrestors": "Arrestachispas",
+  "2-Stroke Pipes": "Tubos de Escape 2 Tiempos",
+  "2-Stroke Silencers": "Silenciadores 2 Tiempos",
+  "Exhaust Hangers": "Soportes de Escape",
+  "Exhaust Hardware": "Herrajes de Escape",
+  "Flanges": "Bridas",
+  "Heat Shields": "Escudos Térmicos",
 
   // Lighting
   "LED Light Bars": "Barras LED",
@@ -358,6 +366,10 @@ export const SUBCATEGORIAS: Record<string, string> = {
   "Hoses": "Mangueras",
   "Clamps": "Abrazaderas",
   "Gauges": "Medidores",
+  "Grips": "Puños",
+  "Keychains": "Llaveros",
+  "License Frame": "Marcos de Matrícula",
+  "Tools": "Herramientas", // Puede aparecer como categoría o subcategoría
   "Marketing": "Marketing",
   "Stickers/Decals/Banners": "Calcomanías/Adhesivos/Banners",
 

@@ -53,6 +53,13 @@ export class ProductsSyncService {
   private static readonly API_PAGE_SIZE = 100; // La API de Turn14 devuelve ~100 productos por página
   private static readonly USER_PAGES_PER_API_PAGE = 4; // 100 / 25 = 4 páginas de usuario por página de API
 
+  // ⚡ OPTIMIZACIÓN: Caché en memoria para filterData (evita queries repetidas a DB)
+  private static filterDataCache = new Map<number, {
+    data: BrandFilterData;
+    timestamp: number;
+  }>();
+  private static readonly FILTER_DATA_CACHE_TTL = 5 * 60 * 1000; // 5 minutos en memoria
+
   /**
    * Obtener productos con sistema de caché lazy-loading + TTL
    * 1. Si la página está cacheada y < 5 días → leer desde DB
@@ -257,8 +264,21 @@ export class ProductsSyncService {
 
   /**
    * Obtener datos de filtros desde la base de datos
+   * ⚡ OPTIMIZADO: Caché en memoria para reducir queries repetidas
    */
   private async getFilterDataFromDatabase(brandId: number): Promise<BrandFilterData> {
+    // Verificar caché en memoria primero
+    const cached = ProductsSyncService.filterDataCache.get(brandId);
+    const now = Date.now();
+
+    if (cached && now - cached.timestamp < ProductsSyncService.FILTER_DATA_CACHE_TTL) {
+      console.log(`💾 Memory cache HIT for filterData brand ${brandId}`);
+      return cached.data;
+    }
+
+    // Cache miss o expirado - fetch desde DB
+    console.log(`🔍 Memory cache MISS for filterData brand ${brandId} - fetching from DB`);
+
     const [categories, subcategories, productNames] = await Promise.all([
       prisma.brandCategory.findMany({
         where: { brandId },
@@ -274,10 +294,19 @@ export class ProductsSyncService {
         where: { brandId },
         orderBy: { productName: "asc" },
         select: { productName: true },
+        take: 100, // Limitar a top 100 para performance
       }),
     ]);
 
-    return { categories, subcategories, productNames };
+    const filterData = { categories, subcategories, productNames };
+
+    // Guardar en caché en memoria
+    ProductsSyncService.filterDataCache.set(brandId, {
+      data: filterData,
+      timestamp: now,
+    });
+
+    return filterData;
   }
 
   /**

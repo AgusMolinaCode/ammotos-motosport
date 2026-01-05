@@ -34,7 +34,7 @@ export function ActiveFilters({ brandId, filters }: ActiveFiltersProps) {
   };
 
   return (
-    <div className="mt-4 flex items-center gap-2 flex-wrap">
+    <div className="mt-4 flex items-center gap-2 flex-wrap my-2">
       <span className="font-semibold text-gray-700">Filtros activos:</span>
 
       {/* Categoría */}

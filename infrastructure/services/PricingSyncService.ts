@@ -51,12 +51,12 @@ export class PricingSyncService {
 
   /**
    * Obtener precios individuales de la API para productos faltantes
-   * OPTIMIZADO: Fetch paralelo con rate limiting conservador (2 concurrent requests)
-   * Balance entre velocidad y respeto al rate limit de Turn14 API
+   * OPTIMIZADO: Fetch paralelo balanceado con rate limiting conservador
+   * Ajustado a 3 concurrent y 350ms delay para balance velocidad/límites API
    */
   private async fetchMissingPrices(productIds: string[]): Promise<void> {
-    const CONCURRENT_REQUESTS = 2; // Requests simultáneos por chunk (reducido para evitar 429)
-    const DELAY_BETWEEN_CHUNKS_MS = 500; // Delay entre chunks (aumentado para estabilidad)
+    const CONCURRENT_REQUESTS = 3; // Balance entre velocidad (vs 2 original) y rate limits (vs 5 agresivo)
+    const DELAY_BETWEEN_CHUNKS_MS = 350; // Balance entre latencia (vs 500ms) y rate limits (vs 200ms)
 
     // Dividir en chunks para rate limiting
     const chunks = this.chunkArray(productIds, CONCURRENT_REQUESTS);
