@@ -1,8 +1,12 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { ProductPagination } from "./ProductPagination";
 import { EmptyPageMessage } from "./EmptyPageMessage";
 import { ProductPriceAndStock } from "./ProductPriceAndStock";
 import { ProductPriceSkeleton } from "./ProductPriceSkeleton";
+import { ProductGridSkeleton } from "./ProductGridSkeleton";
 import type { Product } from "@/domain/types/turn14/products";
 import { traducirCategoria, traducirSubcategoria } from "@/constants/categorias";
 
@@ -39,6 +43,33 @@ export function ProductGridInstant({
   pricesData = null,
   inventory = null,
 }: ProductGridInstantProps) {
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  // Callback para cuando se navega
+  const handleNavigate = () => {
+    setIsNavigating(true);
+  };
+
+  // Resetear estado de navegación cuando cambia la página
+  useEffect(() => {
+    setIsNavigating(false);
+  }, [currentPage]);
+
+  // Si está navegando, mostrar skeleton completo
+  if (isNavigating) {
+    return (
+      <>
+        <ProductGridSkeleton count={products.length || 12} />
+        <ProductPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          brandId={brandId}
+          onNavigate={handleNavigate}
+        />
+      </>
+    );
+  }
+
   // Si no hay productos, mostrar mensaje de página vacía
   if (products.length === 0) {
     return <EmptyPageMessage brandId={brandId} currentPage={currentPage} />;
@@ -168,6 +199,7 @@ export function ProductGridInstant({
         currentPage={currentPage}
         totalPages={totalPages}
         brandId={brandId}
+        onNavigate={handleNavigate}
       />
     </>
   );

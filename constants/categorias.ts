@@ -349,6 +349,15 @@ export const SUBCATEGORIAS: Record<string, string> = {
   "Gasket Kits": "Kits de Juntas",
   "O-Rings": "Juntas Tóricas",
 
+  // Valvetrain (Tren de Válvulas)
+  "Valve Lash Caps": "Tapas de Juego de Válvulas",
+  "Valve Springs, Retainers": "Resortes y Retenedores de Válvulas",
+  "Valve Locks": "Seguros de Válvulas",
+  "Valve Guides": "Guías de Válvulas",
+  "Valve Seals": "Retenes de Válvulas",
+  "Lifters": "Levantaválvulas",
+  "Rocker Arms": "Balancines",
+
   // Fuel Delivery System
   "Fuel Tanks": "Tanques de Combustible",
   "Fuel Systems": "Sistemas de Combustible",

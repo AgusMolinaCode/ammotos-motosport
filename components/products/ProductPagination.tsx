@@ -1,26 +1,50 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useTransition, useEffect } from "react";
 import Link from "next/link";
 
 interface ProductPaginationProps {
   currentPage: number;
   totalPages: number;
   brandId: number;
+  onNavigate?: () => void; // Callback cuando se navega
 }
 
 export function ProductPagination({
   currentPage,
   totalPages,
   brandId,
+  onNavigate,
 }: ProductPaginationProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [navigating, setNavigating] = useState(false);
+
+  // Resetear estado de navegación cuando cambia la página
+  useEffect(() => {
+    setNavigating(false);
+  }, [currentPage]);
 
   // Construir URL con página preservando filtros activos
   const buildPageUrl = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", page.toString());
     return `/brands/${brandId}?${params.toString()}`;
+  };
+
+  // Función para navegar con loading state
+  const handleNavigate = (page: number) => {
+    setNavigating(true);
+    onNavigate?.(); // Notificar al componente padre
+
+    startTransition(() => {
+      router.push(buildPageUrl(page));
+    });
+
+    // Scroll al inicio de la página
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   if (totalPages <= 1) return null;
@@ -55,62 +79,65 @@ export function ProductPagination({
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
 
+  const isLoading = isPending || navigating;
+
   return (
     <div className="flex items-center justify-center gap-2 mt-8">
       {/* Previous button */}
-      {isFirstPage ? (
-        <button
-          disabled
-          className="px-4 py-2 text-sm font-semibold text-gray-400 bg-gray-200 rounded cursor-not-allowed"
-        >
-          ← Anterior
-        </button>
-      ) : (
-        <Link
-          href={buildPageUrl(currentPage - 1)}
-          className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
-        >
-          ← Anterior
-        </Link>
-      )}
+      <button
+        onClick={() => !isFirstPage && handleNavigate(currentPage - 1)}
+        disabled={isFirstPage || isLoading}
+        className={`
+          px-4 py-2 text-sm font-semibold rounded transition-colors
+          ${
+            isFirstPage || isLoading
+              ? "text-gray-400 bg-gray-200 cursor-not-allowed"
+              : "text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
+          }
+        `}
+      >
+        {isLoading ? "Cargando..." : "← Anterior"}
+      </button>
 
       {/* Page numbers */}
       <div className="flex gap-1">
         {pageNumbers.map((page) => (
-          <Link
+          <button
             key={page}
-            href={buildPageUrl(page)}
+            onClick={() => page !== currentPage && handleNavigate(page)}
+            disabled={isLoading || currentPage === page}
             className={`
               min-w-[40px] h-10 flex items-center justify-center
               text-sm font-semibold rounded transition-colors
               ${
                 currentPage === page
-                  ? "bg-orange-500 text-white shadow-md"
-                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                  ? "bg-orange-500 text-white shadow-md cursor-default"
+                  : isLoading
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-gray-200 text-gray-800 hover:bg-gray-300 cursor-pointer"
               }
             `}
           >
             {page}
-          </Link>
+          </button>
         ))}
       </div>
 
       {/* Next button */}
-      {isLastPage ? (
-        <button
-          disabled
-          className="px-4 py-2 text-sm font-semibold text-gray-400 bg-gray-200 rounded cursor-not-allowed"
-        >
-          Siguiente →
-        </button>
-      ) : (
-        <Link
-          href={buildPageUrl(currentPage + 1)}
-          className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
-        >
-          Siguiente →
-        </Link>
-      )}
+      <button
+        onClick={() => !isLastPage && handleNavigate(currentPage + 1)}
+        disabled={isLastPage || isLoading}
+        className={`
+          px-4 py-2 text-sm font-semibold rounded transition-colors
+          ${
+            isLastPage || isLoading
+              ? "text-gray-400 bg-gray-200 cursor-not-allowed"
+              : "text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
+          }
+        `}
+      >
+        {isLoading ? "Cargando..." : "Siguiente →"}
+      </button>
     </div>
   );
 }
