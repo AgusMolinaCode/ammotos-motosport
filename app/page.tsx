@@ -1,12 +1,11 @@
-
+import SmallBanner from "@/components/main/SmallBanner";
+import Navbar from "@/components/main/Navbar";
 
 export default function Home() {
   return (
     <div>
-      <smallBanner />
-      <main>
-        <h1>Welcome to Next.js!</h1>
-      </main>
+      <SmallBanner />
+      <Navbar />
     </div>
   );
 }

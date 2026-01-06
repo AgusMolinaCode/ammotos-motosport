@@ -60,7 +60,11 @@ export function ProductGridInstant({
 
   // Resetear estado de navegación cuando cambia la página
   useEffect(() => {
-    setIsNavigating(false);
+    // Deferir el setState para evitar renders en cascada
+    const timer = setTimeout(() => {
+      setIsNavigating(false);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [currentPage]);
 
   // Si está navegando, mostrar skeleton completo

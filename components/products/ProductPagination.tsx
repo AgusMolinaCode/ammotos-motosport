@@ -24,7 +24,11 @@ export function ProductPagination({
 
   // Resetear estado de navegación cuando cambia la página
   useEffect(() => {
-    setNavigating(false);
+    // Deferir el setState para evitar renders en cascada
+    const timer = setTimeout(() => {
+      setNavigating(false);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [currentPage]);
 
   // Construir URL con página preservando filtros activos
