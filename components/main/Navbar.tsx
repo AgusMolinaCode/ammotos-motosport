@@ -5,7 +5,7 @@ import { Minus, ShoppingCart, UserRound } from "lucide-react";
 
 const Navbar = () => {
   return (
-    <div className="flex justify-around items-center py-12">
+    <div className="flex justify-between items-center py-12 max-w-[110rem] mx-auto">
       <div className="flex">
         <div>
           <Image

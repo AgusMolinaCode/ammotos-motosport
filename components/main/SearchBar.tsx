@@ -13,7 +13,7 @@ import { WhatsApp } from "@/public/whatssapp";
 
 const SearchBar = () => {
   return (
-    <div className="h-20 bg-orange-100/30 flex justify-evenly items-center gap-4  border border-neutral-600">
+    <div className="h-20  flex justify-between items-center gap-4 max-w-[110rem] mx-auto ">
       <div className="">
         <DropdownMenu>
           <DropdownMenuTrigger className="flex justify-around items-center cursor-pointer bg-indigo-950/90 px-4 h-14 rounded-full w-70">

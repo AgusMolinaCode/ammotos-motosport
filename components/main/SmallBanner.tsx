@@ -20,25 +20,21 @@ const SmallBanner = () => {
       </div>
 
       <div className="flex items-center gap-4">
-        <Link href="https://www.instagram.com/am.motos1/" target="_blank" className="text-white">
+        <Link
+          href="https://www.instagram.com/am.motos1/"
+          target="_blank"
+          className="text-white"
+        >
           <Instagram size={20} />
         </Link>
-        <Link href="https://www.facebook.com/AM.MOTOSPILAR" target="_blank" className="text-white">
+        <Link
+          href="https://www.facebook.com/AM.MOTOSPILAR"
+          target="_blank"
+          className="text-white"
+        >
           <Facebook size={20} />
         </Link>
       </div>
-      {/* <div>
-        <p className="text-center text-white font-medium py-2">
-          Whatssapp:{" "}
-          <Link
-            href="https://wa.link/0hyq3z"
-            target="_blank"
-            className="underline"
-          >
-            11 5049-4936
-          </Link>
-        </p>
-      </div> */}
     </div>
   );
 };
