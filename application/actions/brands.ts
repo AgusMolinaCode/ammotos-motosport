@@ -36,6 +36,30 @@ export async function getBrands() {
 }
 
 /**
+ * SERVER ACTION: Obtener marcas con logo para el slider
+ *
+ * Filtra solo las marcas que tienen logo disponible.
+ */
+export async function getBrandsWithLogo() {
+  try {
+    const brands = await brandsSyncService.getBrands();
+
+    // Filtrar solo marcas con logo
+    const brandsWithLogo = brands.filter((brand: Brand) => brand.logo && brand.logo.trim() !== "");
+
+    return {
+      data: brandsWithLogo.map((brand: Brand) => ({
+        id: brand.id,
+        name: brand.name,
+        logo: brand.logo,
+      })),
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
+/**
  * SERVER ACTION: Forzar sincronización de marcas
  *
  * Útil para sincronizar manualmente cuando se necesite.

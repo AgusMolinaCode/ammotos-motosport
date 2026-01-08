@@ -1,55 +1,61 @@
-import React from "react";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronRight, Menu, Minus } from "lucide-react";
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { WhatsApp } from "@/public/whatssapp";
+import { getBrands } from "@/application/actions/brands";
+
+interface Brand {
+  id: string;
+  name: string;
+}
 
 const SearchBar = () => {
+  const router = useRouter();
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const result = await getBrands();
+        const brandsData = result.data.map(
+          (brand: { id: string; attributes: { name: string } }) => ({
+            id: brand.id,
+            name: brand.attributes.name,
+          })
+        );
+        setBrands(brandsData);
+      } catch (error) {
+        console.error("Error fetching brands:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBrands();
+  }, []);
+
+  const handleBrandSelect = (brandId: string) => {
+    router.push(`/brands/${brandId}`);
+  };
+
   return (
     <div className="h-20  flex justify-between items-center gap-4 max-w-[110rem] mx-auto ">
-      <div className="">
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex justify-around items-center cursor-pointer bg-indigo-950/90 px-4 h-14 rounded-full w-70">
-            <p className="text-2xl font-medium text-white">Productos</p>
-            <Menu className="h-8 w-8 text-3xl text-white font-bold stroke-2" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-80">
-            <DropdownMenuItem className="font-medium text-xl flex justify-between">
-              Motor
-              <ChevronRight className="h-8 w-8 font-bold stroke-4" />
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="font-medium text-xl flex justify-between">
-              Motor
-              <ChevronRight className="h-8 w-8 font-bold stroke-4" />
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="font-medium text-xl flex justify-between">
-              Motor
-              <ChevronRight className="h-8 w-8 font-bold stroke-4" />
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="font-medium text-xl flex justify-between">
-              Motor
-              <ChevronRight className="h-8 w-8 font-bold stroke-4" />
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="font-medium text-xl flex justify-between">
-              Motor
-              <ChevronRight className="h-8 w-8 font-bold stroke-4" />
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <div className="flex items-center justify-center gap-3">
+        <WhatsApp className="w-10 h-10  cursor-pointer" />
+        <p className="text-3xl font-semibold">11 5049-4936</p>
       </div>
-
       <div className="relative xl:w-[900px] h-14 flex items-center bg-white rounded-full overflow-hidden">
         <Input
           type="text"
@@ -60,9 +66,26 @@ const SearchBar = () => {
           <span className="text-white font-semibold text-lg">BUSCAR</span>
         </div>{" "}
       </div>
-      <div className="flex items-center justify-center gap-3">
-        <WhatsApp className="w-10 h-10  cursor-pointer" />
-        <p className="text-3xl font-semibold">11 5049-4936</p>
+      <div>
+        <Select onValueChange={handleBrandSelect} disabled={loading}>
+          <SelectTrigger className="w-[320px] h-18 bg-white border-gray-300 text-black text-lg font-medium rounded-lg focus:ring-0 focus:ring-gray-50">
+            <SelectValue className="text-black" placeholder={loading ? "Cargando..." : "Marcas"} />
+          </SelectTrigger>
+          <SelectContent className="bg-gray-100 border-gray-700 max-h-[200px] overflow-y-auto">
+            <SelectGroup>
+              <SelectLabel className="text-gray-900 text-base">Marcas</SelectLabel>
+              {brands.map((brand) => (
+                <SelectItem
+                  key={brand.id}
+                  value={brand.id}
+                  className="text-black text-lg py-3 hover:bg-gray-300 focus:bg-gray-300 cursor-pointer"
+                >
+                  {brand.name}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

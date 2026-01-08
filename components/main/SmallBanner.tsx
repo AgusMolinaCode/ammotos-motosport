@@ -14,10 +14,11 @@ const SmallBanner = () => {
         </p>
       </div>
       <div>
-        <p className="text-center text-white font-medium py-2">
-          ¡Envío gratis en pedidos superiores a $100.000!
-        </p>
+        <Link href="https://www.am-motos-repuestos.com.ar/" target="_blank" className="text-center text-white font-medium py-2">
+          Repuestos de motos- visitar <span className="text-yellow-200 underline">AM MOTOS</span>
+        </Link>
       </div>
+      
 
       <div className="flex items-center gap-4">
         <Link
