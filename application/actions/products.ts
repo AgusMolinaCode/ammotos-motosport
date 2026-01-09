@@ -2,7 +2,8 @@
 
 import { productsSyncService } from "@/infrastructure/services/ProductsSyncService";
 import { prisma } from "@/infrastructure/database/prisma";
-import type { ProductData, ProductsResponse } from "@/domain/types/turn14/products";
+import type { ProductData, ProductsResponse, Product as Turn14Product, ProductFile } from "@/domain/types/turn14/products";
+import type { BrandFilterData } from "@/infrastructure/services/ProductsSyncService";
 
 // Tipo para filtros de productos
 export interface ProductFilters {
@@ -11,22 +12,27 @@ export interface ProductFilters {
   productName?: string;
 }
 
+// Tipo para productos en OfferItems
+export interface OfferProduct {
+  id: string;
+  productName: string;
+  partNumber: string;
+  brandName: string;
+  brandId: number;
+  thumbnail: string | null;
+  files: ProductFile[];
+  price: number | null;
+}
+
 export interface ProductsWithFiltersResult {
-  data: ReturnType<typeof productsSyncService.getProductsByBrandPaginated> extends Promise<infer T>
-    ? T extends { products: infer P } ? { products: P; filterData?: any }
-    : never
-    : never;
+  data: Turn14Product[];
   meta: {
     total_pages: number;
     current_page: number;
     total_matches?: number;
-    total_products?: number; // Total de productos en la marca (sin filtros)
+    total_products?: number;
   };
-  filterData: {
-    categories: { category: string; categoryEs: string }[];
-    subcategories: { subcategory: string; subcategoryEs: string }[];
-    productNames: { productName: string }[];
-  };
+  filterData: BrandFilterData;
 }
 
 /**
@@ -48,7 +54,7 @@ export async function getProductsByBrand(
   brandId: number,
   page: number = 1,
   filters: ProductFilters = {}
-) {
+): Promise<ProductsWithFiltersResult> {
   try {
     const hasFilters = !!(
       filters.category || filters.subcategory || filters.productName
@@ -62,8 +68,7 @@ export async function getProductsByBrand(
       getTotalProductsByBrand(brandId)
     ]);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const totalMatches = (result as any).totalMatches ?? result.products.length;
+    const totalMatches = "totalMatches" in result ? result.totalMatches : result.products.length;
 
     return {
       data: result.products,
@@ -157,6 +162,23 @@ export async function getRecommendedProducts(count: number = 10) {
     return products.sort(() => Math.random() - 0.5);
   } catch (error) {
     console.error("Error fetching recommended products:", error);
+    return [];
+  }
+}
+
+/**
+ * Obtener productos de brands específicos (para sección de ofertas)
+ * @param count - Cantidad de productos
+ * @param brandIds - Array de IDs de brands
+ */
+export async function getProductsByBrandsForOffers(
+  count: number = 12,
+  brandIds: number[]
+): Promise<OfferProduct[]> {
+  try {
+    return await productsSyncService.getProductsByBrands(count, brandIds) as OfferProduct[];
+  } catch (error) {
+    console.error("Error fetching products by brands:", error);
     return [];
   }
 }

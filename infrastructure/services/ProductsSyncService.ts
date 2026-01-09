@@ -8,6 +8,23 @@ import type {
 } from "@/domain/types/turn14/products";
 import { traducirCategoria, traducirSubcategoria } from "@/constants/categorias";
 
+// Tipo para pricing de la API
+interface PricingResponse {
+  data: {
+    id: string;
+    type: string;
+    attributes: {
+      has_map: boolean;
+      can_purchase: boolean;
+      pricelists: Array<{
+        name: string;
+        price: number;
+      }>;
+      purchase_cost: number;
+    };
+  };
+}
+
 // Tipo para datos de filtros de marca (categorías, subcategorías, productNames)
 export interface BrandFilterData {
   categories: { category: string; categoryEs: string }[];
@@ -1048,6 +1065,95 @@ export class ProductsSyncService {
     }
 
     return productResults.sort(() => Math.random() - 0.5);
+  }
+
+  /**
+   * Obtener productos de brands específicos con sus archivos/imágenes y precio
+   * @param count - Cantidad de productos a obtener
+   * @param brandIds - Array de IDs de brands específicos
+   */
+  async getProductsByBrands(count: number = 12, brandIds: number[]) {
+    const products = await prisma.product.findMany({
+      where: {
+        brandId: { in: brandIds },
+        thumbnail: { not: null }
+      },
+      select: {
+        id: true,
+        brandId: true,
+        brandName: true,
+        productName: true,
+        partNumber: true,
+        thumbnail: true
+      }
+    });
+
+    if (products.length === 0) {
+      return [];
+    }
+
+    // Si hay menos productos que count, retornar todos los disponibles
+    const finalCount = Math.min(products.length, count);
+
+    // Shuffle de productos para variedad
+    const shuffled = products.sort(() => Math.random() - 0.5);
+    const selectedProducts = shuffled.slice(0, finalCount);
+
+    const productResults: Array<{
+      id: string;
+      productName: string;
+      partNumber: string;
+      brandName: string;
+      brandId: number;
+      thumbnail: string | null;
+      files: ProductData["files"];
+      price: number | null;
+    }> = [];
+
+    for (const product of selectedProducts) {
+      const [productData, pricing] = await Promise.all([
+        this.getProductDataById(product.id),
+        this.getProductPricing(product.id)
+      ]);
+
+      productResults.push({
+        id: product.id,
+        productName: product.productName,
+        partNumber: product.partNumber,
+        brandName: product.brandName,
+        brandId: product.brandId,
+        thumbnail: product.thumbnail,
+        files: productData?.files || [],
+        price: pricing?.purchase_cost || null
+      });
+    }
+
+    return productResults;
+  }
+
+  /**
+   * Obtener pricing de un producto desde la API de Turn14
+   */
+  private async getProductPricing(itemId: string): Promise<PricingResponse["data"]["attributes"] | null> {
+    try {
+      const response = await fetch(
+        `https://api.turn14.com/v1/items/pricing/${itemId}`,
+        {
+          headers: {
+            Authorization: await authService.getAuthorizationHeader(),
+          },
+        }
+      );
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const data: PricingResponse = await response.json();
+      return data.data.attributes;
+    } catch {
+      return null;
+    }
   }
 }
 
