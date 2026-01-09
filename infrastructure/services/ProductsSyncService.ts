@@ -800,10 +800,6 @@ export class ProductsSyncService {
       take: ProductsSyncService.PAGE_SIZE,
     });
 
-    console.log(
-      `📦 Returning ${products.length} products (page ${userPage}/${totalPages}, total: ${totalMatches})`
-    );
-
     // Convertir a formato Turn14Product (reutilizar lógica existente)
     const turn14Products: Turn14Product[] = products.map((p) => ({
       id: p.id,
@@ -871,7 +867,6 @@ export class ProductsSyncService {
 
       // Caché válido (< 7 días)
       if (daysSinceCache < 7) {
-        console.log(`💾 Cache HIT: ProductDetail ${itemId} (${daysSinceCache.toFixed(1)} días)`);
         return {
           id: cachedDetail.id,
           type: "ProductData",
@@ -884,26 +879,82 @@ export class ProductsSyncService {
           },
         };
       }
-
-      // Caché expirado - renovación silenciosa en background
-      console.log(
-        `♻️  Cache STALE: ProductDetail ${itemId} (${daysSinceCache.toFixed(1)} días) - Renovando...`
-      );
     }
 
     // 2. Fetch desde API
-    console.log(`🌐 Cache MISS: Fetching from API - ProductDetail ${itemId}`);
-    const data = await this.fetchAndCacheProductData(itemId);
-
-    return data;
+    return await this.fetchAndCacheProductData(itemId);
   }
 
   /**
    * Fetch desde API y guardar en DB
    */
   private async fetchAndCacheProductData(itemId: string): Promise<ProductData | null> {
+    try {
+      const response = await fetch(
+        `https://api.turn14.com/v1/items/data/${itemId}`,
+        {
+          headers: {
+            Authorization: await authService.getAuthorizationHeader(),
+          },
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null;
+        }
+        // Error de autenticación u otro - retornar null para usar thumbnail
+        return null;
+      }
+
+      const apiData = await response.json();
+      // La API devuelve data como array, necesitamos acceder al primer elemento
+      const productData = apiData.data?.[0] as ProductData | null | undefined;
+
+      if (productData) {
+        // Guardar en DB (usando arrays vacíos como fallback si undefined)
+        const files = productData.files || [];
+        const descriptions = productData.descriptions || [];
+
+        await prisma.productDetail.upsert({
+          where: { id: itemId },
+          update: {
+            files: files as any,
+            descriptions: descriptions as any,
+            vehicleFitments: productData.relationships?.vehicle_fitments?.links?.self || null,
+            cachedAt: new Date(),
+          },
+          create: {
+            id: itemId,
+            files: files as any,
+            descriptions: descriptions as any,
+            vehicleFitments: productData.relationships?.vehicle_fitments?.links?.self || null,
+          },
+        });
+      }
+
+      return productData || null;
+    } catch {
+      // Cualquier error - retornar null para usar thumbnail
+      return null;
+    }
+  }
+
+  /**
+   * Obtener productos actualizados o añadidos en los últimos X días
+   *
+   * @param page - Número de página (required)
+   * @param days - Número de días (1-15, default: 1)
+   * @returns ProductsResponse con productos actualizados
+   */
+  async getItemsUpdates(page: number = 1, days: number = 1): Promise<ProductsResponse> {
+    // Validar rango de días (1-15 según documentación)
+    const validatedDays = Math.max(1, Math.min(15, days));
+
+    console.log(`🔍 GET UPDATES: page=${page}, days=${validatedDays}`);
+
     const response = await fetch(
-      `https://api.turn14.com/v1/items/data/${itemId}`,
+      `https://api.turn14.com/v1/items/updates?page=${page}&days=${validatedDays}`,
       {
         headers: {
           Authorization: await authService.getAuthorizationHeader(),
@@ -912,41 +963,91 @@ export class ProductsSyncService {
     );
 
     if (!response.ok) {
-      if (response.status === 404) {
-        return null;
+      throw new Error(`Failed to fetch items updates: ${response.status}`);
+    }
+
+    const data: ProductsResponse = await response.json();
+
+    console.log(`📦 Received ${data.data.length} updated items (page ${page}/${data.meta.total_pages})`);
+
+    return data;
+  }
+
+  /**
+   * Obtener productos aleatorios con sus archivos/imágenes
+   * 1. Obtiene productos con stock y thumbnail
+   * 2. Selecciona hasta 12 productos de brands diferentes
+   * 3. Para cada producto, obtiene los files desde DB o API
+   */
+  async getProductsWithFiles(count: number = 12) {
+    const productsWithStock = await prisma.productPrice.findMany({
+      where: { canPurchase: true },
+      select: { productId: true }
+    });
+
+    if (productsWithStock.length === 0) {
+      return [];
+    }
+
+    const productIds = productsWithStock.map((p) => p.productId);
+
+    const products = await prisma.product.findMany({
+      where: {
+        id: { in: productIds },
+        thumbnail: { not: null }
+      },
+      select: {
+        id: true,
+        brandId: true,
+        brandName: true,
+        productName: true,
+        partNumber: true,
+        thumbnail: true
       }
-      throw new Error(`Failed to fetch product data for ${itemId}: ${response.status}`);
+    });
+
+    if (products.length === 0) {
+      return [];
     }
 
-    const apiData = await response.json();
-    // La API devuelve data como array, necesitamos acceder al primer elemento
-    const productData = apiData.data?.[0] as ProductData | null | undefined;
+    const byBrand = new Map<number, typeof products>();
+    for (const p of products) {
+      if (!byBrand.has(p.brandId)) {
+        byBrand.set(p.brandId, []);
+      }
+      byBrand.get(p.brandId)!.push(p);
+    }
 
-    if (productData) {
-      // Guardar en DB (usando arrays vacíos como fallback si undefined)
-      const files = productData.files || [];
-      const descriptions = productData.descriptions || [];
+    const brands = Array.from(byBrand.entries()).sort(() => Math.random() - 0.5);
+    const selectedBrands = brands.slice(0, count);
 
-      await prisma.productDetail.upsert({
-        where: { id: itemId },
-        update: {
-          files: files as any,
-          descriptions: descriptions as any,
-          vehicleFitments: productData.relationships?.vehicle_fitments?.links?.self || null,
-          cachedAt: new Date(),
-        },
-        create: {
-          id: itemId,
-          files: files as any,
-          descriptions: descriptions as any,
-          vehicleFitments: productData.relationships?.vehicle_fitments?.links?.self || null,
-        },
+    const productResults: Array<{
+      id: string;
+      productName: string;
+      partNumber: string;
+      brandName: string;
+      brandId: number;
+      thumbnail: string | null;
+      files: ProductData["files"];
+    }> = [];
+
+    for (const [_, brandProducts] of selectedBrands) {
+      const randomProduct = brandProducts[Math.floor(Math.random() * brandProducts.length)];
+
+      const productData = await this.getProductDataById(randomProduct.id);
+
+      productResults.push({
+        id: randomProduct.id,
+        productName: randomProduct.productName,
+        partNumber: randomProduct.partNumber,
+        brandName: randomProduct.brandName,
+        brandId: randomProduct.brandId,
+        thumbnail: randomProduct.thumbnail,
+        files: productData?.files || []
       });
-
-      console.log(`✅ ProductDetail ${itemId} saved to database`);
     }
 
-    return productData || null;
+    return productResults.sort(() => Math.random() - 0.5);
   }
 }
 

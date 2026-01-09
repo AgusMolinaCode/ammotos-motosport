@@ -42,16 +42,16 @@ function SliderBrands() {
 
   if (loading) {
     return (
-      <div style={{ height: "200px", position: "relative", overflow: "hidden" }} className="bg-gray-100 animate-pulse">
+      <div style={{ height: "280px", position: "relative", overflow: "hidden" }} className="bg-gray-100 animate-pulse">
         <div className="flex items-center justify-center h-full">
-          <p className="text-gray-400">Cargando marcas...</p>
+          <p className="text-gray-800 font-semibold text-xl">Cargando marcas...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ height: "200px", position: "relative", overflow: "hidden" }}>
+    <div style={{ height: "280px", position: "relative", overflow: "hidden" }}>
       {logos.length > 0 ? (
         <LogoLoop
           logos={logos}

@@ -2,7 +2,7 @@
 
 import { productsSyncService } from "@/infrastructure/services/ProductsSyncService";
 import { prisma } from "@/infrastructure/database/prisma";
-import type { ProductData } from "@/domain/types/turn14/products";
+import type { ProductData, ProductsResponse } from "@/domain/types/turn14/products";
 
 // Tipo para filtros de productos
 export interface ProductFilters {
@@ -92,5 +92,71 @@ export async function getProductDataById(itemId: string): Promise<ProductData | 
   } catch (error) {
     console.error(`Error fetching product data for ${itemId}:`, error);
     throw error;
+  }
+}
+
+/**
+ * Obtener productos actualizados o añadidos en los últimos X días
+ *
+ * @param page - Número de página (required)
+ * @param days - Número de días (1-15, default: 1)
+ * @returns ProductsResponse con productos actualizados
+ */
+export async function getItemsUpdates(
+  page: number = 1,
+  days: number = 1
+): Promise<ProductsResponse> {
+  try {
+    return await productsSyncService.getItemsUpdates(page, days);
+  } catch (error) {
+    console.error(`Error fetching items updates:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Obtener productos recomendados con stock (para sección de ofertas)
+ * 1. Filtra productos con canPurchase = true (tienen stock)
+ * 2. Ordena por clearanceItem para priorizar ofertas
+ * 3. Toma 10 productos aleatorios
+ */
+export async function getRecommendedProducts(count: number = 10) {
+  try {
+    // Contar productos con stock
+    const totalWithStock = await prisma.productPrice.count({
+      where: { canPurchase: true }
+    });
+
+    if (totalWithStock === 0) {
+      return [];
+    }
+
+    // Obtener skip aleatorio (asegurar que hay suficientes productos)
+    const skip = Math.max(0, Math.floor(Math.random() * Math.min(totalWithStock - count, 1000)));
+
+    // Obtener productos con stock
+    const productsWithStock = await prisma.productPrice.findMany({
+      where: { canPurchase: true },
+      take: Math.min(count + skip, totalWithStock),
+      skip: skip,
+      select: { productId: true }
+    });
+
+    if (productsWithStock.length === 0) {
+      return [];
+    }
+
+    // Obtener detalles de los productos
+    const productIds = productsWithStock.map(p => p.productId);
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      take: count
+    });
+
+    // Shuffle para aleatoriedad
+    return products.sort(() => Math.random() - 0.5);
+  } catch (error) {
+    console.error("Error fetching recommended products:", error);
+    return [];
   }
 }
