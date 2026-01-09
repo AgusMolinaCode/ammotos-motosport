@@ -27,10 +27,7 @@ const OfferItems = () => {
         const data = await getProductsByBrandsForOffers(12, [405, 333]);
         console.log("=== OfferItems Debug ===");
         console.log("Products count:", data.length);
-        if (data.length > 0) {
-          console.log("First product price:", data[0].price);
-          console.log("Sample products:", data.slice(0, 3).map(p => ({ id: p.id, price: p.price })));
-        }
+        console.log("Data completa:", JSON.stringify(data, null, 2));
         setProducts(data);
       } catch (error) {
         console.error("Error fetching products:", error);

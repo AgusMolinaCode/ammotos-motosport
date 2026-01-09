@@ -8,23 +8,6 @@ import type {
 } from "@/domain/types/turn14/products";
 import { traducirCategoria, traducirSubcategoria } from "@/constants/categorias";
 
-// Tipo para pricing de la API
-interface PricingResponse {
-  data: {
-    id: string;
-    type: string;
-    attributes: {
-      has_map: boolean;
-      can_purchase: boolean;
-      pricelists: Array<{
-        name: string;
-        price: number;
-      }>;
-      purchase_cost: number;
-    };
-  };
-}
-
 // Tipo para datos de filtros de marca (categorías, subcategorías, productNames)
 export interface BrandFilterData {
   categories: { category: string; categoryEs: string }[];
@@ -1073,87 +1056,50 @@ export class ProductsSyncService {
    * @param brandIds - Array de IDs de brands específicos
    */
   async getProductsByBrands(count: number = 12, brandIds: number[]) {
+    console.log("[getProductsByBrands] Buscando productos para brands:", brandIds);
+
+    // Buscar productos con archivos desde ProductDetail
     const products = await prisma.product.findMany({
       where: {
         brandId: { in: brandIds },
         thumbnail: { not: null }
       },
-      select: {
-        id: true,
-        brandId: true,
-        brandName: true,
-        productName: true,
-        partNumber: true,
-        thumbnail: true
-      }
+      take: count * 2
     });
+
+    console.log("[getProductsByBrands] Productos encontrados:", products.length);
 
     if (products.length === 0) {
       return [];
     }
 
-    // Si hay menos productos que count, retornar todos los disponibles
-    const finalCount = Math.min(products.length, count);
+    // Obtener ProductDetail para cada producto (solo files)
+    const productIds = products.map(p => p.id);
+    const details = await prisma.productDetail.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, files: true }
+    });
 
-    // Shuffle de productos para variedad
+    // Mapear details por id
+    const detailsMap = new Map(details.map(d => [d.id, d.files]));
+
+    // Shuffle y limitar a count
     const shuffled = products.sort(() => Math.random() - 0.5);
-    const selectedProducts = shuffled.slice(0, finalCount);
+    const selected = shuffled.slice(0, count);
 
-    const productResults: Array<{
-      id: string;
-      productName: string;
-      partNumber: string;
-      brandName: string;
-      brandId: number;
-      thumbnail: string | null;
-      files: ProductData["files"];
-      price: number | null;
-    }> = [];
+    const result = selected.map(p => ({
+      id: p.id,
+      productName: p.productName,
+      partNumber: p.partNumber,
+      brandName: p.brandName,
+      brandId: p.brandId,
+      thumbnail: p.thumbnail,
+      files: detailsMap.get(p.id) || [],
+      price: null
+    }));
 
-    for (const product of selectedProducts) {
-      const [productData, pricing] = await Promise.all([
-        this.getProductDataById(product.id),
-        this.getProductPricing(product.id)
-      ]);
-
-      productResults.push({
-        id: product.id,
-        productName: product.productName,
-        partNumber: product.partNumber,
-        brandName: product.brandName,
-        brandId: product.brandId,
-        thumbnail: product.thumbnail,
-        files: productData?.files || [],
-        price: pricing?.purchase_cost || null
-      });
-    }
-
-    return productResults;
-  }
-
-  /**
-   * Obtener pricing de un producto desde la API de Turn14
-   */
-  private async getProductPricing(itemId: string): Promise<PricingResponse["data"]["attributes"] | null> {
-    try {
-      const response = await fetch(
-        `https://api.turn14.com/v1/items/pricing/${itemId}`,
-        {
-          headers: {
-            Authorization: await authService.getAuthorizationHeader(),
-          },
-        }
-      );
-
-      if (!response.ok) {
-        return null;
-      }
-
-      const data: PricingResponse = await response.json();
-      return data.data.attributes;
-    } catch {
-      return null;
-    }
+    console.log("[getProductsByBrands] Data completa:", JSON.stringify(result, null, 2));
+    return result;
   }
 }
 

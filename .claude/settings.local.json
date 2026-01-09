@@ -49,7 +49,8 @@
       "mcp__prisma-local__migrate-dev",
       "mcp__prisma-local__migrate-reset",
       "mcp__playwright__browser_take_screenshot",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(node:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
