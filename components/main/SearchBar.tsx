@@ -11,9 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { WhatsApp } from "@/public/whatssapp";
 import { getBrands } from "@/application/actions/brands";
+import { ProductSearchPopup } from "./ProductSearchPopup";
 
 interface Brand {
   id: string;
@@ -51,25 +51,23 @@ const SearchBar = () => {
   };
 
   return (
-    <div className="h-20  flex justify-between items-center gap-4 max-w-[110rem] mx-auto ">
+    <div className="h-20 flex justify-between items-center gap-4 max-w-[110rem] mx-auto">
       <div className="flex items-center justify-center gap-3">
-        <WhatsApp className="w-10 h-10  cursor-pointer" />
+        <WhatsApp className="w-10 h-10 cursor-pointer" />
         <p className="text-3xl font-semibold">11 5049-4936</p>
       </div>
-      <div className="relative xl:w-[900px] h-14 flex items-center bg-white rounded-full overflow-hidden">
-        <Input
-          type="text"
-          placeholder="Buscar productos..."
-          className="flex-1 h-full rounded-l-full focus-visible:ring-0 focus-visible:ring-offset-0 px-4 border border-neutral-600"
-        />
-        <div className="w-1/4 h-full bg-black flex items-center cursor-pointer justify-center rounded-r-full">
-          <span className="text-white font-semibold text-lg">BUSCAR</span>
-        </div>{" "}
+
+      <div className="flex items-center gap-3">
+        <ProductSearchPopup />
       </div>
+
       <div>
         <Select onValueChange={handleBrandSelect} disabled={loading}>
           <SelectTrigger className="w-[320px] h-18 bg-white border-gray-300 text-black text-lg font-medium rounded-lg focus:ring-0 focus:ring-gray-50">
-            <SelectValue className="text-black" placeholder={loading ? "Cargando..." : "Marcas"} />
+            <SelectValue
+              className="text-black"
+              placeholder={loading ? "Cargando..." : "Marcas"}
+            />
           </SelectTrigger>
           <SelectContent className="bg-gray-100 border-gray-700 max-h-[200px] overflow-y-auto">
             <SelectGroup>

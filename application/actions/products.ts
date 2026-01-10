@@ -182,3 +182,105 @@ export async function getProductsByBrandsForOffers(
     return [];
   }
 }
+
+/**
+ * Obtener logo de una marca por su ID
+ */
+export async function getBrandLogo(brandId: number): Promise<string | null> {
+  try {
+    const brand = await prisma.brand.findUnique({
+      where: { id: String(brandId) },
+      select: { logo: true }
+    });
+    return brand?.logo || null;
+  } catch (error) {
+    console.error(`Error fetching brand logo for ${brandId}:`, error);
+    return null;
+  }
+}
+
+// Tipo para resultado de búsqueda por mfrPartNumber
+export interface MfrPartNumberSearchResult {
+  id: string;
+  productName: string;
+  mfrPartNumber: string;
+  thumbnail: string | null;
+  brandName: string;
+  brandId: number;
+}
+
+/**
+ * Buscar productos por mfrPartNumber O partNumber
+ * @param query - Texto de búsqueda (búsqueda parcial, case-insensitive)
+ * @param limit - Máximo de resultados (default: 10)
+ * @returns Array de productos que coinciden con la búsqueda
+ */
+export async function searchByMfrPartNumber(
+  query: string,
+  limit: number = 10
+): Promise<MfrPartNumberSearchResult[]> {
+  if (!query || query.length < 2) {
+    return [];
+  }
+
+  try {
+    // Buscar en mfrPartNumberMap por mfrPartNumber
+    const mfrResults = await prisma.mfrPartNumberMap.findMany({
+      where: {
+        mfrPartNumber: {
+          contains: query,
+          mode: "insensitive",
+        },
+      },
+      take: Math.ceil(limit / 2),
+      orderBy: { mfrPartNumber: "asc" },
+    });
+
+    // Buscar en Product por partNumber (código interno de Turn14)
+    const productResults = await prisma.product.findMany({
+      where: {
+        partNumber: {
+          contains: query,
+          mode: "insensitive",
+        },
+      },
+      take: Math.ceil(limit / 2),
+      orderBy: { partNumber: "asc" },
+    });
+
+    // Combinar resultados, removiendo duplicados por productId
+    const combinedMap = new Map<string, MfrPartNumberSearchResult>();
+
+    // Agregar resultados de mfrPartNumberMap
+    for (const r of mfrResults) {
+      combinedMap.set(r.productId, {
+        id: r.productId,
+        productName: r.productName,
+        mfrPartNumber: r.mfrPartNumber,
+        thumbnail: r.thumbnail,
+        brandName: r.brandName,
+        brandId: r.brandId,
+      });
+    }
+
+    // Agregar resultados de Product (usan partNumber)
+    for (const p of productResults) {
+      if (!combinedMap.has(p.id)) {
+        combinedMap.set(p.id, {
+          id: p.id,
+          productName: p.productName,
+          mfrPartNumber: p.mfrPartNumber || "",
+          thumbnail: p.thumbnail,
+          brandName: p.brandName,
+          brandId: p.brandId,
+        });
+      }
+    }
+
+    // Retornar primeros 'limit' resultados
+    return Array.from(combinedMap.values()).slice(0, limit);
+  } catch (error) {
+    console.error("Error searching by part number:", error);
+    return [];
+  }
+}

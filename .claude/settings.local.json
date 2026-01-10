@@ -50,7 +50,9 @@
       "mcp__prisma-local__migrate-reset",
       "mcp__playwright__browser_take_screenshot",
       "Bash(timeout:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npx dotenv -e .env.local tsx:*)",
+      "Bash(rm \"c:\\\\Users\\\\urano\\\\OneDrive\\\\Escritorio\\\\Programacion\\\\turn14_ammotos\\\\scripts\\\\test-recent.ts\")"
     ]
   },
   "enableAllProjectMcpServers": true,

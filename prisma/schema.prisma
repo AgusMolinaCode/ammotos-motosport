@@ -213,3 +213,17 @@ model ProductDetail {
   @@index([id])
   @@map("product_details")
 }
+
+// Mapeo de mfrPartNumber a datos de producto para búsqueda rápida
+model MfrPartNumberMap {
+  mfrPartNumber  String   @id
+  productId      String
+  productName    String
+  thumbnail      String?
+  brandId        Int
+  brandName      String
+  createdAt      DateTime @default(now())
+
+  @@index([mfrPartNumber])
+  @@map("mfr_part_number_map")
+}
