@@ -14,6 +14,9 @@ interface ProductsWithDataProps {
  * ⚡ SERVER COMPONENT: Fetch de precios e inventario
  * Usa ProductGridWrapper (client) para controlar rendering progresivo
  * y evitar que cache de Next.js muestre todo de golpe
+ *
+ * NOTA: Si el inventario falla (ej. API Turn14 no disponible), continuamos
+ * sin él para que los productos se muestren igual (sin datos de stock)
  */
 export async function ProductsWithData({
   products,
@@ -25,9 +28,22 @@ export async function ProductsWithData({
   const productIds = products.map((product) => product.id);
 
   // Fetch paralelo de precios e inventario
+  // Ambos son OPTIONAL - si alguno falla, continuamos sin él
   const [pricesData, inventory] = await Promise.all([
-    getPricesByProductIds(productIds),
-    getInventoryByBrand(brandId),
+    getPricesByProductIds(productIds).catch((error) => {
+      console.warn(
+        `⚠️ Prices unavailable for brand ${brandId}, showing products without pricing:`,
+        error instanceof Error ? error.message : error
+      );
+      return null;
+    }),
+    getInventoryByBrand(brandId).catch((error) => {
+      console.warn(
+        `⚠️ Inventory unavailable for brand ${brandId}, showing products without stock info:`,
+        error instanceof Error ? error.message : error
+      );
+      return null;
+    }),
   ]);
 
   return (

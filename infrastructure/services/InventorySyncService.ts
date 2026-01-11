@@ -72,7 +72,12 @@ export class InventorySyncService {
         return this.getInventoryFromDatabase(brandId);
       }
 
-      throw error;
+      // Si NO hay caché y la API falló, retornar Map vacío en lugar de lanzar error
+      // Esto permite que los productos se muestren aunque no haya inventario
+      console.warn(
+        `⚠️  No cache and API failed for brand ${brandId}, returning empty inventory`
+      );
+      return new Map<string, InventoryItem>();
     }
   }
 
@@ -127,61 +132,76 @@ export class InventorySyncService {
   private async fetchAndCacheInventory(
     brandId: number
   ): Promise<Map<string, InventoryItem>> {
-    const inventoryMap = new Map<string, InventoryItem>();
+    try {
+      const inventoryMap = new Map<string, InventoryItem>();
 
-    // Primera llamada para obtener total_pages
-    const firstPageResponse = await this.fetchInventoryPage(brandId, 1);
-    const totalPages = firstPageResponse.meta.total_pages;
+      // Primera llamada para obtener total_pages
+      const firstPageResponse = await this.fetchInventoryPage(brandId, 1);
+      const totalPages = firstPageResponse.meta.total_pages;
 
-    // Guardar items de la primera página
-    firstPageResponse.data.forEach((item) => {
-      inventoryMap.set(item.id, item);
-    });
+      // Guardar items de la primera página
+      firstPageResponse.data.forEach((item) => {
+        inventoryMap.set(item.id, item);
+      });
 
-    console.log(
-      `📦 Inventory: Brand ${brandId}, Page 1/${totalPages} fetched (${firstPageResponse.data.length} items)`
-    );
+      console.log(
+        `📦 Inventory: Brand ${brandId}, Page 1/${totalPages} fetched (${firstPageResponse.data.length} items)`
+      );
 
-    // Si hay más páginas, fetch en paralelo
-    if (totalPages > 1) {
-      const pagePromises = [];
-      for (let page = 2; page <= totalPages; page++) {
-        pagePromises.push(this.fetchInventoryPage(brandId, page));
+      // Si hay más páginas, fetch en paralelo
+      if (totalPages > 1) {
+        const pagePromises = [];
+        for (let page = 2; page <= totalPages; page++) {
+          pagePromises.push(this.fetchInventoryPage(brandId, page).catch((err) => {
+            console.warn(`⚠️ Failed to fetch inventory page ${page} for brand ${brandId}:`, err.message);
+            return null; // Retornar null para páginas que fallan
+          }));
+        }
+
+        const remainingPages = await Promise.all(pagePromises);
+
+        // Agregar items de las páginas restantes (solo las que tuvieron éxito)
+        remainingPages.forEach((pageData, index) => {
+          if (pageData) {
+            pageData.data.forEach((item) => {
+              inventoryMap.set(item.id, item);
+            });
+            console.log(
+              `📦 Inventory: Brand ${brandId}, Page ${index + 2}/${totalPages} fetched (${pageData.data.length} items)`
+            );
+          }
+        });
       }
 
-      const remainingPages = await Promise.all(pagePromises);
+      // Guardar en base de datos
+      await this.saveInventoryToDatabase(brandId, Array.from(inventoryMap.values()));
 
-      // Agregar items de las páginas restantes
-      remainingPages.forEach((pageData, index) => {
-        pageData.data.forEach((item) => {
-          inventoryMap.set(item.id, item);
-        });
-        console.log(
-          `📦 Inventory: Brand ${brandId}, Page ${index + 2}/${totalPages} fetched (${pageData.data.length} items)`
-        );
+      // Marcar como cacheado
+      await prisma.inventoryCache.upsert({
+        where: { brandId },
+        update: {
+          cachedAt: new Date(),
+          updatedAt: new Date(),
+        },
+        create: {
+          brandId,
+        },
       });
+
+      console.log(
+        `✅ Inventory cached: Brand ${brandId}, ${inventoryMap.size} items saved to database`
+      );
+
+      return inventoryMap;
+    } catch (error) {
+      // Si algo falla durante el fetch, loguear pero no lanzar
+      // Esto permite que el llamador maneje el caso de "sin caché y sin API"
+      console.error(
+        `❌ Error in fetchAndCacheInventory for brand ${brandId}:`,
+        error instanceof Error ? error.message : error
+      );
+      throw error; // Re-lanzar para que getInventoryByBrand lo maneje
     }
-
-    // Guardar en base de datos
-    await this.saveInventoryToDatabase(brandId, Array.from(inventoryMap.values()));
-
-    // Marcar como cacheado
-    await prisma.inventoryCache.upsert({
-      where: { brandId },
-      update: {
-        cachedAt: new Date(),
-        updatedAt: new Date(),
-      },
-      create: {
-        brandId,
-      },
-    });
-
-    console.log(
-      `✅ Inventory cached: Brand ${brandId}, ${inventoryMap.size} items saved to database`
-    );
-
-    return inventoryMap;
   }
 
   /**
@@ -276,14 +296,42 @@ export class InventorySyncService {
           continue;
         }
 
-        // Otros errores, lanzar inmediatamente
+        // Error de autenticación
+        if (response.status === 401 || response.status === 403) {
+          console.error(
+            `🔐 Auth error (${response.status}) fetching brand ${brandId} page ${page}. Check Turn14 API credentials.`
+          );
+        }
+
+        // Errores del servidor (5xx) - reintentar
+        if (response.status >= 500) {
+          const delayMs = baseDelayMs * Math.pow(2, attempt - 1);
+          console.warn(
+            `⚠️ Server error (${response.status}) fetching brand ${brandId} page ${page}, retry ${attempt}/${maxRetries} in ${delayMs}ms`
+          );
+          await this.sleep(delayMs);
+          continue;
+        }
+
+        // Otros errores (4xx excepto 429), lanzar inmediatamente
+        const errorBody = await response.text().catch(() => "No body");
+        console.error(
+          `❌ API error fetching brand ${brandId} page ${page}: ${response.status} - ${errorBody.slice(0, 200)}`
+        );
         throw new Error(
-          `Failed to fetch inventory for brand ${brandId}, page ${page}: ${response.status}`
+          `Failed to fetch inventory for brand ${brandId}, page ${page}: ${response.status} ${response.statusText}`
         );
       } catch (error) {
-        // Si es el último intento, lanzar el error
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(
+          `💥 Error fetching brand ${brandId} page ${page}, attempt ${attempt}/${maxRetries}: ${errorMessage}`
+        );
+
+        // Si es el último intento, lanzar el error con más contexto
         if (attempt === maxRetries) {
-          throw error;
+          throw new Error(
+            `Failed to fetch inventory for brand ${brandId}, page ${page} after ${maxRetries} attempts: ${errorMessage}`
+          );
         }
         // Esperar antes del siguiente retry
         const delayMs = baseDelayMs * Math.pow(2, attempt - 1);
