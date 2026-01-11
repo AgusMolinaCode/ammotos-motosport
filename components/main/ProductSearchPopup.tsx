@@ -132,7 +132,7 @@ export function ProductSearchPopup({ className = "", onProductSelect }: ProductS
       setQuery("");
       setResults([]);
     } else {
-      router.push(`/brands/${result.brandId}/${result.id}`);
+      router.push(`/brands/${result.brandId}`);
     }
   };
 
@@ -152,7 +152,7 @@ export function ProductSearchPopup({ className = "", onProductSelect }: ProductS
       setQuery("");
       setResults([]);
     } else {
-      router.push(`/brands/${search.brandId}/${search.id}`);
+      router.push(`/brands/${search.brandId}`);
     }
   };
 
