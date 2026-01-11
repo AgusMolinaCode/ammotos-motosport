@@ -3,80 +3,109 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { Search, Loader2, Clock, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { searchByMfrPartNumber, type MfrPartNumberSearchResult } from "@/application/actions/products";
 
-interface ProductSearchPopupProps {
-  triggerClassName?: string;
-  triggerSize?: "sm" | "md" | "lg";
+interface ProductSearchBarProps {
+  className?: string;
+  onProductSelect?: (product: MfrPartNumberSearchResult) => void;
 }
 
-export function ProductSearchPopup({ triggerClassName = "", triggerSize = "md" }: ProductSearchPopupProps) {
+interface RecentSearch {
+  id: string;
+  productName: string;
+  mfrPartNumber: string;
+  brandName: string;
+  brandId: number;
+  thumbnail: string | null;
+  timestamp: number;
+}
+
+const MAX_RECENT_SEARCHES = 5;
+const STORAGE_KEY = "product_search_recent";
+
+export function ProductSearchPopup({ className = "", onProductSelect }: ProductSearchBarProps) {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<MfrPartNumberSearchResult[]>([]);
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [loading, setLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [showResults, setShowResults] = useState(false);
 
-  // Focus input cuando se abre el popup
-  useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isOpen]);
+  // Usar ref para mantener el historial actualizado
+  const recentSearchesRef = useRef<RecentSearch[]>([]);
 
-  // Cerrar popup al hacer click fuera
+  // Cargar búsquedas recientes del localStorage al montar
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+    const loadFromStorage = () => {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            setRecentSearches(parsed);
+            recentSearchesRef.current = parsed;
+          }
+        }
+      } catch (e) {
+        console.error("Error loading recent searches:", e);
       }
-    }
+    };
 
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
+    loadFromStorage();
+  }, []);
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [isOpen]);
+  // Guardar búsqueda en recent searches
+  const saveToRecentSearches = (result: MfrPartNumberSearchResult) => {
+    const newSearch: RecentSearch = {
+      id: result.id,
+      productName: result.productName,
+      mfrPartNumber: result.mfrPartNumber,
+      brandName: result.brandName,
+      brandId: result.brandId,
+      thumbnail: result.thumbnail,
+      timestamp: Date.now(),
+    };
 
-  // Cerrar con ESC
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setIsOpen(false);
-      }
-    }
+    // Usar el ref para obtener la lista actual
+    const currentList = [...recentSearchesRef.current];
 
-    if (isOpen) {
-      document.addEventListener("keydown", handleKeyDown);
-    }
+    // Filtrar duplicados y agregar al principio
+    const filtered = currentList.filter((s) => s.id !== result.id);
+    const updated = [newSearch, ...filtered].slice(0, MAX_RECENT_SEARCHES);
 
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    }
-  }, [isOpen]);
+    // Actualizar ref y estado
+    recentSearchesRef.current = updated;
+    setRecentSearches(updated);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  };
+
+  // Eliminar un elemento del historial
+  const removeFromRecentSearches = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    const updated = recentSearches.filter((s) => s.id !== id);
+    recentSearchesRef.current = updated;
+    setRecentSearches(updated);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  };
 
   // Debounced search
   useEffect(() => {
     if (!query || query.length < 2) {
       setResults([]);
-      setHasSearched(false);
+      setShowResults(false);
       return;
     }
 
     const timer = setTimeout(async () => {
       setLoading(true);
-      setHasSearched(true);
       try {
         const searchResults = await searchByMfrPartNumber(query, 10);
         setResults(searchResults);
+        setShowResults(true);
       } catch (error) {
         console.error("Search error:", error);
         setResults([]);
@@ -88,96 +117,144 @@ export function ProductSearchPopup({ triggerClassName = "", triggerSize = "md" }
     return () => clearTimeout(timer);
   }, [query]);
 
-  const handleSelect = (productId: string) => {
-    setIsOpen(false);
-    setQuery("");
-    setResults([]);
-    router.push(`/products/${productId}`);
-  };
-
   const handleClose = () => {
-    setIsOpen(false);
+    setShowResults(false);
     setQuery("");
     setResults([]);
   };
 
-  const triggerSizes = {
-    sm: "w-8 h-8",
-    md: "w-10 h-10",
-    lg: "w-12 h-12",
+  const handleSelect = (result: MfrPartNumberSearchResult) => {
+    saveToRecentSearches(result);
+
+    if (onProductSelect) {
+      onProductSelect(result);
+      setShowResults(false);
+      setQuery("");
+      setResults([]);
+    } else {
+      router.push(`/brands/${result.brandId}/${result.id}`);
+    }
+  };
+
+  const handleRecentClick = (search: RecentSearch) => {
+    if (onProductSelect) {
+      // Convertir RecentSearch a MfrPartNumberSearchResult
+      const result: MfrPartNumberSearchResult = {
+        id: search.id,
+        productName: search.productName,
+        mfrPartNumber: search.mfrPartNumber,
+        brandName: search.brandName,
+        brandId: search.brandId,
+        thumbnail: search.thumbnail,
+      };
+      onProductSelect(result);
+      setShowResults(false);
+      setQuery("");
+      setResults([]);
+    } else {
+      router.push(`/brands/${search.brandId}/${search.id}`);
+    }
   };
 
   return (
-    <div className="relative" ref={containerRef}>
-      {/* Botón trigger */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className={`${triggerSizes[triggerSize]} flex items-center justify-center rounded-full bg-black hover:bg-gray-800 transition-colors ${triggerClassName}`}
-        aria-label="Buscar productos"
-      >
-        <Search className="w-5 h-5 text-white" />
-      </button>
+    <div className={`relative w-full ${className}`}>
+      {/* Input con icono a la derecha y cruz para cerrar */}
+      <div className="relative">
+        <Input
+          type="text"
+          placeholder="Buscar"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => query.length >= 2 && setShowResults(true)}
+          className="h-14 w-[30rem] pr-20"
+        />
+        {/* Iconos a la derecha */}
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+          {loading ? (
+            <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+          ) : query ? (
+            <button
+              onClick={handleClose}
+              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <X className="w-4 h-4 text-gray-400" />
+            </button>
+          ) : (
+            <Search className="w-4 h-4 text-gray-400" />
+          )}
+        </div>
+      </div>
 
-      {/* Popup overlay */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20">
-          {/* Backdrop con blur */}
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={handleClose}
-          />
-
-          {/* Modal */}
-          <div className="relative w-full max-w-2xl mx-4 bg-white rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            {/* Header con input */}
-            <div className="flex items-center gap-3 p-4 border-b">
-              <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
-              <Input
-                ref={inputRef}
-                type="text"
-                placeholder="Buscar por número de parte (ej: 20-0262)"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="flex-1 h-10 text-lg border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
-              />
-              <button
-                onClick={handleClose}
-                className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
+      {/* Resultados dropdown */}
+      {showResults && (
+        <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg overflow-hidden">
+          {loading ? (
+            <div className="p-8 text-center text-gray-500">
+              <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
             </div>
+          ) : results.length === 0 ? (
+            <div className="p-4 text-center text-gray-500 text-sm">
+              No se encontraron productos para "{query}"
+            </div>
+          ) : (
+            <ul className="divide-y max-h-96 overflow-y-auto">
+              {/* Resultados de búsqueda actual */}
+              {results.map((result) => (
+                <li key={result.id}>
+                  <button
+                    onClick={() => handleSelect(result)}
+                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <div className="w-16 h-20 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                      {result.thumbnail ? (
+                        <Image
+                          src={result.thumbnail}
+                          alt={result.productName}
+                          width={64}
+                          height={64}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                          Sin img
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 text-base truncate">
+                        {result.productName}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {result.mfrPartNumber}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        {result.brandName}
+                      </p>
+                    </div>
+                  </button>
+                </li>
+              ))}
 
-            {/* Resultados */}
-            <div className="max-h-[60vh] overflow-y-auto">
-              {loading && (
-                <div className="p-8 text-center text-gray-500">
-                  <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
-                  <p className="mt-2">Buscando...</p>
-                </div>
-              )}
-
-              {!loading && hasSearched && results.length === 0 && (
-                <div className="p-8 text-center text-gray-500">
-                  <p>No se encontraron productos para &quot;{query}&quot;</p>
-                  <p className="text-sm mt-1">Intenta con otro número de parte</p>
-                </div>
-              )}
-
-              {!loading && results.length > 0 && (
-                <ul className="divide-y">
-                  {results.map((result) => (
-                    <li key={result.id}>
+              {/* Historial */}
+              {recentSearches.length > 0 && (
+                <>
+                  <li className="bg-gray-50 border-t">
+                    <div className="px-4 py-3 flex items-center gap-2 text-sm text-gray-500">
+                      <Clock className="w-4 h-4" />
+                      <span className="font-medium">Historial ({recentSearches.length})</span>
+                    </div>
+                  </li>
+                  {recentSearches.slice(0, MAX_RECENT_SEARCHES).map((search) => (
+                    <li key={search.id}>
                       <button
-                        onClick={() => handleSelect(result.id)}
-                        className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors text-left"
+                        onClick={() => handleRecentClick(search)}
+                        className="w-full flex items-center gap-3 p-3 hover:bg-gray-100 transition-colors text-left group"
                       >
-                        {/* Thumbnail */}
-                        <div className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
-                          {result.thumbnail ? (
+                        <div className="w-16 h-20 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                          {search.thumbnail ? (
                             <Image
-                              src={result.thumbnail}
-                              alt={result.productName}
+                              src={search.thumbnail}
+                              alt={search.productName}
                               width={64}
                               height={64}
                               className="w-full h-full object-contain"
@@ -188,39 +265,43 @@ export function ProductSearchPopup({ triggerClassName = "", triggerSize = "md" }
                             </div>
                           )}
                         </div>
-
-                        {/* Info */}
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 truncate">
-                            {result.productName}
+                          <p className="font-medium text-gray-700 text-base truncate">
+                            {search.productName}
                           </p>
-                          <p className="text-sm text-gray-500 mt-0.5">
-                            {result.mfrPartNumber}
+                          <p className="text-sm text-gray-500">
+                            {search.mfrPartNumber}
                           </p>
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            {result.brandName}
+                          <p className="text-sm text-gray-400">
+                            {search.brandName}
                           </p>
+                        </div>
+                        {/* Botón X para eliminar */}
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            removeFromRecentSearches(search.id, e as unknown as React.MouseEvent);
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              removeFromRecentSearches(search.id, e as unknown as React.MouseEvent);
+                            }
+                          }}
+                          className="p-2 rounded-full hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                        >
+                          <X className="w-4 h-4 text-red-500" />
                         </div>
                       </button>
                     </li>
                   ))}
-                </ul>
+                </>
               )}
-
-              {/* Estado inicial - sin búsqueda */}
-              {!loading && !hasSearched && (
-                <div className="p-8 text-center text-gray-400">
-                  <Search className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                  <p>Ingresa un número de parte para buscar</p>
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="p-3 bg-gray-50 border-t text-xs text-gray-500 text-center">
-              Presiona ESC para cerrar
-            </div>
-          </div>
+            </ul>
+          )}
         </div>
       )}
     </div>

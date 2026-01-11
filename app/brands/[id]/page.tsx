@@ -19,6 +19,8 @@ import {
   traducirCategoria,
   traducirSubcategoria,
 } from "@/constants/categorias";
+import Image from "next/image";
+import { BrandSearchHandler } from "@/components/brand-details/BrandSearchHandler";
 
 export default async function BrandDetailPage({
   params,
@@ -72,10 +74,13 @@ export default async function BrandDetailPage({
   // Preparar datos de filtros activos con traducciones
   const activeFiltersData = {
     category: filters.category,
-    categoryEs: filters.category ? traducirCategoria(filters.category) : undefined,
+    categoryEs: filters.category
+      ? traducirCategoria(filters.category)
+      : undefined,
     subcategory: filters.subcategory,
     subcategoryEs: filters.subcategory
-      ? subcategories.find(s => s.subcategory === filters.subcategory)?.subcategoryEs || traducirSubcategoria(filters.subcategory)
+      ? subcategories.find((s) => s.subcategory === filters.subcategory)
+          ?.subcategoryEs || traducirSubcategoria(filters.subcategory)
       : undefined,
     productName: filters.productName,
   };
@@ -97,131 +102,101 @@ export default async function BrandDetailPage({
   return (
     <div className="min-h-screen bg-zinc-50">
       <div className="max-w-[110rem] mx-auto p-8">
-        {/* Header */}
-        <div className="mb-6">
-          <Link
-            href="/test-brands"
-            className="text-blue-600 hover:text-blue-800 inline-flex items-center gap-2 transition-colors"
-          >
-            ← Volver a todas las marcas
-          </Link>
-          <h1 className="text-3xl font-bold mt-2">{brand.attributes.name}</h1>
-        </div>
-
-        {/* Details Card */}
-        <div className="bg-white rounded-lg shadow p-6 space-y-6">
-          {/* Logo */}
-          {brand.attributes.logo && (
-            <div className="flex justify-center p-4 bg-zinc-50 rounded">
-              <img
-                src={brand.attributes.logo}
-                alt={brand.attributes.name}
-                className="max-w-xs max-h-28 object-contain"
-              />
-            </div>
-          )}
-
-          {/* Basic Info Grid */}
-          <div className="grid grid-cols-2 gap-4 border-t pt-6">
-            <InfoItem label="Brand ID" value={brand.id} />
-            <InfoItem
-              label="Dropship"
-              value={brand.attributes.dropship ? "✅ Sí" : "❌ No"}
-            />
-            <InfoItem
-              label="Códigos AAIA"
-              value={
-                brand.attributes.AAIA && brand.attributes.AAIA.length > 0
-                  ? brand.attributes.AAIA.join(", ")
-                  : "Ninguno"
-              }
-            />
-            <InfoItem
-              label="Grupos de Precio"
-              value={priceGroups.length.toString()}
-            />
+        <BrandSearchHandler brandId={parseInt(id)}>
+          {/* Header */}
+          <div className="mb-6">
+            <Link
+              href="/test-brands"
+              className="text-blue-600 hover:text-blue-800 inline-flex items-center gap-2 transition-colors"
+            >
+              ← Volver a todas las marcas
+            </Link>
+            <h1 className="text-3xl font-bold mt-2">{brand.attributes.name}</h1>
           </div>
 
-          {/* Price Groups Detail */}
-          {priceGroups.length > 0 && (
-            <div className="mt-6 border-t pt-6">
-              <h2 className="text-xl font-semibold mb-4">Grupos de Precio</h2>
-              <div className="space-y-4">
-                {priceGroups.map((pg) => (
-                  <PriceGroupCard key={pg.pricegroup_id} priceGroup={pg} />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Products Section with Sidebar */}
-        <div className="mt-12">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <h2 className="text-2xl font-bold">
-              Productos
-              {hasActiveFilters ? (
-                <span className="text-lg font-normal text-gray-600 ml-2">
-                  ({productsData.meta.total_matches} coincidencias de {productsData.meta.total_products} totales)
-                </span>
-              ) : (
-                <span className="text-lg font-normal text-gray-600 ml-2">
-                  ({productsData.meta.total_products} productos)
-                </span>
-              )}
-            </h2>
-            <ProductPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              brandId={parseInt(brand.id)}
-            />
-          </div>
-
-          
-
-          {/* Indicador de filtros activos */}
-          <ActiveFilters brandId={parseInt(id)} filters={activeFiltersData} />
-
-          {/* Mobile Category Filter Button */}
-          <MobileCategoryButton categories={categories} />
-
-          {/* Layout: Sidebar + Products Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-8">
-            {/* Sidebar - Hidden on mobile, visible on large screens */}
-            <div className="hidden lg:block">
-              <div className="sticky top-6">
-                <CategorySidebarAccordion
-                  categories={categories}
-                  subcategories={subcategories}
-                  productNames={productNames}
-                  brandId={parseInt(id)}
-                  activeFilters={filters}
+          {/* Details Card */}
+          <div className="bg-white rounded-lg shadow p-6 space-y-6">
+            {/* Logo */}
+            {brand.attributes.logo && (
+              <div className="flex justify-center p-4 bg-zinc-50 rounded">
+                <Image
+                  src={brand.attributes.logo}
+                  alt={brand.attributes.name}
+                  className="max-w-xs max-h-28 object-contain"
+                  width={200}
+                  height={100}
                 />
               </div>
+            )}
+          </div>
+
+          {/* Products Section with Sidebar */}
+          <div className="mt-12">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <h2 className="text-2xl font-bold">
+                Productos
+                {hasActiveFilters ? (
+                  <span className="text-lg font-normal text-gray-600 ml-2">
+                    ({productsData.meta.total_matches} coincidencias de{" "}
+                    {productsData.meta.total_products} totales)
+                  </span>
+                ) : (
+                  <span className="text-lg font-normal text-gray-600 ml-2">
+                    ({productsData.meta.total_products} productos)
+                  </span>
+                )}
+              </h2>
+              <ProductPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                brandId={parseInt(brand.id)}
+              />
             </div>
 
-            {/* Products Grid con carga ultra-progresiva */}
-            <div>
-              <Suspense
-                fallback={
-                  <ProductGridInstant
+            {/* Indicador de filtros activos */}
+            <ActiveFilters brandId={parseInt(id)} filters={activeFiltersData} />
+
+            {/* Mobile Category Filter Button */}
+            <MobileCategoryButton categories={categories} />
+
+            {/* Layout: Sidebar + Products Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-8">
+              {/* Sidebar - Hidden on mobile, visible on large screens */}
+              <div className="hidden lg:block">
+                <div className="sticky top-6">
+                  <CategorySidebarAccordion
+                    categories={categories}
+                    subcategories={subcategories}
+                    productNames={productNames}
+                    brandId={parseInt(id)}
+                    activeFilters={filters}
+                  />
+                </div>
+              </div>
+
+              {/* Products Grid con carga ultra-progresiva */}
+              <div>
+                <Suspense
+                  fallback={
+                    <ProductGridInstant
+                      products={productsData.data}
+                      brandId={parseInt(id)}
+                      currentPage={currentPage}
+                      totalPages={productsData.meta.total_pages}
+                    />
+                  }
+                >
+                  <ProductsWithData
                     products={productsData.data}
                     brandId={parseInt(id)}
                     currentPage={currentPage}
                     totalPages={productsData.meta.total_pages}
                   />
-                }
-              >
-                <ProductsWithData
-                  products={productsData.data}
-                  brandId={parseInt(id)}
-                  currentPage={currentPage}
-                  totalPages={productsData.meta.total_pages}
-                />
-              </Suspense>
+                </Suspense>
+              </div>
             </div>
           </div>
-        </div>
+        </BrandSearchHandler>
       </div>
 
       {/* ⚡ PREFETCH: Cargar siguiente página en background */}

@@ -243,28 +243,59 @@ export class InventorySyncService {
   }
 
   /**
-   * Fetch de una página de inventario desde Turn14 API
+   * Fetch de una página de inventario desde Turn14 API con retry para 429
    */
   private async fetchInventoryPage(
     brandId: number,
-    page: number
+    page: number,
+    maxRetries: number = 3,
+    baseDelayMs: number = 1000
   ): Promise<BrandInventoryResponse> {
-    const response = await fetch(
-      `https://api.turn14.com/v1/inventory/brand/${brandId}?page=${page}`,
-      {
-        headers: {
-          Authorization: await authService.getAuthorizationHeader(),
-        },
-      }
-    );
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(
+          `https://api.turn14.com/v1/inventory/brand/${brandId}?page=${page}`,
+          {
+            headers: {
+              Authorization: await authService.getAuthorizationHeader(),
+            },
+          }
+        );
 
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch inventory for brand ${brandId}, page ${page}: ${response.status}`
-      );
+        if (response.ok) {
+          return await response.json();
+        }
+
+        // Si es 429 (rate limit), esperar y reintentar
+        if (response.status === 429) {
+          const delayMs = baseDelayMs * Math.pow(2, attempt - 1); // Exponential backoff
+          console.warn(
+            `⚠️ Rate limited (429) fetching brand ${brandId} page ${page}, retry ${attempt}/${maxRetries} in ${delayMs}ms`
+          );
+          await this.sleep(delayMs);
+          continue;
+        }
+
+        // Otros errores, lanzar inmediatamente
+        throw new Error(
+          `Failed to fetch inventory for brand ${brandId}, page ${page}: ${response.status}`
+        );
+      } catch (error) {
+        // Si es el último intento, lanzar el error
+        if (attempt === maxRetries) {
+          throw error;
+        }
+        // Esperar antes del siguiente retry
+        const delayMs = baseDelayMs * Math.pow(2, attempt - 1);
+        await this.sleep(delayMs);
+      }
     }
 
-    return await response.json();
+    throw new Error(`Failed to fetch inventory after ${maxRetries} retries`);
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
