@@ -35,6 +35,7 @@ interface CategorySidebarAccordionProps {
   subcategories: BrandSubcategory[];
   productNames: BrandProductName[];
   brandId: number;
+  brandSlug: string;
   activeFilters: ProductFilters;
 }
 
@@ -49,6 +50,7 @@ export function CategorySidebarAccordion({
   subcategories,
   productNames,
   brandId,
+  brandSlug,
   activeFilters,
 }: CategorySidebarAccordionProps) {
   const router = useRouter();
@@ -69,7 +71,7 @@ export function CategorySidebarAccordion({
     const params = new URLSearchParams(searchParams.toString());
     params.set(filterType, encodeURIComponent(value));
     params.set("page", "1"); // Reset a página 1
-    return `/brands/${brandId}?${params.toString()}`;
+    return `/brands/${brandSlug}?${params.toString()}`;
   };
 
   const handleFilterClick = (

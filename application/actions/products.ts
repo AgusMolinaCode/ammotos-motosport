@@ -176,7 +176,8 @@ export async function getProductsByBrandsForOffers(
   brandIds: number[]
 ): Promise<OfferProduct[]> {
   try {
-    return await productsSyncService.getProductsByBrands(count, brandIds) as OfferProduct[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return await productsSyncService.getProductsByBrands(count, brandIds) as any as OfferProduct[];
   } catch (error) {
     console.error("Error fetching products by brands:", error);
     return [];
@@ -207,6 +208,7 @@ export interface MfrPartNumberSearchResult {
   thumbnail: string | null;
   brandName: string;
   brandId: number;
+  brandSlug: string;
 }
 
 /**
@@ -251,8 +253,12 @@ export async function searchByMfrPartNumber(
     // Combinar resultados, removiendo duplicados por productId
     const combinedMap = new Map<string, MfrPartNumberSearchResult>();
 
+    // Recopilar todos los brandIds para hacer una sola consulta
+    const brandIds = new Set<number>();
+
     // Agregar resultados de mfrPartNumberMap
     for (const r of mfrResults) {
+      brandIds.add(r.brandId);
       combinedMap.set(r.productId, {
         id: r.productId,
         productName: r.productName,
@@ -260,11 +266,13 @@ export async function searchByMfrPartNumber(
         thumbnail: r.thumbnail,
         brandName: r.brandName,
         brandId: r.brandId,
+        brandSlug: "", // Se填充 después
       });
     }
 
     // Agregar resultados de Product (usan partNumber)
     for (const p of productResults) {
+      brandIds.add(p.brandId);
       if (!combinedMap.has(p.id)) {
         combinedMap.set(p.id, {
           id: p.id,
@@ -273,12 +281,30 @@ export async function searchByMfrPartNumber(
           thumbnail: p.thumbnail,
           brandName: p.brandName,
           brandId: p.brandId,
+          brandSlug: "", // Se填充 después
         });
       }
     }
 
+    // Fetch slugs para todos los brandIds
+    const brands = await prisma.brand.findMany({
+      where: { id: { in: Array.from(brandIds).map(String) } },
+      select: { id: true, slug: true },
+    });
+
+    const brandSlugMap = new Map<string, string>();
+    for (const brand of brands) {
+      brandSlugMap.set(brand.id, brand.slug || brand.id);
+    }
+
+    // Actualizar resultados con slugs
+    const results = Array.from(combinedMap.values());
+    for (const result of results) {
+      result.brandSlug = brandSlugMap.get(String(result.brandId)) || String(result.brandId);
+    }
+
     // Retornar primeros 'limit' resultados
-    return Array.from(combinedMap.values()).slice(0, limit);
+    return results.slice(0, limit);
   } catch (error) {
     console.error("Error searching by part number:", error);
     return [];
@@ -352,7 +378,7 @@ export async function getProductForGrid(productId: string): Promise<Product | nu
         part_description: product.partDescription || "",
         category: product.category,
         subcategory: product.subcategory,
-        dimensions: product.dimensions as Product["attributes"]["dimensions"],
+        dimensions: product.dimensions as unknown as Product["attributes"]["dimensions"],
         brand_id: product.brandId,
         brand: product.brandName,
         price_group_id: product.priceGroupId,
@@ -371,7 +397,7 @@ export async function getProductForGrid(productId: string): Promise<Product | nu
         carb_eo_number: null,
         prop_65: "N",
         epa: "N/A",
-        warehouse_availability: product.warehouseAvailability as Product["attributes"]["warehouse_availability"],
+        warehouse_availability: product.warehouseAvailability as unknown as Product["attributes"]["warehouse_availability"],
         thumbnail: product.thumbnail || "",
         barcode: undefined,
         alternate_part_number: null,

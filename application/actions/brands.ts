@@ -23,6 +23,7 @@ export async function getBrands() {
         type: "Brand" as const,
         attributes: {
           name: brand.name,
+          slug: brand.slug,
           dropship: brand.dropship,
           logo: brand.logo || "",
           pricegroups: brand.pricegroups as unknown as PriceGroup[],
@@ -51,6 +52,7 @@ export async function getBrandsWithLogo() {
       data: brandsWithLogo.map((brand: Brand) => ({
         id: brand.id,
         name: brand.name,
+        slug: brand.slug,
         logo: brand.logo,
       })),
     };
@@ -97,6 +99,37 @@ export async function getBrandById(brandId: string) {
         type: "IndividualBrand" as const,
         attributes: {
           name: brand.name,
+          dropship: brand.dropship,
+          logo: brand.logo || "",
+          pricegroups: brand.pricegroups as unknown as PriceGroup[],
+          AAIA: brand.aaia,
+        },
+      },
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
+/**
+ * Get brand by slug (URL-friendly identifier)
+ */
+export async function getBrandBySlug(slug: string) {
+  try {
+    const brand = await brandsSyncService.getBrandBySlug(slug);
+
+    if (!brand) {
+      return { data: null };
+    }
+
+    // Transform to match API response format
+    return {
+      data: {
+        id: brand.id,
+        type: "IndividualBrand" as const,
+        attributes: {
+          name: brand.name,
+          slug: brand.slug,
           dropship: brand.dropship,
           logo: brand.logo || "",
           pricegroups: brand.pricegroups as unknown as PriceGroup[],

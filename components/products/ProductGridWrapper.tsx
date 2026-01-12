@@ -9,6 +9,7 @@ interface ProductGridWrapperProps {
   currentPage: number;
   totalPages: number;
   brandId: number;
+  brandSlug: string;
   pricesData: Array<{
     productId: string;
     purchaseCost: number;
@@ -42,6 +43,7 @@ export function ProductGridWrapper({
   currentPage,
   totalPages,
   brandId,
+  brandSlug,
   pricesData,
   inventory,
 }: ProductGridWrapperProps) {
@@ -64,6 +66,7 @@ export function ProductGridWrapper({
       currentPage={currentPage}
       totalPages={totalPages}
       brandId={brandId}
+      brandSlug={brandSlug}
       pricesData={showData ? pricesData : null}
       inventory={showData ? inventory : null}
     />

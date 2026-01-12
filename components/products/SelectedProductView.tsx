@@ -14,6 +14,7 @@ import {
 interface SelectedProductViewProps {
   product: Product;
   brandId: number;
+  brandSlug: string;
   pricesData: Array<{
     productId: string;
     purchaseCost: number;
@@ -36,6 +37,7 @@ interface SelectedProductViewProps {
 export function SelectedProductView({
   product,
   brandId,
+  brandSlug,
   pricesData,
   inventory,
 }: SelectedProductViewProps) {
@@ -62,7 +64,7 @@ export function SelectedProductView({
     <div className="space-y-6">
       {/* Botón para volver */}
       <Link
-        href={`/brands/${brandId}`}
+        href={`/brands/${brandSlug}`}
         className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors font-medium"
       >
         ← Volver a todos los productos de la marca

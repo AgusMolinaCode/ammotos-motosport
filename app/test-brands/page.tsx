@@ -55,7 +55,7 @@ export default async function TestBrandsPage() {
                       />
                     )}
                     <div className="flex-1">
-                      <Link href={`/brands/${brand.id}`}>
+                      <Link href={`/brands/${brand.attributes.slug || brand.id}`}>
                         <h3 className="font-semibold text-lg hover:text-blue-600 transition-colors cursor-pointer">
                           {brand.attributes.name}
                         </h3>
@@ -63,6 +63,9 @@ export default async function TestBrandsPage() {
                       <div className="mt-2 text-sm text-zinc-600 space-y-1">
                         <p>
                           <strong>ID:</strong> {brand.id}
+                        </p>
+                        <p>
+                          <strong>Slug:</strong> {brand.attributes.slug || "N/A"}
                         </p>
                         <p>
                           <strong>Dropship:</strong>{" "}

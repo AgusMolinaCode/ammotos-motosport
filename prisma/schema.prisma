@@ -17,6 +17,7 @@ datasource db {
 model Brand {
   id               String    @id
   name             String
+  slug             String    @default("") @unique // URL-friendly slug
   dropship         Boolean
   logo             String?
   aaia             String[]  // Array of AAIA codes

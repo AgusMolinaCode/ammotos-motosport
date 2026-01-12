@@ -13,7 +13,8 @@ export function GlobalSearchHandler() {
 
   const handleProductSelect = (product: MfrPartNumberSearchResult) => {
     // Siempre navegar a la marca del producto con el productId
-    router.push(`/brands/${product.brandId}?productId=${product.id}`, {
+    const brandSlug = product.brandSlug || product.brandId;
+    router.push(`/brands/${brandSlug}?productId=${product.id}`, {
       scroll: false,
     });
   };

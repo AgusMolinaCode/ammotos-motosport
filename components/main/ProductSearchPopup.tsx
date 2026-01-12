@@ -5,7 +5,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Search, Loader2, Clock, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { searchByMfrPartNumber, type MfrPartNumberSearchResult } from "@/application/actions/products";
+import {
+  searchByMfrPartNumber,
+  type MfrPartNumberSearchResult,
+} from "@/application/actions/products";
 
 interface ProductSearchBarProps {
   className?: string;
@@ -18,6 +21,7 @@ interface RecentSearch {
   mfrPartNumber: string;
   brandName: string;
   brandId: number;
+  brandSlug: string;
   thumbnail: string | null;
   timestamp: number;
 }
@@ -25,7 +29,10 @@ interface RecentSearch {
 const MAX_RECENT_SEARCHES = 5;
 const STORAGE_KEY = "product_search_recent";
 
-export function ProductSearchPopup({ className = "", onProductSelect }: ProductSearchBarProps) {
+export function ProductSearchPopup({
+  className = "",
+  onProductSelect,
+}: ProductSearchBarProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<MfrPartNumberSearchResult[]>([]);
@@ -64,6 +71,7 @@ export function ProductSearchPopup({ className = "", onProductSelect }: ProductS
       mfrPartNumber: result.mfrPartNumber,
       brandName: result.brandName,
       brandId: result.brandId,
+      brandSlug: result.brandSlug,
       thumbnail: result.thumbnail,
       timestamp: Date.now(),
     };
@@ -132,7 +140,7 @@ export function ProductSearchPopup({ className = "", onProductSelect }: ProductS
       setQuery("");
       setResults([]);
     } else {
-      router.push(`/brands/${result.brandId}`);
+      router.push(`/brands/${result.brandSlug || result.brandId}`);
     }
   };
 
@@ -145,6 +153,7 @@ export function ProductSearchPopup({ className = "", onProductSelect }: ProductS
         mfrPartNumber: search.mfrPartNumber,
         brandName: search.brandName,
         brandId: search.brandId,
+        brandSlug: search.brandSlug,
         thumbnail: search.thumbnail,
       };
       onProductSelect(result);
@@ -152,7 +161,7 @@ export function ProductSearchPopup({ className = "", onProductSelect }: ProductS
       setQuery("");
       setResults([]);
     } else {
-      router.push(`/brands/${search.brandId}`);
+      router.push(`/brands/${search.brandSlug || search.brandId}`);
     }
   };
 
@@ -169,18 +178,18 @@ export function ProductSearchPopup({ className = "", onProductSelect }: ProductS
           className="h-14 xl:w-[40rem]  px-6 rounded-full border border-gray-300 bg-white text-black text-lg font-medium focus:ring-0 focus:ring-gray-50"
         />
         {/* Iconos a la derecha */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center h-14 w-14 bg-black rounded-full px-3">
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center h-14 w-14 bg-black rounded-full px-4">
           {loading ? (
             <Loader2 className="w-7 h-7 text-gray-400 animate-spin" />
           ) : query ? (
             <button
               onClick={handleClose}
-              className="p-[0.1rem] hover:bg-gray-700 rounded-full transition-colors"
+              className=" hover:bg-gray-700 rounded-full transition-colors"
             >
-              <X className="p-[0.1rem] w-7 h-7 text-gray-400" />
+              <X className=" w-7 h-7 text-gray-400" />
             </button>
           ) : (
-            <Search className="p-[0.1rem] w-7 h-7 text-gray-400" />
+            <Search className=" w-7 h-7 text-gray-400" />
           )}
         </div>
       </div>
@@ -241,63 +250,73 @@ export function ProductSearchPopup({ className = "", onProductSelect }: ProductS
                   <li className="bg-gray-50 border-t">
                     <div className="px-4 py-3 flex items-center gap-2 text-sm text-gray-500">
                       <Clock className="w-4 h-4" />
-                      <span className="font-medium">Historial ({recentSearches.length})</span>
+                      <span className="font-medium">
+                        Historial ({recentSearches.length})
+                      </span>
                     </div>
                   </li>
-                  {recentSearches.slice(0, MAX_RECENT_SEARCHES).map((search) => (
-                    <li key={search.id}>
-                      <button
-                        onClick={() => handleRecentClick(search)}
-                        className="w-full flex items-center gap-3 p-3 hover:bg-gray-100 transition-colors text-left group"
-                      >
-                        <div className="w-16 h-20 flex-shrink-0 rounded overflow-hidden bg-gray-100">
-                          {search.thumbnail ? (
-                            <Image
-                              src={search.thumbnail}
-                              alt={search.productName}
-                              width={64}
-                              height={64}
-                              className="w-full h-full object-contain"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                              Sin img
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-700 text-base truncate">
-                            {search.productName}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {search.mfrPartNumber}
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            {search.brandName}
-                          </p>
-                        </div>
-                        {/* Botón X para eliminar */}
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            removeFromRecentSearches(search.id, e as unknown as React.MouseEvent);
-                          }}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault();
-                              removeFromRecentSearches(search.id, e as unknown as React.MouseEvent);
-                            }
-                          }}
-                          className="p-2 rounded-full hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                  {recentSearches
+                    .slice(0, MAX_RECENT_SEARCHES)
+                    .map((search) => (
+                      <li key={search.id}>
+                        <button
+                          onClick={() => handleRecentClick(search)}
+                          className="w-full flex items-center gap-3 p-3 hover:bg-gray-100 transition-colors text-left group"
                         >
-                          <X className="w-4 h-4 text-red-500" />
-                        </div>
-                      </button>
-                    </li>
-                  ))}
+                          <div className="w-16 h-20 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                            {search.thumbnail ? (
+                              <Image
+                                src={search.thumbnail}
+                                alt={search.productName}
+                                width={64}
+                                height={64}
+                                className="w-full h-full object-contain"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                                Sin img
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-700 text-base truncate">
+                              {search.productName}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {search.mfrPartNumber}
+                            </p>
+                            <p className="text-sm text-gray-400">
+                              {search.brandName}
+                            </p>
+                          </div>
+                          {/* Botón X para eliminar */}
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              removeFromRecentSearches(
+                                search.id,
+                                e as unknown as React.MouseEvent
+                              );
+                            }}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                removeFromRecentSearches(
+                                  search.id,
+                                  e as unknown as React.MouseEvent
+                                );
+                              }
+                            }}
+                            className="p-2 rounded-full hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                          >
+                            <X className="w-4 h-4 text-red-500" />
+                          </div>
+                        </button>
+                      </li>
+                    ))}
                 </>
               )}
             </ul>

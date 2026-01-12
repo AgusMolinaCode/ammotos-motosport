@@ -20,12 +20,13 @@ export function ProductGrid({
   currentPage,
   totalPages,
   brandId,
+  brandSlug,
 }: ProductGridProps) {
   const [selectedProduct, setSelectedProduct] = useState<ProductWithDetails | null>(null);
 
   // Si no hay productos, mostrar mensaje de página vacía
   if (products.length === 0) {
-    return <EmptyPageMessage brandId={brandId} currentPage={currentPage} />;
+    return <EmptyPageMessage brandId={brandId} brandSlug={brandSlug} currentPage={currentPage} />;
   }
 
   return (
@@ -224,6 +225,7 @@ export function ProductGrid({
         currentPage={currentPage}
         totalPages={totalPages}
         brandId={brandId}
+        brandSlug={brandSlug}
       />
 
       {/* Dialog con detalles del producto */}

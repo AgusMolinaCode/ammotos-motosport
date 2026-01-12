@@ -22,17 +22,24 @@ export async function GET(
     }
 
     // Primero buscar en MfrPartNumberMap (contiene todos los productos mapeados)
-    const mappedProduct = await prisma.mfrPartNumberMap.findUnique({
+    // Usamos findFirst porque productId no es un campo unique
+    const mappedProduct = await prisma.mfrPartNumberMap.findFirst({
       where: { productId: id },
     });
 
     if (mappedProduct) {
+      // Fetch brand slug
+      const brand = await prisma.brand.findUnique({
+        where: { id: String(mappedProduct.brandId) },
+        select: { slug: true },
+      });
       return NextResponse.json({
         id: mappedProduct.productId,
         productName: mappedProduct.productName,
         mfrPartNumber: mappedProduct.mfrPartNumber,
         brandName: mappedProduct.brandName,
         brandId: mappedProduct.brandId,
+        brandSlug: brand?.slug || String(mappedProduct.brandId),
         thumbnail: mappedProduct.thumbnail,
       });
     }
@@ -58,6 +65,12 @@ export async function GET(
       );
     }
 
+    // Fetch brand slug
+    const brand = await prisma.brand.findUnique({
+      where: { id: String(product.brandId) },
+      select: { slug: true },
+    });
+
     // Devolver en formato MfrPartNumberSearchResult
     return NextResponse.json({
       id: product.id,
@@ -65,6 +78,7 @@ export async function GET(
       mfrPartNumber: product.mfrPartNumber || product.partNumber,
       brandName: product.brandName,
       brandId: product.brandId,
+      brandSlug: brand?.slug || String(product.brandId),
       thumbnail: product.thumbnail,
     });
   } catch (error) {

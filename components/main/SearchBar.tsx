@@ -19,6 +19,7 @@ import { GlobalSearchHandler } from "./GlobalSearchHandler";
 interface Brand {
   id: string;
   name: string;
+  slug: string;
 }
 
 const SearchBar = () => {
@@ -31,9 +32,10 @@ const SearchBar = () => {
       try {
         const result = await getBrands();
         const brandsData = result.data.map(
-          (brand: { id: string; attributes: { name: string } }) => ({
+          (brand: { id: string; attributes: { name: string; slug: string } }) => ({
             id: brand.id,
             name: brand.attributes.name,
+            slug: brand.attributes.slug,
           })
         );
         setBrands(brandsData);
@@ -48,7 +50,10 @@ const SearchBar = () => {
   }, []);
 
   const handleBrandSelect = (brandId: string) => {
-    router.push(`/brands/${brandId}`);
+    // Find the brand to get the slug
+    const brand = brands.find((b) => b.id === brandId);
+    const slug = brand?.slug || brandId;
+    router.push(`/brands/${slug}`);
   };
 
   return (

@@ -207,6 +207,43 @@ export class BrandsSyncService {
   }
 
   /**
+   * Get brand by slug (URL-friendly identifier)
+   */
+  async getBrandBySlug(slug: string) {
+    // Find brand by slug
+    const cachedBrand = await prisma.brand.findUnique({
+      where: { slug },
+    });
+
+    // If not found, return null
+    if (!cachedBrand) {
+      return null;
+    }
+
+    // If details already fetched, return immediately
+    if (cachedBrand.detailsFetched) {
+      return cachedBrand;
+    }
+
+    // Need to fetch details from API
+    const apiResponse = await this.fetchBrandDetailsFromAPI(cachedBrand.id);
+    const brandData = apiResponse.data;
+
+    return await prisma.brand.update({
+      where: { id: cachedBrand.id },
+      data: {
+        name: brandData.attributes.name,
+        dropship: brandData.attributes.dropship,
+        logo: brandData.attributes.logo,
+        aaia: (brandData.attributes.AAIA || []).filter((code): code is string => code !== null),
+        pricegroups: brandData.attributes.pricegroups as any,
+        detailsFetched: true,
+        detailsFetchedAt: new Date(),
+      },
+    });
+  }
+
+  /**
    * Force refresh brand details (admin tool - violates immutability)
    */
   async forceRefreshBrandDetails(brandId: string) {

@@ -8,6 +8,7 @@ import { getBrandsWithLogo } from "@/application/actions/brands";
 interface BrandLogo {
   id: string;
   name: string;
+  slug: string;
   logo: string | null;
 }
 
@@ -37,7 +38,7 @@ function SliderBrands() {
     .map((brand) => ({
       src: brand.logo as string,
       alt: brand.name,
-      href: `/brands/${brand.id}`,
+      href: `/brands/${brand.slug || brand.id}`,
     }));
 
   if (loading) {

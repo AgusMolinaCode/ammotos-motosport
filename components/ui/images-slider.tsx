@@ -95,14 +95,14 @@ export const ImagesSlider = ({
       x: 0,
       transition: {
         duration: 0.5,
-        ease: "easeOut",
+        ease: "easeOut" as const,
       },
     },
     exit: (direction: string) => ({
       x: direction === "left" ? "-100%" : "100%",
       transition: {
         duration: 0.5,
-        ease: "easeIn",
+        ease: "easeIn" as const,
       },
     }),
   };

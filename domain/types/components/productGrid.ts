@@ -28,4 +28,5 @@ export interface ProductGridProps {
   currentPage: number;
   totalPages: number;
   brandId: number;
+  brandSlug: string;
 }

@@ -7,6 +7,7 @@ import type { Product } from "@/domain/types/turn14/products";
 interface ProductsWithDataProps {
   products: Product[];
   brandId: number;
+  brandSlug: string;
   currentPage: number;
   totalPages: number;
   selectedProduct?: Product | null;
@@ -23,6 +24,7 @@ interface ProductsWithDataProps {
 export async function ProductsWithData({
   products,
   brandId,
+  brandSlug,
   currentPage,
   totalPages,
   selectedProduct,
@@ -55,6 +57,7 @@ export async function ProductsWithData({
       <SelectedProductView
         product={selectedProduct}
         brandId={brandId}
+        brandSlug={brandSlug}
         pricesData={pricesData}
         inventory={inventory}
       />
@@ -68,6 +71,7 @@ export async function ProductsWithData({
       currentPage={currentPage}
       totalPages={totalPages}
       brandId={brandId}
+      brandSlug={brandSlug}
       pricesData={pricesData}
       inventory={inventory}
     />

@@ -5,6 +5,7 @@ import { traducirCategoria } from "@/constants/categorias";
 
 interface ActiveFiltersProps {
   brandId: number;
+  brandSlug: string;
   filters: {
     category?: string;
     categoryEs?: string;
@@ -14,7 +15,7 @@ interface ActiveFiltersProps {
   };
 }
 
-export function ActiveFilters({ brandId, filters }: ActiveFiltersProps) {
+export function ActiveFilters({ brandId, brandSlug, filters }: ActiveFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -26,11 +27,11 @@ export function ActiveFilters({ brandId, filters }: ActiveFiltersProps) {
     const params = new URLSearchParams(searchParams.toString());
     params.delete(filterType);
     params.set("page", "1"); // Reset a página 1
-    router.push(`/brands/${brandId}?${params.toString()}`);
+    router.push(`/brands/${brandSlug}?${params.toString()}`);
   };
 
   const clearAllFilters = () => {
-    router.push(`/brands/${brandId}`);
+    router.push(`/brands/${brandSlug}`);
   };
 
   return (

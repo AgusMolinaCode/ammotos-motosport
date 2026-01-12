@@ -52,7 +52,12 @@
       "Bash(timeout:*)",
       "Bash(node:*)",
       "Bash(npx dotenv -e .env.local tsx:*)",
-      "Bash(rm \"c:\\\\Users\\\\urano\\\\OneDrive\\\\Escritorio\\\\Programacion\\\\turn14_ammotos\\\\scripts\\\\test-recent.ts\")"
+      "Bash(rm \"c:\\\\Users\\\\urano\\\\OneDrive\\\\Escritorio\\\\Programacion\\\\turn14_ammotos\\\\scripts\\\\test-recent.ts\")",
+      "Bash(git restore:*)",
+      "Bash(git stash)",
+      "Bash(set:*)",
+      "Bash(npx dotenv:*)",
+      "Bash(tasklist)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -2,11 +2,13 @@ import Link from "next/link";
 
 interface EmptyPageMessageProps {
   brandId: number;
+  brandSlug: string;
   currentPage: number;
 }
 
 export function EmptyPageMessage({
   brandId,
+  brandSlug,
   currentPage,
 }: EmptyPageMessageProps) {
   const previousPage = Math.max(1, currentPage - 1); // Nunca ir a página 0
@@ -19,7 +21,7 @@ export function EmptyPageMessage({
         </p>
         {currentPage > 1 && (
           <Link
-            href={`/brands/${brandId}?page=${previousPage}`}
+            href={`/brands/${brandSlug}?page=${previousPage}`}
             className="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-sm"
           >
             ← Volver a página {previousPage}

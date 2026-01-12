@@ -8,6 +8,7 @@ interface ProductPaginationProps {
   currentPage: number;
   totalPages: number;
   brandId: number;
+  brandSlug: string;
   onNavigate?: () => void; // Callback cuando se navega
 }
 
@@ -15,6 +16,7 @@ export function ProductPagination({
   currentPage,
   totalPages,
   brandId,
+  brandSlug,
   onNavigate,
 }: ProductPaginationProps) {
   const searchParams = useSearchParams();
@@ -35,7 +37,7 @@ export function ProductPagination({
   const buildPageUrl = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", page.toString());
-    return `/brands/${brandId}?${params.toString()}`;
+    return `/brands/${brandSlug}?${params.toString()}`;
   };
 
   // Función para navegar con loading state
