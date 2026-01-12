@@ -11,6 +11,7 @@ import { InfoItem } from "@/components/brand-details/InfoItem";
 import { PriceGroupCard } from "@/components/brand-details/PriceGroupCard";
 import { ProductGridInstant } from "@/components/products/ProductGridInstant";
 import { ProductsWithData } from "@/components/products/ProductsWithData";
+import { SelectedProductView } from "@/components/products/SelectedProductView";
 import { CategorySidebarAccordion } from "@/components/sidebar/CategorySidebarAccordion";
 import { MobileCategoryButton } from "@/components/sidebar/MobileCategoryButton";
 import { ActiveFilters } from "@/components/filters/ActiveFilters";
@@ -53,6 +54,10 @@ export default async function BrandDetailPage({
   if (productName) filters.productName = decodeURIComponent(productName);
 
   const hasActiveFilters = !!(category || subcategory || productName);
+  const hasProductSelection = !!productId;
+
+  // Solo mostrar producto encontrado si NO hay filtros activos pero SÍ hay productId
+  const shouldShowSelectedProduct = hasProductSelection && !hasActiveFilters;
 
   // ⚡ OPTIMIZACIÓN: Paralelizar llamadas independientes
   // Solo cargamos Brand y Productos primero (datos esenciales)
@@ -97,22 +102,21 @@ export default async function BrandDetailPage({
     filters
   );
 
-  const hasProductSelection = !!productId;
   const hasNextPage = currentPage < productsData.meta.total_pages;
   const nextPage = currentPage + 1;
   const totalPages = productsData.meta.total_pages;
 
-  // Si hay selección de producto, obtenerlo para mostrar en la grilla
-  const selectedProduct = hasProductSelection && productId ? await getProductForGrid(productId) : null;
+  // Si hay selección de producto Y NO hay filtros activos, obtenerlo para mostrar en la grilla
+  const selectedProduct = shouldShowSelectedProduct && productId ? await getProductForGrid(productId) : null;
 
   // Productos para mostrar: el producto seleccionado o todos los productos
   const productsForGrid = selectedProduct ? [selectedProduct] : productsData.data;
 
   return (
     <div className="min-h-screen bg-zinc-50">
-      <div className="max-w-[110rem] mx-auto p-8">
+      <div className="max-w-[110rem] mx-auto">
         {/* BrandSearchHandler solo maneja el search */}
-        <BrandSearchHandler brandId={parseInt(id)} />
+        {/* <BrandSearchHandler brandId={parseInt(id)} /> */}
 
         {/* Resto del contenido de la página */}
         {/* Header */}
@@ -180,40 +184,59 @@ export default async function BrandDetailPage({
 
           {/* Layout: Sidebar + Products Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-8">
-            {/* Sidebar - Hidden on mobile, visible on large screens - solo si no hay producto seleccionado */}
-            {!selectedProduct && (
-              <div className="hidden lg:block">
-                <div className="sticky top-6">
-                  <CategorySidebarAccordion
-                    categories={categories}
-                    subcategories={subcategories}
-                    productNames={productNames}
-                    brandId={parseInt(id)}
-                    activeFilters={filters}
-                  />
-                </div>
+            {/* Sidebar - Hidden on mobile, visible on large screens */}
+            <div className="hidden lg:block">
+              <div className="sticky top-6">
+                <CategorySidebarAccordion
+                  categories={categories}
+                  subcategories={subcategories}
+                  productNames={productNames}
+                  brandId={parseInt(id)}
+                  activeFilters={filters}
+                />
               </div>
-            )}
+            </div>
 
             {/* Products Grid con carga ultra-progresiva */}
             <div>
-              <Suspense
-                fallback={
-                  <ProductGridInstant
+              {/* Si hay producto seleccionado, usar SelectedProductView */}
+              {selectedProduct ? (
+                <Suspense
+                  fallback={
+                    <div className="h-64 bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
+                      <span className="text-gray-400">Cargando producto...</span>
+                    </div>
+                  }
+                >
+                  <ProductsWithData
                     products={productsForGrid}
                     brandId={parseInt(id)}
                     currentPage={currentPage}
-                    totalPages={selectedProduct ? 1 : productsData.meta.total_pages}
+                    totalPages={1}
+                    selectedProduct={selectedProduct}
                   />
-                }
-              >
-                <ProductsWithData
-                  products={productsForGrid}
-                  brandId={parseInt(id)}
-                  currentPage={currentPage}
-                  totalPages={selectedProduct ? 1 : productsData.meta.total_pages}
-                />
-              </Suspense>
+                </Suspense>
+              ) : (
+                /* Si no hay producto seleccionado, mostrar grilla normal */
+                <Suspense
+                  fallback={
+                    <ProductGridInstant
+                      products={productsForGrid}
+                      brandId={parseInt(id)}
+                      currentPage={currentPage}
+                      totalPages={productsData.meta.total_pages}
+                    />
+                  }
+                >
+                  <ProductsWithData
+                    products={productsForGrid}
+                    brandId={parseInt(id)}
+                    currentPage={currentPage}
+                    totalPages={productsData.meta.total_pages}
+                    selectedProduct={null}
+                  />
+                </Suspense>
+              )}
             </div>
           </div>
         </div>

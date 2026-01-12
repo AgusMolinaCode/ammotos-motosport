@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
+import SmallBanner from "@/components/main/SmallBanner";
+import Navbar from "@/components/main/Navbar";
+import SearchBar from "@/components/main/SearchBar";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -22,6 +25,11 @@ export default function RootLayout({
       <body
         className={`${outfit.className} antialiased bg-gradient-to-l from-[#f7f7f7] to-[#fefbfb] `}
       >
+        <SmallBanner />
+        <Navbar />
+        <div className="bg-orange-100/30 w-full border border-neutral-600">
+          <SearchBar />
+        </div>
         {children}
       </body>
     </html>

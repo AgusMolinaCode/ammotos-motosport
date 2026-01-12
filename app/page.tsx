@@ -9,11 +9,6 @@ import OfferItems from "@/components/main/OfferItems";
 export default function Home() {
   return (
     <div>
-      <SmallBanner />
-      <Navbar />
-      <div className="bg-orange-100/30 w-full border border-neutral-600">
-        <SearchBar />
-      </div>
       {/*  <Hero /> */}
       <HeroTwo />
       <SliderBrands />

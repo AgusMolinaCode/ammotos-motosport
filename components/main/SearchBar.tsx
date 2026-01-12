@@ -14,6 +14,7 @@ import {
 import { WhatsApp } from "@/public/whatssapp";
 import { getBrands } from "@/application/actions/brands";
 import { ProductSearchPopup } from "./ProductSearchPopup";
+import { GlobalSearchHandler } from "./GlobalSearchHandler";
 
 interface Brand {
   id: string;
@@ -58,7 +59,7 @@ const SearchBar = () => {
       </div>
 
       <div className="flex items-center gap-3">
-        <ProductSearchPopup />
+        <GlobalSearchHandler />
       </div>
 
       <div>

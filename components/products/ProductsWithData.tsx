@@ -1,6 +1,7 @@
 import { getPricesByProductIds } from "@/application/actions/prices";
 import { getInventoryByBrand } from "@/application/actions/inventory";
 import { ProductGridWrapper } from "./ProductGridWrapper";
+import { SelectedProductView } from "./SelectedProductView";
 import type { Product } from "@/domain/types/turn14/products";
 
 interface ProductsWithDataProps {
@@ -8,6 +9,7 @@ interface ProductsWithDataProps {
   brandId: number;
   currentPage: number;
   totalPages: number;
+  selectedProduct?: Product | null;
 }
 
 /**
@@ -23,6 +25,7 @@ export async function ProductsWithData({
   brandId,
   currentPage,
   totalPages,
+  selectedProduct,
 }: ProductsWithDataProps) {
   // Extraer IDs de productos
   const productIds = products.map((product) => product.id);
@@ -46,6 +49,19 @@ export async function ProductsWithData({
     }),
   ]);
 
+  // Si hay un producto seleccionado, usar SelectedProductView
+  if (selectedProduct) {
+    return (
+      <SelectedProductView
+        product={selectedProduct}
+        brandId={brandId}
+        pricesData={pricesData}
+        inventory={inventory}
+      />
+    );
+  }
+
+  // Otherwise, show the normal grid
   return (
     <ProductGridWrapper
       products={products}

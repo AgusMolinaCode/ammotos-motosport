@@ -166,21 +166,21 @@ export function ProductSearchPopup({ className = "", onProductSelect }: ProductS
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.length >= 2 && setShowResults(true)}
-          className="h-14 w-[30rem] pr-20"
+          className="h-14 xl:w-[40rem]  px-6 rounded-full border border-gray-300 bg-white text-black text-lg font-medium focus:ring-0 focus:ring-gray-50"
         />
         {/* Iconos a la derecha */}
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center h-14 w-14 bg-black rounded-full px-3">
           {loading ? (
-            <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+            <Loader2 className="w-7 h-7 text-gray-400 animate-spin" />
           ) : query ? (
             <button
               onClick={handleClose}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-[0.1rem] hover:bg-gray-700 rounded-full transition-colors"
             >
-              <X className="w-4 h-4 text-gray-400" />
+              <X className="p-[0.1rem] w-7 h-7 text-gray-400" />
             </button>
           ) : (
-            <Search className="w-4 h-4 text-gray-400" />
+            <Search className="p-[0.1rem] w-7 h-7 text-gray-400" />
           )}
         </div>
       </div>
