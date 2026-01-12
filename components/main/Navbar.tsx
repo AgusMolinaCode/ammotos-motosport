@@ -8,13 +8,15 @@ const Navbar = () => {
     <div className="flex justify-between items-center py-12 max-w-[110rem] mx-auto">
       <div className="flex">
         <div>
-          <Image
-            src="/logo2.png"
-            alt="Logo"
-            width={500}
-            height={500}
-            className="object-contain"
-          />
+          <Link href="/">
+            <Image
+              src="/logo2.png"
+              alt="Logo"
+              width={500}
+              height={500}
+              className="object-contain"
+            />
+          </Link>
         </div>
         <div className="flex items-center ml-6 gap-2 space-x-4">
           <div>
@@ -26,7 +28,7 @@ const Navbar = () => {
                 Home
               </button>
             </Link>
-            
+
             <Link href="/test-products" className="text-2xl font-medium ml-6">
               <button
                 role="link"
