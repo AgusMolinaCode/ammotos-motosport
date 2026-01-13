@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { ProductPagination } from "./ProductPagination";
 import { EmptyPageMessage } from "./EmptyPageMessage";
@@ -37,11 +37,13 @@ interface ProductGridInstantProps {
       } | null;
     }
   > | null;
+  hideOutOfStock?: boolean;
 }
 
 /**
  * ⚡ GRID OPTIMIZADO: Muestra productos con/sin datos
  * Si no hay precios/inventario, muestra skeleton
+ * Si showOutOfStock es false, oculta productos sin stock
  */
 export function ProductGridInstant({
   products,
@@ -51,6 +53,7 @@ export function ProductGridInstant({
   brandSlug,
   pricesData = null,
   inventory = null,
+  hideOutOfStock = false,
 }: ProductGridInstantProps) {
   const [isNavigating, setIsNavigating] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -69,6 +72,21 @@ export function ProductGridInstant({
     return () => clearTimeout(timer);
   }, [currentPage]);
 
+  // Filtrar productos según hideOutOfStock
+  const filteredProducts = useMemo(() => {
+    // Por defecto mostrar todos los productos
+    if (!hideOutOfStock || !inventory) {
+      return products;
+    }
+    // Ocultar productos sin stock cuando hideOutOfStock es true
+    return products.filter((product) => {
+      const productInventory = inventory[product.id];
+      const hasStock = productInventory?.hasStock ?? false;
+      const manufacturerStock = productInventory?.manufacturer?.stock ?? 0;
+      return hasStock || manufacturerStock > 0;
+    });
+  }, [products, inventory, hideOutOfStock]);
+
   // Si está navegando, mostrar skeleton completo
   if (isNavigating) {
     return (
@@ -85,8 +103,8 @@ export function ProductGridInstant({
     );
   }
 
-  // Si no hay productos, mostrar mensaje de página vacía
-  if (products.length === 0) {
+  // Si no hay productos después de filtrar, mostrar mensaje de página vacía
+  if (filteredProducts.length === 0) {
     return <EmptyPageMessage brandId={brandId} brandSlug={brandSlug} currentPage={currentPage} />;
   }
 
@@ -95,13 +113,16 @@ export function ProductGridInstant({
       {/* Lista de productos */}
 
       <div className="space-y-3 mb-8">
-        {products.map((product) => {
+        {filteredProducts.map((product) => {
           const isClearance = product.attributes.clearance_item ?? false;
 
           // Extraer datos de inventario si están disponibles
           const productInventory = inventory?.[product.id] || null;
           const hasStock = productInventory?.hasStock ?? false;
           const manufacturerStock = productInventory?.manufacturer?.stock ?? 0;
+
+          // Determinar si es producto sin stock
+          const isOutOfStock = !hasStock && manufacturerStock === 0;
 
           // Función de color de borde (igual que ProductGrid.tsx)
           const getBorderColor = () => {
@@ -194,6 +215,12 @@ export function ProductGridInstant({
                     {isClearance && (
                       <p className="text-yellow-600 font-bold">
                         🏷️ Liquidación
+                      </p>
+                    )}
+                    {/* Etiqueta de Sin Stock */}
+                    {isOutOfStock && (
+                      <p className="text-red-600 font-bold text-lg">
+                        ❌ Sin Stock
                       </p>
                     )}
                   </div>

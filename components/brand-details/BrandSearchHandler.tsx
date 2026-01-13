@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ProductSearchPopup } from "@/components/main/ProductSearchPopup";
 import type { MfrPartNumberSearchResult } from "@/application/actions/products";
+import { generateProductUrl } from "@/lib/utils";
 
 interface BrandSearchHandlerProps {
   brandId: number;
@@ -15,17 +16,14 @@ export function BrandSearchHandler({ brandId, brandSlug }: BrandSearchHandlerPro
 
   const handleProductSelect = useCallback(
     (product: MfrPartNumberSearchResult) => {
-      const productBrandSlug = product.brandSlug || product.brandId;
-      // Si es de la misma marca, navegar con query param
+      const productBrandSlug = String(product.brandSlug || product.brandId);
+      // Navegar con el productName y productId en la URL
       if (product.brandId === brandId) {
-        router.push(`/brands/${brandSlug}?productId=${product.id}`, {
-          scroll: false,
-        });
+        const productUrl = generateProductUrl(brandSlug, product.id, product.productName);
+        router.push(productUrl, { scroll: false });
       } else {
-        // Si es de otra marca, navegar a esa marca
-        router.push(`/brands/${productBrandSlug}?productId=${product.id}`, {
-          scroll: false,
-        });
+        const productUrl = generateProductUrl(productBrandSlug, product.id, product.productName);
+        router.push(productUrl, { scroll: false });
       }
     },
     [brandId, brandSlug, router]

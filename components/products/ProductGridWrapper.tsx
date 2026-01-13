@@ -24,6 +24,7 @@ interface ProductGridWrapperProps {
       esd: string;
     } | null;
   }> | null;
+  hideOutOfStock?: boolean;
 }
 
 /**
@@ -46,6 +47,7 @@ export function ProductGridWrapper({
   brandSlug,
   pricesData,
   inventory,
+  hideOutOfStock = false,
 }: ProductGridWrapperProps) {
   // Estado: controla si debemos mostrar los datos
   const [showData, setShowData] = useState(false);
@@ -69,6 +71,7 @@ export function ProductGridWrapper({
       brandSlug={brandSlug}
       pricesData={showData ? pricesData : null}
       inventory={showData ? inventory : null}
+      hideOutOfStock={hideOutOfStock}
     />
   );
 }

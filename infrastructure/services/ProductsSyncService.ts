@@ -33,6 +33,7 @@ export interface ProductFilters {
   category?: string;
   subcategory?: string;
   productName?: string;
+  hasStock?: boolean; // Si true, solo mostrar productos con canPurchase = true
 }
 
 // Tipo de retorno para productos filtrados con total de coincidencias
@@ -644,6 +645,7 @@ export class ProductsSyncService {
 
   /**
    * Construir WHERE clause de Prisma con filtros opcionales
+   * Nota: hasStock requiere un filtrado especial porque no hay relación Prisma definida
    */
   private buildFilterWhereClause(brandId: number, filters: ProductFilters) {
     const where: any = {
@@ -752,6 +754,7 @@ export class ProductsSyncService {
 
   /**
    * Verificar si un producto coincide con los filtros especificados
+   * Nota: hasStock no puede verificarse aquí porque la API no devuelve info de stock
    */
   private productMatchesFilters(
     product: Turn14Product,
@@ -772,6 +775,7 @@ export class ProductsSyncService {
     ) {
       return false;
     }
+    // Nota: hasStock se filtra después en la consulta a DB
     return true;
   }
 

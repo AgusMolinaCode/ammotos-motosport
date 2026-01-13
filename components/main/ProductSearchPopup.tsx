@@ -9,6 +9,7 @@ import {
   searchByMfrPartNumber,
   type MfrPartNumberSearchResult,
 } from "@/application/actions/products";
+import { generateProductUrl } from "@/lib/utils";
 
 interface ProductSearchBarProps {
   className?: string;
@@ -140,7 +141,12 @@ export function ProductSearchPopup({
       setQuery("");
       setResults([]);
     } else {
-      router.push(`/brands/${result.brandSlug || result.brandId}`);
+      const productUrl = generateProductUrl(
+        String(result.brandSlug || result.brandId),
+        result.id,
+        result.productName
+      );
+      router.push(productUrl);
     }
   };
 
@@ -161,7 +167,12 @@ export function ProductSearchPopup({
       setQuery("");
       setResults([]);
     } else {
-      router.push(`/brands/${search.brandSlug || search.brandId}`);
+      const productUrl = generateProductUrl(
+        String(search.brandSlug || search.brandId),
+        search.id,
+        search.productName
+      );
+      router.push(productUrl);
     }
   };
 

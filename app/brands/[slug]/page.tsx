@@ -1,9 +1,9 @@
 import { getBrandBySlug } from "@/application/actions/brands";
 import {
   getProductsByBrand,
-  type ProductFilters,
   getProductForGrid,
 } from "@/application/actions/products";
+import type { ProductFilters } from "@/infrastructure/services/ProductsSyncService";
 import Link from "next/link";
 import { Suspense } from "react";
 import type { PriceGroup } from "@/domain/types/turn14/brands";
@@ -12,6 +12,7 @@ import { PriceGroupCard } from "@/components/brand-details/PriceGroupCard";
 import { ProductGridInstant } from "@/components/products/ProductGridInstant";
 import { ProductsWithData } from "@/components/products/ProductsWithData";
 import { SelectedProductView } from "@/components/products/SelectedProductView";
+import { HideOutOfStockSwitch } from "@/components/products/StockFilterSwitch";
 import { CategorySidebarAccordion } from "@/components/sidebar/CategorySidebarAccordion";
 import { MobileCategoryButton } from "@/components/sidebar/MobileCategoryButton";
 import { ActiveFilters } from "@/components/filters/ActiveFilters";
@@ -25,6 +26,10 @@ import Image from "next/image";
 import { BrandSearchHandler } from "@/components/brand-details/BrandSearchHandler";
 import Head from "next/head";
 
+// Mantenemos extractProductId para compatibilidad hacia atrás con URLs legacy
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { extractProductId } from "@/lib/utils";
+
 export default async function BrandDetailPage({
   params,
   searchParams,
@@ -36,6 +41,7 @@ export default async function BrandDetailPage({
     subcategory?: string;
     productName?: string;
     productId?: string;
+    hideOutOfStock?: string;
   }>;
 }) {
   const { slug } = await params;
@@ -44,11 +50,16 @@ export default async function BrandDetailPage({
     category,
     subcategory,
     productName,
-    productId,
+    productId: rawProductId,
+    hideOutOfStock: hideOutOfStockParam,
   } = await searchParams;
-  const currentPage = pageParam ? Math.max(1, parseInt(pageParam)) : 1; // Nunca permitir página 0 o negativa
 
-  // Construir objeto de filtros
+  // Extraer el productId real del slug (soporta formatos: "620863" y "620863-nombre-producto")
+  const productId = rawProductId ? extractProductId(rawProductId) : undefined;
+  const currentPage = pageParam ? Math.max(1, parseInt(pageParam)) : 1; // Nunca permitir página 0 o negativa
+  const hideOutOfStock = hideOutOfStockParam === "true";
+
+  // Construir objeto de filtros (sin hasStock - el filtrado se hace en frontend)
   const filters: ProductFilters = {};
   if (category) filters.category = decodeURIComponent(category);
   if (subcategory) filters.subcategory = decodeURIComponent(subcategory);
@@ -69,8 +80,13 @@ export default async function BrandDetailPage({
     return (
       <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Marca no encontrada</h1>
-          <Link href="/test-brands" className="text-blue-600 hover:text-blue-800">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Marca no encontrada
+          </h1>
+          <Link
+            href="/test-brands"
+            className="text-blue-600 hover:text-blue-800"
+          >
             ← Volver a todas las marcas
           </Link>
         </div>
@@ -149,44 +165,59 @@ export default async function BrandDetailPage({
               href="/test-brands"
               className="text-blue-600 hover:text-blue-800 inline-flex items-center gap-2 transition-colors"
             >
-              ← Volver a todas las marcas
+              ← Ver todas las marcas
             </Link>
-            <h1 className="text-3xl font-bold mt-2">{brand.attributes.name}</h1>
-          </div>
+            <div className="flex justify-start items-center my-6">
+              <h1 className="text-3xl font-bold mt-2">
+                {brand.attributes.name}
+              </h1>
 
-          {/* Details Card */}
-          <div className="bg-white rounded-lg shadow p-6 space-y-6">
-            {/* Logo */}
-            {brand.attributes.logo && (
-              <div className="flex justify-center p-4 bg-zinc-50 rounded">
-                <Image
-                  src={brand.attributes.logo}
-                  alt={brand.attributes.name}
-                  className="max-w-xs max-h-28 object-contain"
-                  width={200}
-                  height={100}
-                />
-              </div>
-            )}
+              {brand.attributes.logo && (
+                <div className="">
+                  <Image
+                    src={brand.attributes.logo}
+                    alt={brand.attributes.name}
+                    className="max-w-xs max-h-28 object-contain"
+                    width={200}
+                    height={100}
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Products Section with Sidebar */}
           <div className="mt-12">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-              <h2 className="text-2xl font-bold">
-                {selectedProduct ? "Producto encontrado" : "Productos"}
-                {hasActiveFilters ? (
-                  <span className="text-lg font-normal text-gray-600 ml-2">
-                    ({productsData.meta.total_matches} coincidencias de{" "}
-                    {productsData.meta.total_products} totales)
-                  </span>
-                ) : (
-                  <span className="text-lg font-normal text-gray-600 ml-2">
-                    ({selectedProduct ? "1" : productsData.meta.total_products}{" "}
-                    productos)
-                  </span>
-                )}
-              </h2>
+              <div className="flex justify-start items-center gap-4">
+                <h2 className="text-2xl font-bold">
+                  {selectedProduct ? "Producto encontrado" : "Productos"}
+                  {hasActiveFilters ? (
+                    <span className="text-lg font-normal text-gray-600 ml-2">
+                      ({productsData.meta.total_matches} coincidencias de{" "}
+                      {productsData.meta.total_products} totales)
+                    </span>
+                  ) : (
+                    <span className="text-lg font-normal text-gray-600 ml-2">
+                      (
+                      {selectedProduct ? "1" : productsData.meta.total_products}{" "}
+                      productos)
+                    </span>
+                  )}
+                </h2>
+                <div>
+                  {/* Solo mostrar filtro de stock si no hay producto seleccionado */}
+                  {!selectedProduct && (
+                    <Suspense fallback={<div className="h-10" />}>
+                      <HideOutOfStockSwitch
+                        brandId={brandId}
+                        brandSlug={brandSlug}
+                      />
+                    </Suspense>
+                  )}
+                </div>
+              </div>
+
               {/* Solo mostrar paginación si NO hay producto seleccionado */}
               {!selectedProduct && (
                 <ProductPagination
@@ -248,6 +279,7 @@ export default async function BrandDetailPage({
                       currentPage={currentPage}
                       totalPages={1}
                       selectedProduct={selectedProduct}
+                      hideOutOfStock={hideOutOfStock}
                     />
                   </Suspense>
                 ) : (
@@ -260,6 +292,7 @@ export default async function BrandDetailPage({
                         brandSlug={brandSlug}
                         currentPage={currentPage}
                         totalPages={productsData.meta.total_pages}
+                        hideOutOfStock={hideOutOfStock}
                       />
                     }
                   >
@@ -270,6 +303,7 @@ export default async function BrandDetailPage({
                       currentPage={currentPage}
                       totalPages={productsData.meta.total_pages}
                       selectedProduct={null}
+                      hideOutOfStock={hideOutOfStock}
                     />
                   </Suspense>
                 )}

@@ -11,6 +11,7 @@ interface ProductsWithDataProps {
   currentPage: number;
   totalPages: number;
   selectedProduct?: Product | null;
+  hideOutOfStock?: boolean;
 }
 
 /**
@@ -28,6 +29,7 @@ export async function ProductsWithData({
   currentPage,
   totalPages,
   selectedProduct,
+  hideOutOfStock = false,
 }: ProductsWithDataProps) {
   // Extraer IDs de productos
   const productIds = products.map((product) => product.id);
@@ -74,6 +76,7 @@ export async function ProductsWithData({
       brandSlug={brandSlug}
       pricesData={pricesData}
       inventory={inventory}
+      hideOutOfStock={hideOutOfStock}
     />
   );
 }

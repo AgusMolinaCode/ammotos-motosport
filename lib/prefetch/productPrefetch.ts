@@ -2,7 +2,7 @@
 
 import { productsSyncService } from "@/infrastructure/services/ProductsSyncService";
 import { pricingSyncService } from "@/infrastructure/services/PricingSyncService";
-import type { ProductFilters } from "@/application/actions/products";
+import type { ProductFilters } from "@/infrastructure/services/ProductsSyncService";
 
 /**
  * Prefetch inteligente de páginas adyacentes en background

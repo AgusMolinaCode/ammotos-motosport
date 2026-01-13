@@ -3,14 +3,7 @@
 import { productsSyncService } from "@/infrastructure/services/ProductsSyncService";
 import { prisma } from "@/infrastructure/database/prisma";
 import type { ProductData, ProductsResponse, Product as Turn14Product, ProductFile, Product } from "@/domain/types/turn14/products";
-import type { BrandFilterData } from "@/infrastructure/services/ProductsSyncService";
-
-// Tipo para filtros de productos
-export interface ProductFilters {
-  category?: string;
-  subcategory?: string;
-  productName?: string;
-}
+import type { BrandFilterData, ProductFilters } from "@/infrastructure/services/ProductsSyncService";
 
 // Tipo para productos en OfferItems
 export interface OfferProduct {
@@ -57,7 +50,7 @@ export async function getProductsByBrand(
 ): Promise<ProductsWithFiltersResult> {
   try {
     const hasFilters = !!(
-      filters.category || filters.subcategory || filters.productName
+      filters.category || filters.subcategory || filters.productName || filters.hasStock
     );
 
     // Obtener productos y total de productos en paralelo
@@ -365,6 +358,114 @@ export async function getProductForGrid(productId: string): Promise<Product | nu
   // Si no está en MfrPartNumberMap, buscar en Product (formato completo)
   const product = await prisma.product.findUnique({
     where: { id: productId },
+  });
+
+  if (product) {
+    return {
+      id: product.id,
+      type: "Item" as const,
+      attributes: {
+        product_name: product.productName,
+        part_number: product.partNumber,
+        mfr_part_number: product.mfrPartNumber,
+        part_description: product.partDescription || "",
+        category: product.category,
+        subcategory: product.subcategory,
+        dimensions: product.dimensions as unknown as Product["attributes"]["dimensions"],
+        brand_id: product.brandId,
+        brand: product.brandName,
+        price_group_id: product.priceGroupId,
+        price_group: product.priceGroup,
+        active: product.active,
+        born_on_date: "",
+        regular_stock: product.regularStock,
+        powersports_indicator: false,
+        clearance_item: product.clearanceItem,
+        dropship_controller_id: 0,
+        air_freight_prohibited: false,
+        ltl_freight_required: false,
+        units_per_sku: 1,
+        not_carb_approved: false,
+        carb_acknowledgement_required: false,
+        carb_eo_number: null,
+        prop_65: "N",
+        epa: "N/A",
+        warehouse_availability: product.warehouseAvailability as unknown as Product["attributes"]["warehouse_availability"],
+        thumbnail: product.thumbnail || "",
+        barcode: undefined,
+        alternate_part_number: null,
+        contents: null,
+      },
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Obtener un producto por su mfrPartNumber
+ * 1. Busca en MfrPartNumberMap (más completo)
+ * 2. Si no está, busca en Product
+ * 3. Si no está en DB, busca directamente en Turn14 API
+ */
+export async function getProductByMfrPartNumber(
+  mfrPartNumber: string
+): Promise<Product | null> {
+  const normalizedPartNumber = mfrPartNumber.toUpperCase();
+
+  // Primero buscar en MfrPartNumberMap (tiene todos los productos mapeados)
+  const mappedProduct = await prisma.mfrPartNumberMap.findFirst({
+    where: {
+      OR: [
+        { mfrPartNumber: normalizedPartNumber },
+        // También buscar sin guiones para mayor tolerancia
+        { mfrPartNumber: normalizedPartNumber.replace(/-/g, "") },
+      ],
+    },
+  });
+
+  if (mappedProduct) {
+    return {
+      id: mappedProduct.productId,
+      type: "Item" as const,
+      attributes: {
+        product_name: mappedProduct.productName,
+        part_number: "",
+        mfr_part_number: mappedProduct.mfrPartNumber,
+        part_description: "",
+        category: "Other",
+        subcategory: "Other",
+        dimensions: [],
+        brand_id: mappedProduct.brandId,
+        brand: mappedProduct.brandName,
+        price_group_id: 0,
+        price_group: "Standard",
+        active: true,
+        born_on_date: "",
+        regular_stock: true,
+        powersports_indicator: false,
+        clearance_item: false,
+        dropship_controller_id: 0,
+        air_freight_prohibited: false,
+        ltl_freight_required: false,
+        units_per_sku: 1,
+        not_carb_approved: false,
+        carb_acknowledgement_required: false,
+        carb_eo_number: null,
+        prop_65: "N",
+        epa: "N/A",
+        warehouse_availability: [],
+        thumbnail: mappedProduct.thumbnail || "",
+        barcode: undefined,
+        alternate_part_number: null,
+        contents: null,
+      },
+    };
+  }
+
+  // Si no está en MfrPartNumberMap, buscar en Product
+  const product = await prisma.product.findFirst({
+    where: { mfrPartNumber: normalizedPartNumber },
   });
 
   if (product) {
