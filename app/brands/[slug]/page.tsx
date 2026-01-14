@@ -14,7 +14,7 @@ import { ProductsWithData } from "@/components/products/ProductsWithData";
 import { SelectedProductView } from "@/components/products/SelectedProductView";
 import { HideOutOfStockSwitch } from "@/components/products/StockFilterSwitch";
 import { CategorySidebarAccordion } from "@/components/sidebar/CategorySidebarAccordion";
-import { MobileCategoryButton } from "@/components/sidebar/MobileCategoryButton";
+import { MobileFilterButton } from "@/components/sidebar/MobileFilterButton";
 import { ActiveFilters } from "@/components/filters/ActiveFilters";
 import { ProductPagination } from "@/components/products/ProductPagination";
 import { prefetchAdjacentPages } from "@/lib/prefetch/productPrefetch";
@@ -238,16 +238,11 @@ export default async function BrandDetailPage({
               />
             )}
 
-            {/* Mobile Category Filter Button - solo si no hay producto seleccionado */}
-            {!selectedProduct && (
-              <MobileCategoryButton categories={categories} />
-            )}
-
             {/* Layout: Sidebar + Products Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-8">
-              {/* Sidebar - Hidden on mobile, visible on large screens */}
-              <div className="hidden lg:block">
-                <div className="sticky top-6">
+            <div className="grid grid-cols-1 xl:grid-cols-[320px_1fr] gap-6 xl:gap-8">
+              {/* Sidebar - Solo visible en xl+ (desktop) */}
+              <div className="hidden xl:block xl:col-span-1">
+                <div className="xl:sticky xl:top-6">
                   <CategorySidebarAccordion
                     categories={categories}
                     subcategories={subcategories}
@@ -260,7 +255,18 @@ export default async function BrandDetailPage({
               </div>
 
               {/* Products Grid con carga ultra-progresiva */}
-              <div>
+              <div className="xl:col-span-1">
+                {/* Botón filtros móvil - visible solo en < xl */}
+                <div className="xl:hidden mb-4">
+                  <MobileFilterButton
+                    categories={categories}
+                    subcategories={subcategories}
+                    productNames={productNames}
+                    brandId={brandId}
+                    brandSlug={brandSlug}
+                    activeFilters={filters}
+                  />
+                </div>
                 {/* Si hay producto seleccionado, usar SelectedProductView */}
                 {selectedProduct ? (
                   <Suspense
