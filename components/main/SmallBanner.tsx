@@ -5,7 +5,7 @@ import { Instagram, Facebook } from "lucide-react";
 const SmallBanner = () => {
   return (
     <div className="h-10 bg-blue-900/70 flex justify-around items-center">
-      <div>
+      <div className="hidden md:block">
         <p className="text-center text-white font-medium py-2">
           Soporte 24/7:{" "}
           <Link href="mailto:am.motos@hotmail.com" className="underline">

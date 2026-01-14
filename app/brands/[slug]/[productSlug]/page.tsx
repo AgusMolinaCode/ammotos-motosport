@@ -115,13 +115,26 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <div className="min-h-screen bg-zinc-50">
       <div className="max-w-[110rem] mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <Link
-            href="/test-brands"
-            className="text-blue-600 hover:text-blue-800 inline-flex items-center gap-2 transition-colors"
-          >
-            ← Ver todas las marcas
-          </Link>
+        <div className="my-6">
+          <div className="flex flex-wrap items-center gap-4 px-2">
+            <Link
+              href="/test-brands"
+              className="text-blue-600 hover:text-blue-800 inline-flex items-center gap-2 transition-colors font-semibold text-lg md:text-xl shrink-0 whitespace-nowrap"
+            >
+              ← Ver todas las marcas
+            </Link>
+            {/* Botón filtros móvil - visible solo en < xl */}
+            <div className="xl:hidden flex-1 min-w-0">
+              <CategorySidebarAccordion
+                categories={categories}
+                subcategories={subcategories}
+                productNames={productNames}
+                brandId={brandId}
+                brandSlug={brandSlugFromDb}
+                activeFilters={{}}
+              />
+            </div>
+          </div>
           <div className="flex justify-start items-center my-6">
             <h1 className="text-3xl font-bold mt-2">{brand.attributes.name}</h1>
 
@@ -166,17 +179,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
             {/* Product */}
             <div className="xl:col-span-1">
-              {/* Botón filtros móvil - visible solo en < xl */}
-              <div className="xl:hidden mb-4">
-                <CategorySidebarAccordion
-                  categories={categories}
-                  subcategories={subcategories}
-                  productNames={productNames}
-                  brandId={brandId}
-                  brandSlug={brandSlugFromDb}
-                  activeFilters={{}}
-                />
-              </div>
               {selectedProduct ? (
                 <Suspense
                   fallback={
