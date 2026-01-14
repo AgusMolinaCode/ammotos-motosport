@@ -103,9 +103,9 @@ export function ProductDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-full max-w-6xl max-h-[90vh] overflow-y-auto m-4 sm:m-6">
         <DialogHeader>
-          <DialogTitle className="text-xl pr-8">Detalles del Producto</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl pr-8">Detalles del Producto</DialogTitle>
           <DialogClose className="absolute right-4 top-4" onClick={handleClose}>
             <X className="h-4 w-4" />
           </DialogClose>
@@ -113,9 +113,9 @@ export function ProductDetailDialog({
 
         <div className="space-y-4 mt-4">
           {/* Carousel de imágenes */}
-          <div className="relative bg-zinc-50 rounded-lg p-4">
+          <div className="relative bg-zinc-50 rounded-lg p-3 sm:p-4">
             {isLoading ? (
-              <div className="flex items-center justify-center h-64">
+              <div className="flex items-center justify-center h-48 sm:h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
               </div>
             ) : images.length > 0 ? (
@@ -126,12 +126,12 @@ export function ProductDetailDialog({
                     <Image
                       src={mainImageLink.url}
                       alt={displayImage?.media_content || product.attributes.product_name}
-                      className="object-contain"
+                      className="object-contain max-h-48 sm:max-h-64"
                       width={600}
                       height={600}
                     />
                   ) : (
-                    <div className="flex items-center justify-center h-72 text-zinc-400">
+                    <div className="flex items-center justify-center h-48 sm:h-64 text-zinc-400">
                       Sin imagen
                     </div>
                   )}
@@ -141,17 +141,17 @@ export function ProductDetailDialog({
                     <>
                       <button
                         onClick={() => setCurrentImageIndex(prev => (prev > 0 ? prev - 1 : images.length - 1))}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 rounded-full hover:bg-white shadow-md transition-colors"
+                        className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 bg-white/80 rounded-full hover:bg-white shadow-md transition-colors"
                         disabled={isLoading}
                       >
-                        <ChevronLeft className="h-5 w-5" />
+                        <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                       </button>
                       <button
                         onClick={() => setCurrentImageIndex(prev => (prev < images.length - 1 ? prev + 1 : 0))}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 rounded-full hover:bg-white shadow-md transition-colors"
+                        className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 bg-white/80 rounded-full hover:bg-white shadow-md transition-colors"
                         disabled={isLoading}
                       >
-                        <ChevronRight className="h-5 w-5" />
+                        <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
                       </button>
                     </>
                   )}
@@ -159,7 +159,7 @@ export function ProductDetailDialog({
 
                 {/* Indicadores de imagen */}
                 {images.length > 1 && (
-                  <div className="flex justify-center gap-2 mt-4">
+                  <div className="flex justify-center gap-2 mt-3 sm:mt-4">
                     {images.map((_, idx) => (
                       <button
                         key={idx}
@@ -171,11 +171,6 @@ export function ProductDetailDialog({
                     ))}
                   </div>
                 )}
-
-                {/* Label de la imagen actual */}
-                {/* <p className="text-center text-sm text-zinc-500 mt-2">
-                  {displayImage?.media_content || `Imagen ${currentImageIndex + 1} de ${images.length}`}
-                </p> */}
               </>
             ) : (
               // Thumbnail fallback
@@ -184,12 +179,12 @@ export function ProductDetailDialog({
                   <Image
                     src={product.attributes.thumbnail}
                     alt={product.attributes.product_name}
-                    className="object-contain max-h-64"
+                    className="object-contain max-h-48 sm:max-h-64"
                     width={300}
                     height={256}
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-64 text-zinc-400">
+                  <div className="flex items-center justify-center h-48 sm:h-64 text-zinc-400">
                     Sin imagen
                   </div>
                 )}
@@ -198,24 +193,24 @@ export function ProductDetailDialog({
           </div>
 
           {/* Información principal */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <p className="text-sm font-semibold text-zinc-500">Pieza #</p>
-              <p className="text-lg font-medium text-cyan-600">
+              <p className="text-xs sm:text-sm font-semibold text-zinc-500">Pieza #</p>
+              <p className="text-base sm:text-lg font-medium text-cyan-600">
                 {product.attributes.mfr_part_number}
               </p>
             </div>
             <div>
-              <p className="text-sm font-semibold text-zinc-500">Turn14 ID</p>
-              <p className="text-lg">{product.id}</p>
+              <p className="text-xs sm:text-sm font-semibold text-zinc-500">Turn14 ID</p>
+              <p className="text-base sm:text-lg">{product.id}</p>
             </div>
-            <div className="col-span-2">
-              <p className="text-sm font-semibold text-zinc-500">Nombre del Producto</p>
-              <p className="text-lg">{product.attributes.product_name}</p>
+            <div className="sm:col-span-2">
+              <p className="text-xs sm:text-sm font-semibold text-zinc-500">Nombre del Producto</p>
+              <p className="text-base sm:text-lg">{product.attributes.product_name}</p>
             </div>
-            <div className="col-span-2">
-              <p className="text-sm font-semibold text-zinc-500">Descripción Corta</p>
-              <p className="text-gray-700">
+            <div className="sm:col-span-2">
+              <p className="text-xs sm:text-sm font-semibold text-zinc-500">Descripción Corta</p>
+              <p className="text-sm text-gray-700">
                 {product.attributes.part_description || "Sin descripción"}
               </p>
             </div>
@@ -223,8 +218,8 @@ export function ProductDetailDialog({
 
           {/* Descripciones largas del API */}
           {productData?.descriptions && productData.descriptions.length > 0 && (
-            <div className="bg-zinc-50 rounded-lg p-4 space-y-3">
-              <h4 className="font-semibold text-zinc-700">Descripción Detallada</h4>
+            <div className="bg-zinc-50 rounded-lg p-3 sm:p-4 space-y-2 sm:space-y-3">
+              <h4 className="font-semibold text-zinc-700 text-sm sm:text-base">Descripción Detallada</h4>
               {productData.descriptions.map((desc, idx) => (
                 <div key={idx} className="text-sm">
                   <p className="font-medium text-zinc-600">{desc.type}</p>
@@ -236,8 +231,8 @@ export function ProductDetailDialog({
 
           {/* Archivos PDF (manuales, etc.) */}
           {productData?.files && productData.files.filter(f => f.type !== "Image").length > 0 && (
-            <div className="bg-zinc-50 rounded-lg p-4 space-y-2">
-              <h4 className="font-semibold text-zinc-700">Documentos</h4>
+            <div className="bg-zinc-50 rounded-lg p-3 sm:p-4 space-y-2">
+              <h4 className="font-semibold text-zinc-700 text-sm sm:text-base">Documentos</h4>
               <div className="flex flex-wrap gap-2">
                 {productData.files
                   .filter(f => f.type !== "Image")
@@ -250,7 +245,7 @@ export function ProductDetailDialog({
                       className="flex items-center gap-2 px-3 py-2 bg-white rounded border border-zinc-200 hover:bg-zinc-50 transition-colors text-sm"
                     >
                       <span className="text-red-600 font-semibold">{file.file_extension}</span>
-                      <span>{file.media_content}</span>
+                      <span className="truncate max-w-[150px] sm:max-w-none">{file.media_content}</span>
                     </a>
                   ))}
               </div>
@@ -259,24 +254,24 @@ export function ProductDetailDialog({
 
           {/* Sección de precios */}
           {pricesData && (
-            <div className="bg-zinc-50 rounded-lg p-4 space-y-2">
-              <h4 className="font-semibold text-zinc-700">Información de Precios</h4>
-              <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="bg-zinc-50 rounded-lg p-3 sm:p-4 space-y-2">
+              <h4 className="font-semibold text-zinc-700 text-sm sm:text-base">Información de Precios</h4>
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
                 <div>
                   <p className="text-xs text-zinc-500">Retail</p>
-                  <p className="text-lg text-zinc-600 line-through">
+                  <p className="text-base sm:text-lg text-zinc-600 line-through">
                     ${pricesData.find(p => p.productId === product.id)?.retailPrice?.toFixed(2) || "-"}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-zinc-500">MAP</p>
-                  <p className="text-lg text-zinc-600">
+                  <p className="text-base sm:text-lg text-zinc-600">
                     ${pricesData.find(p => p.productId === product.id)?.mapPrice?.toFixed(2) || "-"}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-zinc-500">Tu Precio</p>
-                  <p className="text-2xl font-bold text-orange-500">
+                  <p className="text-xl sm:text-2xl font-bold text-orange-500">
                     ${pricesData.find(p => p.productId === product.id)?.purchaseCost.toFixed(2) || "-"}
                   </p>
                 </div>
@@ -286,12 +281,12 @@ export function ProductDetailDialog({
 
           {/* Sección de inventario */}
           {inventory && inventory[product.id] && (
-            <div className="bg-zinc-50 rounded-lg p-4 space-y-2">
-              <h4 className="font-semibold text-zinc-700">Inventario</h4>
-              <div className="grid grid-cols-2 gap-4">
+            <div className="bg-zinc-50 rounded-lg p-3 sm:p-4 space-y-2">
+              <h4 className="font-semibold text-zinc-700 text-sm sm:text-base">Inventario</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <p className="text-sm text-zinc-500">Stock Total</p>
-                  <p className={`text-lg font-medium ${
+                  <p className="text-xs sm:text-sm text-zinc-500">Stock Total</p>
+                  <p className={`text-base sm:text-lg font-medium ${
                     inventory[product.id].hasStock
                       ? "text-green-600"
                       : "text-red-600"
@@ -303,11 +298,11 @@ export function ProductDetailDialog({
                 </div>
                 {inventory[product.id].manufacturer && (
                   <div>
-                    <p className="text-sm text-zinc-500">Stock del Fabricante</p>
-                    <p className="text-lg text-orange-600">
+                    <p className="text-xs sm:text-sm text-zinc-500">Stock del Fabricante</p>
+                    <p className="text-base sm:text-lg text-orange-600">
                       {inventory[product.id].manufacturer!.stock} unidades
                       {inventory[product.id].manufacturer!.esd && (
-                        <span className="text-sm text-zinc-500 ml-2">
+                        <span className="text-xs sm:text-sm text-zinc-500 ml-2 block sm:inline">
                           (ESD: {formatDateSpanish(inventory[product.id].manufacturer!.esd)})
                         </span>
                       )}
@@ -319,7 +314,7 @@ export function ProductDetailDialog({
           )}
 
           {/* Información adicional */}
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
             <div>
               <p className="font-semibold text-zinc-500">Fabricante</p>
               <p>{product.attributes.brand}</p>
@@ -350,7 +345,7 @@ export function ProductDetailDialog({
             </div>
             <div>
               <p className="font-semibold text-zinc-500">Part Number Alterno</p>
-              <p>{product.attributes.alternate_part_number || "-"}</p>
+              <p className="truncate">{product.attributes.alternate_part_number || "-"}</p>
             </div>
             <div>
               <p className="font-semibold text-zinc-500">Barcode</p>

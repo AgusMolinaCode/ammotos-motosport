@@ -78,19 +78,19 @@ export function SelectedProductView({
         `}
       >
         {/* Contenedor principal */}
-        <div className="flex flex-col md:flex-row flex-1 p-6 gap-6">
+        <div className="flex flex-col md:flex-row flex-1 p-4 md:p-6 gap-4 md:gap-6">
           {/* Imagen */}
           <button
             onClick={() => setSelectedProduct(product)}
-            className="w-full md:w-48 h-64 md:h-full shrink-0 bg-zinc-50 rounded flex items-center justify-center overflow-hidden hover:bg-zinc-100 transition-colors cursor-pointer"
+            className="w-full md:w-40 h-48 md:h-full shrink-0 bg-zinc-50 rounded flex items-center justify-center overflow-hidden hover:bg-zinc-100 transition-colors cursor-pointer"
           >
             {product.attributes.thumbnail ? (
               <Image
                 src={product.attributes.thumbnail}
                 alt={product.attributes.product_name}
                 className="object-contain"
-                width={180}
-                height={180}
+                width={150}
+                height={150}
               />
             ) : (
               <span className="text-zinc-400 text-sm">Sin imagen</span>
@@ -102,17 +102,17 @@ export function SelectedProductView({
             {/* Part Number */}
             <button
               onClick={() => setSelectedProduct(product)}
-              className="text-2xl md:text-4xl font-medium text-cyan-600 mb-3 hover:text-cyan-700 transition-colors cursor-pointer text-left"
+              className="text-xl md:text-4xl font-medium text-cyan-600 mb-2 hover:text-cyan-700 transition-colors cursor-pointer text-left"
             >
               Pieza #: {product.attributes.mfr_part_number}
             </button>
 
             {/* Detalles del producto */}
-            <div className="space-y-2 text-lg text-gray-800">
-              <p>
+            <div className="space-y-1.5 text-sm md:text-lg text-gray-800">
+              <p className="flex flex-col md:flex-row md:items-center gap-1 md:gap-0">
                 <span className="font-semibold">Fabricante:</span>{" "}
                 {product.attributes.product_name.split(" ")[0]}
-                <span className="font-semibold ml-4">Pricing Group:</span>{" "}
+                <span className="font-semibold md:ml-4">Pricing Group:</span>{" "}
                 {product.attributes.price_group}
               </p>
               <p>
@@ -152,7 +152,7 @@ export function SelectedProductView({
           </div>
 
           {/* Precio e Inventario */}
-          <div className="w-full md:w-64 shrink-0">
+          <div className="w-full md:w-56 shrink-0 mt-2 md:mt-0">
             {pricesData && inventory ? (
               <ProductPriceAndStock
                 productId={product.id}
@@ -162,8 +162,8 @@ export function SelectedProductView({
                 inventory={inventory[product.id] || null}
               />
             ) : (
-              <div className="h-48 bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
-                <span className="text-gray-400">Cargando precio...</span>
+              <div className="h-40 md:h-48 bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
+                <span className="text-gray-400 text-sm">Cargando precio...</span>
               </div>
             )}
           </div>

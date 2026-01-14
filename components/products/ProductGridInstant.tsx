@@ -141,16 +141,16 @@ export function ProductGridInstant({
             <div
               key={product.id}
               className={`
-                border-l-8 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 flex h-64
+                border-l-8 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col sm:flex-row h-auto sm:h-64
                 ${getBorderColor()}
               `}
             >
               {/* Contenedor principal */}
-              <div className="flex flex-1 p-4 gap-4">
+              <div className="flex flex-col sm:flex-row flex-1 p-3 sm:p-4 gap-3 sm:gap-4">
                 {/* Imagen - Clickable */}
                 <button
                   onClick={() => setSelectedProduct(product)}
-                  className="w-28 h-28 shrink-0 bg-zinc-50 rounded flex items-center justify-center overflow-hidden hover:bg-zinc-100 transition-colors cursor-pointer"
+                  className="w-full sm:w-28 h-48 sm:h-28 shrink-0 bg-zinc-50 rounded flex items-center justify-center overflow-hidden hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
                   {product.attributes.thumbnail ? (
                     <Image
@@ -170,17 +170,17 @@ export function ProductGridInstant({
                   {/* Part Number - Clickable */}
                   <button
                     onClick={() => setSelectedProduct(product)}
-                    className="text-xl md:text-3xl font-medium text-cyan-600 mb-1 hover:text-cyan-700 transition-colors cursor-pointer text-left"
+                    className="text-lg sm:text-xl md:text-3xl font-medium text-cyan-600 mb-1 hover:text-cyan-700 transition-colors cursor-pointer text-left"
                   >
-                    Pieza #: {product.attributes.mfr_part_number}
+                     {product.attributes.mfr_part_number}
                   </button>
 
                   {/* Detalles del producto */}
-                  <div className="space-y-0.5 text-md text-gray-800">
-                    <p>
+                  <div className="space-y-0.5 text-sm sm:text-md text-gray-800">
+                    <p className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
                       <span className="font-semibold">Fabricante:</span>{" "}
                       {product.attributes.product_name.split(" ")[0]}{" "}
-                      <span className="font-semibold ml-2">Pricing Group:</span>{" "}
+                      <span className="font-semibold sm:ml-2">Pricing Group:</span>{" "}
                       {product.attributes.price_group}
                     </p>
                     <p>
@@ -219,7 +219,7 @@ export function ProductGridInstant({
                     )}
                     {/* Etiqueta de Sin Stock */}
                     {isOutOfStock && (
-                      <p className="text-red-600 font-bold text-lg">
+                      <p className="text-red-600 font-bold text-base sm:text-lg">
                         ❌ Sin Stock
                       </p>
                     )}

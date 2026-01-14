@@ -165,7 +165,7 @@ export function MobileFilterButton({
       {/* Botón para abrir filtros */}
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors w-full"
+        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors w-1/2"
       >
         <FilterIcon className="h-4 w-4" />
         <span className="text-sm font-medium">Filtros</span>

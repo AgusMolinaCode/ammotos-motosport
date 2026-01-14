@@ -8,7 +8,6 @@ import { Suspense } from "react";
 import type { PriceGroup } from "@/domain/types/turn14/brands";
 import { ProductsWithData } from "@/components/products/ProductsWithData";
 import { CategorySidebarAccordion } from "@/components/sidebar/CategorySidebarAccordion";
-import { MobileFilterButton } from "@/components/sidebar/MobileFilterButton";
 import { ActiveFilters } from "@/components/filters/ActiveFilters";
 import {
   traducirCategoria,
@@ -169,7 +168,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <div className="xl:col-span-1">
               {/* Botón filtros móvil - visible solo en < xl */}
               <div className="xl:hidden mb-4">
-                <MobileFilterButton
+                <CategorySidebarAccordion
                   categories={categories}
                   subcategories={subcategories}
                   productNames={productNames}
