@@ -170,7 +170,7 @@ export async function getProductsByBrandsForOffers(
 ): Promise<OfferProduct[]> {
   try {
     // Pedimos más productos para compensar los que se filtran por no tener files
-    const fetchCount = Math.ceil(count * 10);
+    const fetchCount = Math.ceil(count * 4);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const products = await productsSyncService.getProductsByBrands(fetchCount, brandIds) as any as OfferProduct[];
 
