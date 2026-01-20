@@ -19,22 +19,45 @@ interface OfferProduct {
   price: number | null;
 }
 
+interface BrandData {
+  brandId: number;
+  products: OfferProduct[];
+  logo: string | null;
+  brandName: string;
+}
+
+const BRANDS_CONFIG = [
+  { id: 405, count: 4 },
+  { id: 228, count: 4 },
+  { id: 165, count: 4 },
+];
+
 const OfferItems = () => {
-  const [products, setProducts] = useState<OfferProduct[]>([]);
-  const [brandLogo, setBrandLogo] = useState<string | null>(null);
+  const [brandsData, setBrandsData] = useState<BrandData[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Fetch products on mount
   useEffect(() => {
     async function fetchData() {
+      console.log("Iniciando fetchData...");
       try {
-        const brandId = 405;
-        const [data, logo] = await Promise.all([
-          getProductsByBrandsForOffers(4, [brandId]),
-          getBrandLogo(brandId),
-        ]);
-        setProducts(data);
-        setBrandLogo(logo);
+        const results = await Promise.all(
+          BRANDS_CONFIG.map(async (config) => {
+            console.log(`Fetching brand ${config.id}...`);
+            const products = await getProductsByBrandsForOffers(config.count, [config.id]);
+            console.log(`Brand ${config.id} productos obtenidos:`, products.length);
+            const logo = await getBrandLogo(config.id);
+            console.log(`Brand ${config.id} logo:`, logo);
+            return {
+              brandId: config.id,
+              products,
+              logo,
+              brandName: products[0]?.brandName || "",
+            };
+          })
+        );
+        console.log("All brands data:", results);
+        setBrandsData(results);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -43,8 +66,6 @@ const OfferItems = () => {
     }
     fetchData();
   }, []);
-
-  const displayProducts = products.slice(0, 12);
 
   if (loading) {
     return (
@@ -60,42 +81,48 @@ const OfferItems = () => {
   }
 
   return (
-    <div className="max-w-[110rem] mx-auto px-4 py-20">
-      <div className="flex items-center gap-4 mb-4">
-        {brandLogo && (
-          <Image
-            src={brandLogo}
-            alt="Brand logo"
-            width={80}
-            height={40}
-            className="object-contain"
-          />
-        )}
-        <h1 className="text-4xl underline font-bold">
-          {displayProducts[0]?.brandName || "Ofertas"}
-        </h1>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 ">
-        {displayProducts.map((product) => {
-          const imageUrl =
-            product.files[0]?.links?.[0]?.url || "/placeholder.png";
-
-          return (
-            <div
-              key={product.id}
-              className="aspect-square border rounded-lg overflow-hidden shadow-sm"
-            >
+    <div className="max-w-[110rem] mx-auto px-2 md:px-4 py-16 md:py-20 space-y-12">
+      {brandsData
+        .filter((brandData) => brandData.products.length > 0)
+        .map((brandData) => (
+          <div key={brandData.brandId}>
+          <div className="flex items-center gap-2 md:gap-4 mb-4">
+            {brandData.logo && (
               <Image
-                src={imageUrl}
-                alt={product.productName}
-                className="w-full h-full object-contain"
-                width={400}
-                height={400}
+                src={brandData.logo}
+                alt="Brand logo"
+                width={80}
+                height={40}
+                className="object-contain md:w-[100px] md:h-[80px] w-[80px] h-[60px]"
               />
-            </div>
-          );
-        })}
-      </div>
+            )}
+            <h1 className="text-2xl md:text-4xl underline font-bold">
+              {brandData.brandName || "Ofertas"}
+            </h1>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {brandData.products.map((product) => {
+              const imageUrl =
+                product.files[0]?.links?.[0]?.url || "/placeholder.png";
+
+              return (
+                <div
+                  key={product.id}
+                  className="aspect-square border rounded-lg overflow-hidden shadow-sm"
+                >
+                  <Image
+                    src={imageUrl}
+                    alt={product.productName}
+                    className="w-full h-full object-contain"
+                    width={400}
+                    height={400}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

@@ -161,16 +161,24 @@ export async function getRecommendedProducts(count: number = 10) {
 
 /**
  * Obtener productos de brands específicos (para sección de ofertas)
- * @param count - Cantidad de productos
+ * @param count - Cantidad de productos FINAL (sepedido más para compensar filtrado)
  * @param brandIds - Array de IDs de brands
  */
 export async function getProductsByBrandsForOffers(
-  count: number = 12,
+  count: number = 6,
   brandIds: number[]
 ): Promise<OfferProduct[]> {
   try {
+    // Pedimos más productos para compensar los que se filtran por no tener files
+    const fetchCount = Math.ceil(count * 10);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return await productsSyncService.getProductsByBrands(count, brandIds) as any as OfferProduct[];
+    const products = await productsSyncService.getProductsByBrands(fetchCount, brandIds) as any as OfferProduct[];
+
+    // Filtrar solo productos que tienen files con items
+    const filteredProducts = products.filter((p) => p.files && p.files.length > 0);
+
+    // Retornar solo la cantidad solicitada
+    return filteredProducts.slice(0, count);
   } catch (error) {
     console.error("Error fetching products by brands:", error);
     return [];
