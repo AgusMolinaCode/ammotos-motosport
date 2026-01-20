@@ -12,7 +12,8 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: {
-    default: "AmPowerparts - Tu Tienda de Repuestos y Accesorios para Autos Deportivos",
+    default:
+      "AmPowerparts - Tu Tienda de Repuestos y Accesorios para Autos Deportivos",
     template: "%s | AmPowerparts",
   },
   description:
@@ -86,14 +87,14 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body
-        className={`${outfit.className} antialiased bg-gradient-to-l from-[#f7f7f7] to-[#fefbfb] `}
+        className={`${outfit.className} antialiased bg-gradient-to-l from-[#f7f7f7] to-[#fefbfb]`}
       >
         <SmallBanner />
         <Navbar />
-        <div className="bg-orange-100/30 w-full border border-neutral-600">
+        <div className="bg-orange-100/30 w-full border-t border-b border-neutral-600 px-1">
           <SearchBar />
         </div>
-        {children}
+        <div className="px-2">{children}</div>
       </body>
     </html>
   );

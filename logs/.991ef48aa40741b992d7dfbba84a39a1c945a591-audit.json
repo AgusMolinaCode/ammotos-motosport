@@ -6,26 +6,6 @@
     "auditLog": "C:\\Users\\urano\\OneDrive\\Escritorio\\Programacion\\turn14_ammotos\\logs\\.991ef48aa40741b992d7dfbba84a39a1c945a591-audit.json",
     "files": [
         {
-            "date": 1767293167861,
-            "name": "C:\\Users\\urano\\OneDrive\\Escritorio\\Programacion\\turn14_ammotos\\logs\\mcp-puppeteer-2026-01-01.log",
-            "hash": "f4a090349df8137ce807292bbc5fd1725199d079d495655db1785e341e1209b2"
-        },
-        {
-            "date": 1767351898289,
-            "name": "C:\\Users\\urano\\OneDrive\\Escritorio\\Programacion\\turn14_ammotos\\logs\\mcp-puppeteer-2026-01-02.log",
-            "hash": "152dd28b2cf19f770146ed537c4307721ccb12740ab06b3fa9d8486746641b02"
-        },
-        {
-            "date": 1767492058544,
-            "name": "C:\\Users\\urano\\OneDrive\\Escritorio\\Programacion\\turn14_ammotos\\logs\\mcp-puppeteer-2026-01-03.log",
-            "hash": "0739be530d27435c914055f85bcc2f5ea73fd749c7d30dd007f58ee90ea257bd"
-        },
-        {
-            "date": 1767499545925,
-            "name": "C:\\Users\\urano\\OneDrive\\Escritorio\\Programacion\\turn14_ammotos\\logs\\mcp-puppeteer-2026-01-04.log",
-            "hash": "fd8e8ab417877e853d6e5fdc9e62314832e72ff5e034179facaa32438bd2c9b3"
-        },
-        {
             "date": 1767614170973,
             "name": "C:\\Users\\urano\\OneDrive\\Escritorio\\Programacion\\turn14_ammotos\\logs\\mcp-puppeteer-2026-01-05.log",
             "hash": "a888b1e9bc0698d040f0baf391631a8bd2a398551a4ae06f40914e7c42a856ad"
@@ -74,6 +54,11 @@
             "date": 1768396559097,
             "name": "C:\\Users\\urano\\OneDrive\\Escritorio\\Programacion\\turn14_ammotos\\logs\\mcp-puppeteer-2026-01-14.log",
             "hash": "69922e3c3ac3775a2f4dec4131b1de4116eb87dc6ad02b3a2cd2defdf733ddb6"
+        },
+        {
+            "date": 1768823359401,
+            "name": "C:\\Users\\urano\\OneDrive\\Escritorio\\Programacion\\turn14_ammotos\\logs\\mcp-puppeteer-2026-01-19.log",
+            "hash": "8e472d2768e4c6aecc6f4d892dcf0d23f352d3202a8bfc555c62cc2548b8ca51"
         }
     ],
     "hashType": "sha256"

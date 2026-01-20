@@ -57,19 +57,19 @@ const SearchBar = () => {
   };
 
   return (
-    <div className="h-20 flex justify-between items-center gap-4 max-w-[110rem] mx-auto">
-      <div className="flex items-center justify-center gap-3">
-        <WhatsApp className="w-10 h-10 cursor-pointer" />
-        <p className="text-3xl font-semibold">11 5049-4936</p>
+    <div className="h-20 flex justify-between items-center gap-2 lg:gap-4 max-w-[110rem] mx-auto">
+      <div className="hidden md:flex items-center justify-center gap-3">
+        <WhatsApp className="w-8 lg:w-10 h-8 lg:h-10 cursor-pointer" />
+        <p className="text-2xl lg:text-3xl font-semibold">11 5049-4936</p>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-1 md:flex-none items-center gap-3">
         <GlobalSearchHandler />
       </div>
 
       <div>
         <Select onValueChange={handleBrandSelect} disabled={loading}>
-          <SelectTrigger className="w-[320px] h-18 bg-white border-gray-300 text-black text-lg font-medium rounded-lg focus:ring-0 focus:ring-gray-50">
+          <SelectTrigger className="hidden md:flex md:w-[240px] lg:w-[320px] h-18 bg-white border-gray-300 text-black text-lg font-medium rounded-lg focus:ring-0 focus:ring-gray-50">
             <SelectValue
               className="text-black"
               placeholder={loading ? "Cargando..." : "Marcas"}
