@@ -189,7 +189,7 @@ export function ProductSearchPopup({
           className="h-10 md:h-14 w-full md:w-[20rem] lg:w-[30rem] xl:w-[40rem] px-6 rounded-full border border-gray-300 bg-white text-black text-lg font-medium focus:ring-0 focus:ring-gray-50"
         />
         {/* Iconos a la derecha */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center h-14 w-14 bg-black rounded-full px-4">
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center md:h-14 h-10 w-10 md:w-14 bg-black rounded-full md:px-4 px-2">
           {loading ? (
             <Loader2 className="w-7 h-7 text-gray-400 animate-spin" />
           ) : query ? (
