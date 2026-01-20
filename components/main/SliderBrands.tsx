@@ -43,7 +43,7 @@ function SliderBrands() {
 
   if (loading) {
     return (
-      <div style={{ height: "280px", position: "relative", overflow: "hidden" }} className="bg-gray-100 animate-pulse">
+      <div style={{ height: "200px", position: "relative", overflow: "hidden" }} className="bg-gray-100 animate-pulse">
         <div className="flex items-center justify-center h-full">
           <p className="text-gray-800 font-semibold text-xl">Cargando marcas...</p>
         </div>
@@ -52,19 +52,20 @@ function SliderBrands() {
   }
 
   return (
-    <div style={{ height: "280px", position: "relative", overflow: "hidden" }}>
+    <div style={{ height: "200px", position: "relative", overflow: "hidden" }}>
       {logos.length > 0 ? (
         <LogoLoop
           logos={logos}
           speed={120}
           direction="left"
-          logoHeight={240}
+          logoHeight={150}
           gap={60}
           hoverSpeed={0}
           scaleOnHover
           fadeOut
           fadeOutColor="#f9fafb"
           ariaLabel="Nuestras marcas"
+          className="max-[480px]:[--logoloop-logoHeight:160px]"
         />
       ) : (
         <div className="flex items-center justify-center h-full bg-gray-100">

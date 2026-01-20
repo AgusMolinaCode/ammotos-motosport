@@ -17,7 +17,7 @@ const SkeletonOne = () => {
 
   return (
     <div className="flex flex-col items-start">
-      <p className="font-bold md:text-5xl text-4xl text-white drop-shadow-lg mb-2">
+      <p className="font-bold text-2xl md:text-3xl lg:text-5xl  text-white drop-shadow-lg mb-2">
         Productos en Oferta
       </p>
       <p className="font-normal text-lg text-gray-200 drop-shadow-md mb-6 max-w-lg">
@@ -43,7 +43,7 @@ const SkeletonTwo = () => {
 
   return (
     <div className="flex flex-col items-start">
-      <p className="font-bold md:text-4xl text-3xl text-white drop-shadow-lg mb-2">
+      <p className="font-bold text-2xl md:text-3xl lg:text-5xl text-white drop-shadow-lg mb-2">
         Suspension Ohlins
       </p>
       <p className="font-normal text-base text-gray-200 drop-shadow-md mb-4 max-w-sm">
@@ -68,7 +68,7 @@ const SkeletonThree = () => {
 
   return (
     <div className="flex flex-col items-start">
-      <p className="font-bold md:text-4xl text-3xl text-white drop-shadow-lg mb-2">
+      <p className="font-bold text-2xl md:text-3xl lg:text-5xl text-white drop-shadow-lg mb-2">
         Sparco
       </p>
       <p className="font-normal text-base text-gray-200 drop-shadow-md mb-4 max-w-sm">
@@ -93,7 +93,7 @@ const SkeletonFour = () => {
 
   return (
     <div className="flex flex-col items-start">
-      <p className="font-bold md:text-5xl text-4xl text-white drop-shadow-lg mb-2">
+      <p className="font-bold text-2xl md:text-3xl lg:text-5xl text-white drop-shadow-lg mb-2">
         Filtros de aire
       </p>
       <p className="font-normal text-lg text-gray-200 drop-shadow-md mb-6 max-w-lg">

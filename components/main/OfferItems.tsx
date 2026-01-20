@@ -33,10 +33,6 @@ const OfferItems = () => {
           getProductsByBrandsForOffers(4, [brandId]),
           getBrandLogo(brandId),
         ]);
-        console.log("=== OfferItems Debug ===");
-        console.log("Products count:", data.length);
-        console.log("Data completa:", JSON.stringify(data, null, 2));
-        console.log("Brand logo:", logo);
         setProducts(data);
         setBrandLogo(logo);
       } catch (error) {
