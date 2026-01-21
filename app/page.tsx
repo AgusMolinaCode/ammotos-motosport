@@ -3,17 +3,16 @@ import Navbar from "@/components/main/Navbar";
 import SearchBar from "@/components/main/SearchBar";
 import HeroTwo from "@/components/main/HeroTwo";
 import SliderBrands from "@/components/main/SliderBrands";
-import UpdateItems from "@/components/main/UpdateItems";
 import OfferItems from "@/components/main/OfferItems";
+import CategoriesItems from "@/components/main/CategoriesItems";
 
 export default function Home() {
   return (
     <div>
-      {/*  <Hero /> */}
       <HeroTwo />
       <SliderBrands />
       <OfferItems />
-      {/* <UpdateItems /> */}
+      <CategoriesItems />
     </div>
   );
 }
