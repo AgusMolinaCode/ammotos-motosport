@@ -7,6 +7,8 @@ import {
   getProductsByBrandsForOffers,
   getBrandLogo,
 } from "@/application/actions/products";
+import { getBrandSlug } from "@/application/actions/brands";
+import Link from "next/link";
 
 interface OfferProduct {
   id: string;
@@ -24,12 +26,13 @@ interface BrandData {
   products: OfferProduct[];
   logo: string | null;
   brandName: string;
+  slug: string;
 }
 
 const BRANDS_CONFIG = [
   { id: 405, count: 4 },
   { id: 228, count: 4 },
-  { id: 165, count: 4 },
+  { id: 437, count: 4 },
 ];
 
 const OfferItems = () => {
@@ -43,18 +46,21 @@ const OfferItems = () => {
       try {
         const results = await Promise.all(
           BRANDS_CONFIG.map(async (config) => {
-            console.log(`Fetching brand ${config.id}...`);
-            const products = await getProductsByBrandsForOffers(config.count, [config.id]);
-            console.log(`Brand ${config.id} productos obtenidos:`, products.length);
+            const products = await getProductsByBrandsForOffers(config.count, [
+              config.id,
+            ]);
+
             const logo = await getBrandLogo(config.id);
-            console.log(`Brand ${config.id} logo:`, logo);
+            const slug = await getBrandSlug(config.id);
+
             return {
               brandId: config.id,
               products,
               logo,
               brandName: products[0]?.brandName || "",
+              slug,
             };
-          })
+          }),
         );
         console.log("All brands data:", results);
         setBrandsData(results);
@@ -86,43 +92,48 @@ const OfferItems = () => {
         .filter((brandData) => brandData.products.length > 0)
         .map((brandData) => (
           <div key={brandData.brandId}>
-          <div className="flex items-center gap-2 md:gap-4 mb-4">
-            {brandData.logo && (
-              <Image
-                src={brandData.logo}
-                alt="Brand logo"
-                width={80}
-                height={40}
-                className="object-contain md:w-[100px] md:h-[80px] w-[80px] h-[60px]"
-              />
-            )}
-            <h1 className="text-2xl md:text-4xl underline font-bold">
-              {brandData.brandName || "Ofertas"}
-            </h1>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {brandData.products.map((product) => {
-              const imageUrl =
-                product.files[0]?.links?.[0]?.url || "/placeholder.png";
-
-              return (
-                <div
-                  key={product.id}
-                  className="aspect-square border rounded-lg overflow-hidden shadow-sm"
-                >
+            <div className="">
+              <Link
+                className="flex items-center gap-2 md:gap-4 mb-4"
+                href={`/brands/${brandData.slug}`}
+              >
+                {brandData.logo && (
                   <Image
-                    src={imageUrl}
-                    alt={product.productName}
-                    className="w-full h-full object-contain"
-                    width={400}
-                    height={400}
+                    src={brandData.logo}
+                    alt="Brand logo"
+                    width={80}
+                    height={40}
+                    className="object-contain md:w-[100px] md:h-[80px] w-[80px] h-[60px]"
                   />
-                </div>
-              );
-            })}
+                )}
+                <h1 className="text-2xl md:text-4xl underline font-bold">
+                  {brandData.brandName || "Ofertas"}
+                </h1>
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {brandData.products.map((product) => {
+                const imageUrl =
+                  product.files[0]?.links?.[0]?.url || "/placeholder.png";
+
+                return (
+                  <div
+                    key={product.id}
+                    className="aspect-square border rounded-lg overflow-hidden shadow-sm"
+                  >
+                    <Image
+                      src={imageUrl}
+                      alt={product.productName}
+                      className="w-full h-full object-contain"
+                      width={400}
+                      height={400}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
     </div>
   );
 };

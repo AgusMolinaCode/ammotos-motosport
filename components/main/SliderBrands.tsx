@@ -58,7 +58,7 @@ function SliderBrands() {
           logos={logos}
           speed={120}
           direction="left"
-          logoHeight={150}
+          logoHeight={120}
           gap={60}
           hoverSpeed={0}
           scaleOnHover

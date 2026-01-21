@@ -143,6 +143,28 @@ export async function getBrandBySlug(slug: string) {
 }
 
 /**
+ * Get brand slug by brand ID
+ * Returns the URL-friendly slug for a given brand ID
+ */
+export async function getBrandSlug(brandId: number): Promise<string> {
+  try {
+    const brand = await brandsSyncService.getBrandById(brandId.toString());
+    // Generate slug from name if not exists
+    if (brand.slug) {
+      return brand.slug;
+    }
+    // Fallback: generate slug from name
+    return brand.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+  } catch (error) {
+    // Fallback: generate slug from brandId (shouldn't happen in normal usage)
+    return brandId.toString();
+  }
+}
+
+/**
  * SERVER ACTION: Obtener estadísticas del cache
  */
 export async function getBrandCacheStats() {
