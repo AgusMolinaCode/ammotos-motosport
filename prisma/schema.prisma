@@ -64,6 +64,24 @@ model Product {
   warehouseAvailability Json // Array de WarehouseAvailability
   apiPage           Int?     // Página de API Turn14 de donde proviene (para sparse cache)
 
+  // Campos adicionales del response de Turn14 API
+  barcode                     String?
+  alternatePartNumber         String?
+  prop65                      String?
+  epa                         String?
+  unitsPerSku                 Int      @default(1)
+  powersportsIndicator        Boolean  @default(false)
+  dropshipControllerId        Int      @default(0)
+  airFreightProhibited        Boolean  @default(false)
+  notCarbApproved             Boolean  @default(false)
+  carbAcknowledgementRequired Boolean  @default(false)
+  carbEoNumber                String?
+  ltlFreightRequired          Boolean  @default(false)
+  bornOnDate                  DateTime?
+
+  // Tracking de updates
+  lastApiUpdate               DateTime?
+
   // Metadata
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

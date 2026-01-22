@@ -7,8 +7,9 @@ import Link from "next/link";
 interface ProductPaginationProps {
   currentPage: number;
   totalPages: number;
-  brandId: number;
-  brandSlug: string;
+  brandId?: number;
+  brandSlug?: string;
+  categorySlug?: string;
   onNavigate?: () => void; // Callback cuando se navega
 }
 
@@ -17,6 +18,7 @@ export function ProductPagination({
   totalPages,
   brandId,
   brandSlug,
+  categorySlug,
   onNavigate,
 }: ProductPaginationProps) {
   const searchParams = useSearchParams();
@@ -37,6 +39,11 @@ export function ProductPagination({
   const buildPageUrl = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", page.toString());
+
+    // Determinar URL base según si es categoría o marca
+    if (categorySlug) {
+      return `/categories/${categorySlug}?${params.toString()}`;
+    }
     return `/brands/${brandSlug}?${params.toString()}`;
   };
 

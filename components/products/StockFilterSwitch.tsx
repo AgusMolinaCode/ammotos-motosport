@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 interface HideOutOfStockSwitchProps {
   brandId: number;
   brandSlug: string;
+  categorySlug?: string;
 }
 
-export function HideOutOfStockSwitch({ brandId, brandSlug }: HideOutOfStockSwitchProps) {
+export function HideOutOfStockSwitch({ brandId, brandSlug, categorySlug }: HideOutOfStockSwitchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -35,9 +36,12 @@ export function HideOutOfStockSwitch({ brandId, brandSlug }: HideOutOfStockSwitc
     // Reset to page 1 when changing filter
     params.delete("page");
 
-    const newUrl = `/brands/${brandSlug}?${params.toString()}`;
+    // Determine URL based on whether we have category or brand
+    const newUrl = categorySlug
+      ? `/categories/${categorySlug}?${params.toString()}`
+      : `/brands/${brandSlug}?${params.toString()}`;
     router.push(newUrl, { scroll: false });
-  }, [brandSlug, hideOutOfStock, router, searchParams]);
+  }, [brandSlug, categorySlug, hideOutOfStock, router, searchParams]);
 
   return (
     <div className="flex items-center space-x-2">

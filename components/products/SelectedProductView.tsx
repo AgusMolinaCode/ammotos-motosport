@@ -13,8 +13,9 @@ import {
 
 interface SelectedProductViewProps {
   product: Product;
-  brandId: number;
-  brandSlug: string;
+  brandId?: number;
+  brandSlug?: string;
+  categorySlug?: string;
   pricesData: Array<{
     productId: string;
     purchaseCost: number;
@@ -38,10 +39,25 @@ export function SelectedProductView({
   product,
   brandId,
   brandSlug,
+  categorySlug,
   pricesData,
   inventory,
 }: SelectedProductViewProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  // Determinar URL base para el botón de volver
+  const getBackUrl = () => {
+    if (categorySlug) return `/categories/${categorySlug}`;
+    if (brandSlug) return `/brands/${brandSlug}`;
+    return "/";
+  };
+
+  // Determinar texto del botón de volver
+  const getBackText = () => {
+    if (categorySlug) return "Volver a todos los productos de la categoría";
+    if (brandSlug) return "Volver a todos los productos de la marca";
+    return "Volver";
+  };
 
   const isClearance = product.attributes.clearance_item ?? false;
   const productInventory = inventory?.[product.id] || null;
@@ -64,10 +80,10 @@ export function SelectedProductView({
     <div className="space-y-6">
       {/* Botón para volver */}
       <Link
-        href={`/brands/${brandSlug}`}
+        href={getBackUrl()}
         className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors font-medium"
       >
-        ← Volver a todos los productos de la marca
+        ← {getBackText()}
       </Link>
 
       {/* Producto encontrado */}

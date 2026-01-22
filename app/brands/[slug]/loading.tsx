@@ -3,7 +3,7 @@ import { ProductSkeleton } from "@/components/products/ProductSkeleton";
 export default function BrandDetailLoading() {
   return (
     <div className="min-h-screen bg-zinc-50">
-      <div className="max-w-[90rem] mx-auto p-8">
+      <div className="max-w-[110rem] mx-auto py-2 lg:py-4">
         <div className="animate-pulse">
           {/* Back link skeleton */}
           <div className="h-6 bg-zinc-300 rounded w-48 mb-2"></div>

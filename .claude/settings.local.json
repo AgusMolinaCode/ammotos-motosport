@@ -57,7 +57,12 @@
       "Bash(git stash)",
       "Bash(set:*)",
       "Bash(npx dotenv:*)",
-      "Bash(tasklist)"
+      "Bash(tasklist)",
+      "Bash(PGPASSWORD=postgres psql:*)",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_console_messages",
+      "mcp__puppeteer__puppeteer_navigate",
+      "mcp__puppeteer__puppeteer_screenshot"
     ]
   },
   "enableAllProjectMcpServers": true,

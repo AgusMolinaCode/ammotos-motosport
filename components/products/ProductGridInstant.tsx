@@ -18,8 +18,9 @@ interface ProductGridInstantProps {
   products: Product[];
   currentPage: number;
   totalPages: number;
-  brandId: number;
-  brandSlug: string;
+  brandId?: number;
+  brandSlug?: string;
+  categorySlug?: string;
   pricesData?: Array<{
     productId: string;
     purchaseCost: number;
@@ -51,6 +52,7 @@ export function ProductGridInstant({
   totalPages,
   brandId,
   brandSlug,
+  categorySlug,
   pricesData = null,
   inventory = null,
   hideOutOfStock = false,
@@ -97,6 +99,7 @@ export function ProductGridInstant({
           totalPages={totalPages}
           brandId={brandId}
           brandSlug={brandSlug}
+          categorySlug={categorySlug}
           onNavigate={handleNavigate}
         />
       </>
@@ -105,7 +108,7 @@ export function ProductGridInstant({
 
   // Si no hay productos después de filtrar, mostrar mensaje de página vacía
   if (filteredProducts.length === 0) {
-    return <EmptyPageMessage brandId={brandId} brandSlug={brandSlug} currentPage={currentPage} />;
+    return <EmptyPageMessage brandId={brandId} brandSlug={brandSlug} categorySlug={categorySlug} currentPage={currentPage} />;
   }
 
   return (
@@ -253,6 +256,7 @@ export function ProductGridInstant({
           totalPages={totalPages}
           brandId={brandId}
           brandSlug={brandSlug}
+          categorySlug={categorySlug}
           onNavigate={handleNavigate}
         />
       </div>

@@ -4,8 +4,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { traducirCategoria } from "@/constants/categorias";
 
 interface ActiveFiltersProps {
-  brandId: number;
-  brandSlug: string;
+  brandId?: number;
+  brandSlug?: string;
+  categorySlug?: string;
   filters: {
     category?: string;
     categoryEs?: string;
@@ -15,7 +16,7 @@ interface ActiveFiltersProps {
   };
 }
 
-export function ActiveFilters({ brandId, brandSlug, filters }: ActiveFiltersProps) {
+export function ActiveFilters({ brandId, brandSlug, categorySlug, filters }: ActiveFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -23,15 +24,22 @@ export function ActiveFilters({ brandId, brandSlug, filters }: ActiveFiltersProp
 
   if (!hasFilters) return null;
 
+  // Determinar URL base
+  const getBaseUrl = () => {
+    if (categorySlug) return `/categories/${categorySlug}`;
+    if (brandSlug) return `/brands/${brandSlug}`;
+    return "/";
+  };
+
   const removeFilter = (filterType: "category" | "subcategory" | "productName") => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete(filterType);
     params.set("page", "1"); // Reset a página 1
-    router.push(`/brands/${brandSlug}?${params.toString()}`);
+    router.push(`${getBaseUrl()}?${params.toString()}`);
   };
 
   const clearAllFilters = () => {
-    router.push(`/brands/${brandSlug}`);
+    router.push(getBaseUrl());
   };
 
   return (

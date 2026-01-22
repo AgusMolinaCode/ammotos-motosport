@@ -34,8 +34,10 @@ interface CategorySidebarAccordionProps {
   categories: BrandCategory[];
   subcategories: BrandSubcategory[];
   productNames: BrandProductName[];
-  brandId: number;
-  brandSlug: string;
+  brandId?: number;
+  brandSlug?: string;
+  categorySlug?: string;
+  brands?: Array<{ id: string; name: string; slug: string; logo: string | null }>;
   activeFilters: ProductFilters;
 }
 
@@ -79,6 +81,8 @@ export function CategorySidebarAccordion({
   productNames,
   brandId,
   brandSlug,
+  categorySlug,
+  brands,
   activeFilters,
 }: CategorySidebarAccordionProps) {
   const router = useRouter();
@@ -93,6 +97,13 @@ export function CategorySidebarAccordion({
     setIsMobileOpen(false); // Cerrar sidebar móvil al aplicar filtro
   }, [activeFilters]);
 
+  // Determinar URL base según si es categoría o marca
+  const getBaseUrl = () => {
+    if (categorySlug) return `/categories/${categorySlug}`;
+    if (brandSlug) return `/brands/${brandSlug}`;
+    return "/";
+  };
+
   // Construir URL con filtro actualizado
   const buildFilterUrl = (
     filterType: "category" | "subcategory" | "productName",
@@ -101,7 +112,7 @@ export function CategorySidebarAccordion({
     const params = new URLSearchParams(searchParams.toString());
     params.set(filterType, encodeURIComponent(value));
     params.set("page", "1"); // Reset a página 1
-    return `/brands/${brandSlug}?${params.toString()}`;
+    return `${getBaseUrl()}?${params.toString()}`;
   };
 
   const handleFilterClick = (

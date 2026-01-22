@@ -1,6 +1,6 @@
 import { getBrandBySlug } from "@/application/actions/brands";
 import {
-  getProductsByBrand,
+  getProductsByBrandFromDB,
   getProductForGrid,
 } from "@/application/actions/products";
 import type { ProductFilters } from "@/infrastructure/services/ProductsSyncService";
@@ -17,7 +17,6 @@ import { CategorySidebarAccordion } from "@/components/sidebar/CategorySidebarAc
 import { MobileFilterButton } from "@/components/sidebar/MobileFilterButton";
 import { ActiveFilters } from "@/components/filters/ActiveFilters";
 import { ProductPagination } from "@/components/products/ProductPagination";
-import { prefetchAdjacentPages } from "@/lib/prefetch/productPrefetch";
 import {
   traducirCategoria,
   traducirSubcategoria,
@@ -97,8 +96,9 @@ export default async function BrandDetailPage({
   const brandId = parseInt(brand.id);
   const brandSlug = brand.attributes.slug || slug;
 
-  // Ahora obtener productos (después de tener el brand ID)
-  const productsData = await getProductsByBrand(brandId, currentPage, filters);
+  // Ahora obtener productos desde la DB local (después de tener el brand ID)
+  // Los precios e inventario se obtienen via ProductsWithData
+  const productsData = await getProductsByBrandFromDB(brandId, currentPage, filters, hideOutOfStock);
 
   // Extraer filterData directamente del resultado de productos
   const { categories, subcategories, productNames } =
@@ -123,15 +123,6 @@ export default async function BrandDetailPage({
       : undefined,
     productName: filters.productName,
   };
-
-  // ⚡ OPTIMIZACIÓN: Prefetch inteligente de páginas adyacentes en background
-  // Esto hace que navegar a la siguiente página sea instantáneo
-  prefetchAdjacentPages(
-    brandId,
-    currentPage,
-    productsData.meta.total_pages,
-    filters
-  );
 
   const hasNextPage = currentPage < productsData.meta.total_pages;
   const nextPage = currentPage + 1;

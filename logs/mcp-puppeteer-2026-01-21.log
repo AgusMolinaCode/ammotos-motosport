@@ -2,3 +2,23 @@
 {"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2026-01-21 00:35:01.112"}
 {"level":"info","message":"Starting MCP server","service":"mcp-puppeteer","timestamp":"2026-01-21 08:11:33.993"}
 {"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2026-01-21 08:11:33.995"}
+{"level":"info","message":"Puppeteer MCP Server closing","service":"mcp-puppeteer","timestamp":"2026-01-21 10:26:39.969"}
+{"level":"info","message":"Starting MCP server","service":"mcp-puppeteer","timestamp":"2026-01-21 10:27:08.040"}
+{"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2026-01-21 10:27:08.041"}
+{"level":"info","message":"Puppeteer MCP Server closing","service":"mcp-puppeteer","timestamp":"2026-01-21 11:27:15.216"}
+{"level":"info","message":"Starting MCP server","service":"mcp-puppeteer","timestamp":"2026-01-21 11:27:44.045"}
+{"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2026-01-21 11:27:44.046"}
+{"level":"info","message":"Puppeteer MCP Server closing","service":"mcp-puppeteer","timestamp":"2026-01-21 12:32:03.012"}
+{"level":"info","message":"Starting MCP server","service":"mcp-puppeteer","timestamp":"2026-01-21 12:32:35.918"}
+{"level":"info","message":"MCP server started successfully","service":"mcp-puppeteer","timestamp":"2026-01-21 12:32:35.920"}
+{"arguments":{"url":"http://localhost:3000/categories/engine-components"},"level":"debug","message":"Tool call received","service":"mcp-puppeteer","timestamp":"2026-01-21 20:37:12.263","tool":"puppeteer_navigate"}
+{"0":"n","1":"p","2":"x","level":"info","message":"Launching browser with config:","service":"mcp-puppeteer","timestamp":"2026-01-21 20:37:12.266"}
+{"level":"info","message":"Browser launched successfully","service":"mcp-puppeteer","timestamp":"2026-01-21 20:37:13.830"}
+{"level":"info","message":"Navigating to URL","service":"mcp-puppeteer","timestamp":"2026-01-21 20:37:13.830","url":"http://localhost:3000/categories/engine-components"}
+{"level":"info","message":"Navigation successful","service":"mcp-puppeteer","status":200,"timestamp":"2026-01-21 20:37:20.876","url":"http://localhost:3000/categories/engine-components"}
+{"arguments":{"filename":"category-brand-select.png"},"level":"debug","message":"Tool call received","service":"mcp-puppeteer","timestamp":"2026-01-21 20:38:04.566","tool":"puppeteer_screenshot"}
+{"arguments":{"filename":"category-page-with-brand-select.png","fullPage":"true","height":800},"level":"debug","message":"Tool call received","service":"mcp-puppeteer","timestamp":"2026-01-21 20:38:11.305","tool":"puppeteer_screenshot"}
+{"arguments":{"url":"http://localhost:3000/brands/mahle?brandId=185&category=Engine%20Components"},"level":"debug","message":"Tool call received","service":"mcp-puppeteer","timestamp":"2026-01-21 20:41:23.781","tool":"puppeteer_navigate"}
+{"level":"info","message":"Navigating to URL","service":"mcp-puppeteer","timestamp":"2026-01-21 20:41:23.781","url":"http://localhost:3000/brands/mahle?brandId=185&category=Engine%20Components"}
+{"level":"info","message":"Navigation successful","service":"mcp-puppeteer","status":200,"timestamp":"2026-01-21 20:41:34.832","url":"http://localhost:3000/brands/mahle?brandId=185&category=Engine%20Components"}
+{"arguments":{"filename":"brand-with-category.png","fullPage":"true","height":800},"level":"debug","message":"Tool call received","service":"mcp-puppeteer","timestamp":"2026-01-21 20:41:43.065","tool":"puppeteer_screenshot"}

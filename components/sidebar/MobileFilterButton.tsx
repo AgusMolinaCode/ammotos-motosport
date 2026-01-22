@@ -34,8 +34,10 @@ interface MobileFilterButtonProps {
   categories: BrandCategory[];
   subcategories: BrandSubcategory[];
   productNames: BrandProductName[];
-  brandId: number;
-  brandSlug: string;
+  brandId?: number;
+  brandSlug?: string;
+  categorySlug?: string;
+  brands?: Array<{ id: string; name: string; slug: string; logo: string | null }>;
   activeFilters: ProductFilters;
 }
 
@@ -67,6 +69,8 @@ export function MobileFilterButton({
   productNames,
   brandId,
   brandSlug,
+  categorySlug,
+  brands,
   activeFilters,
 }: MobileFilterButtonProps) {
   const router = useRouter();
@@ -80,6 +84,13 @@ export function MobileFilterButton({
     setIsOpen(false);
   }, [activeFilters]);
 
+  // Determinar URL base según si es categoría o marca
+  const getBaseUrl = () => {
+    if (categorySlug) return `/categories/${categorySlug}`;
+    if (brandSlug) return `/brands/${brandSlug}`;
+    return "/";
+  };
+
   const buildFilterUrl = (
     filterType: "category" | "subcategory" | "productName",
     value: string
@@ -87,7 +98,7 @@ export function MobileFilterButton({
     const params = new URLSearchParams(searchParams.toString());
     params.set(filterType, encodeURIComponent(value));
     params.set("page", "1");
-    return `/brands/${brandSlug}?${params.toString()}`;
+    return `${getBaseUrl()}?${params.toString()}`;
   };
 
   const handleFilterClick = (

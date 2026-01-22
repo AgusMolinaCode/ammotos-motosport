@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { WhatsApp } from "@/public/whatssapp";
 import { getBrands } from "@/application/actions/brands";
-import { ProductSearchPopup } from "./ProductSearchPopup";
+import Link from "next/link";
 import { GlobalSearchHandler } from "./GlobalSearchHandler";
 
 interface Brand {
@@ -32,11 +32,14 @@ const SearchBar = () => {
       try {
         const result = await getBrands();
         const brandsData = result.data.map(
-          (brand: { id: string; attributes: { name: string; slug: string } }) => ({
+          (brand: {
+            id: string;
+            attributes: { name: string; slug: string };
+          }) => ({
             id: brand.id,
             name: brand.attributes.name,
             slug: brand.attributes.slug,
-          })
+          }),
         );
         setBrands(brandsData);
       } catch (error) {
@@ -58,9 +61,16 @@ const SearchBar = () => {
 
   return (
     <div className="h-20 flex justify-between items-center gap-2 lg:gap-4 max-w-[110rem] mx-auto">
-      <div className="hidden md:flex items-center justify-center gap-3">
-        <WhatsApp className="w-8 lg:w-10 h-8 lg:h-10 cursor-pointer" />
-        <p className="text-2xl lg:text-3xl font-semibold">11 5049-4936</p>
+      <div className="">
+        <Link
+          href="https://wa.me/1150494936"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden md:flex items-center justify-center gap-3"
+        >
+          <WhatsApp className="w-8 lg:w-10 h-8 lg:h-10 cursor-pointer" />
+          <p className="text-2xl lg:text-3xl font-semibold">11 5049-4936</p>
+        </Link>
       </div>
 
       <div className="flex flex-1 md:flex-none items-center gap-3">
@@ -77,7 +87,9 @@ const SearchBar = () => {
           </SelectTrigger>
           <SelectContent className="bg-gray-100 border-gray-700 max-h-[200px] overflow-y-auto">
             <SelectGroup>
-              <SelectLabel className="text-gray-900 text-base">Marcas</SelectLabel>
+              <SelectLabel className="text-gray-900 text-base">
+                Marcas
+              </SelectLabel>
               {brands.map((brand) => (
                 <SelectItem
                   key={brand.id}

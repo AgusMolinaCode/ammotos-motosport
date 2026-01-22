@@ -1,16 +1,18 @@
 import { getPricesByProductIds } from "@/application/actions/prices";
-import { getInventoryByBrand } from "@/application/actions/inventory";
+import { getInventoryByBrand, getInventoryByProductIds } from "@/application/actions/inventory";
 import { ProductGridWrapper } from "./ProductGridWrapper";
 import { SelectedProductView } from "./SelectedProductView";
 import type { Product } from "@/domain/types/turn14/products";
 
 interface ProductsWithDataProps {
   products: Product[];
-  brandId: number;
-  brandSlug: string;
+  brandId?: number;
+  brandSlug?: string;
+  categorySlug?: string;
   currentPage: number;
   totalPages: number;
-  selectedProduct?: Product | null;
+  selectedProductId?: string | null;
+  selectedProduct?: Product | null; // Para backwards compatibility con páginas de marcas
   hideOutOfStock?: boolean;
 }
 
@@ -26,8 +28,10 @@ export async function ProductsWithData({
   products,
   brandId,
   brandSlug,
+  categorySlug,
   currentPage,
   totalPages,
+  selectedProductId,
   selectedProduct,
   hideOutOfStock = false,
 }: ProductsWithDataProps) {
@@ -39,27 +43,40 @@ export async function ProductsWithData({
   const [pricesData, inventory] = await Promise.all([
     getPricesByProductIds(productIds).catch((error) => {
       console.warn(
-        `⚠️ Prices unavailable for brand ${brandId}, showing products without pricing:`,
+        `⚠️ Prices unavailable, showing products without pricing:`,
         error instanceof Error ? error.message : error
       );
       return null;
     }),
-    getInventoryByBrand(brandId).catch((error) => {
-      console.warn(
-        `⚠️ Inventory unavailable for brand ${brandId}, showing products without stock info:`,
-        error instanceof Error ? error.message : error
-      );
-      return null;
-    }),
+    // Para categorías, usar getInventoryByProductIds; para marcas, usar getInventoryByBrand
+    categorySlug
+      ? getInventoryByProductIds(productIds).catch((error) => {
+          console.warn(
+            `⚠️ Inventory unavailable for category ${categorySlug}, showing products without stock info:`,
+            error instanceof Error ? error.message : error
+          );
+          return null;
+        })
+      : brandId
+      ? getInventoryByBrand(brandId).catch((error) => {
+          console.warn(
+            `⚠️ Inventory unavailable for brand ${brandId}, showing products without stock info:`,
+            error instanceof Error ? error.message : error
+          );
+          return null;
+        })
+      : Promise.resolve(null),
   ]);
 
-  // Si hay un producto seleccionado, usar SelectedProductView
-  if (selectedProduct) {
+  // Si hay un producto seleccionado (新旧两种方式都支持)
+  const effectiveSelectedProduct = selectedProduct || (selectedProductId ? products.find((p) => p.id === selectedProductId) || null : null);
+  if (effectiveSelectedProduct) {
     return (
       <SelectedProductView
-        product={selectedProduct}
+        product={effectiveSelectedProduct}
         brandId={brandId}
         brandSlug={brandSlug}
+        categorySlug={categorySlug}
         pricesData={pricesData}
         inventory={inventory}
       />
@@ -74,6 +91,7 @@ export async function ProductsWithData({
       totalPages={totalPages}
       brandId={brandId}
       brandSlug={brandSlug}
+      categorySlug={categorySlug}
       pricesData={pricesData}
       inventory={inventory}
       hideOutOfStock={hideOutOfStock}

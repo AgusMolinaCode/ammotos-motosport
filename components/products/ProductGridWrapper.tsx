@@ -8,8 +8,9 @@ interface ProductGridWrapperProps {
   products: Product[];
   currentPage: number;
   totalPages: number;
-  brandId: number;
-  brandSlug: string;
+  brandId?: number;
+  brandSlug?: string;
+  categorySlug?: string;
   pricesData: Array<{
     productId: string;
     purchaseCost: number;
@@ -45,6 +46,7 @@ export function ProductGridWrapper({
   totalPages,
   brandId,
   brandSlug,
+  categorySlug,
   pricesData,
   inventory,
   hideOutOfStock = false,
@@ -69,6 +71,7 @@ export function ProductGridWrapper({
       totalPages={totalPages}
       brandId={brandId}
       brandSlug={brandSlug}
+      categorySlug={categorySlug}
       pricesData={showData ? pricesData : null}
       inventory={showData ? inventory : null}
       hideOutOfStock={hideOutOfStock}

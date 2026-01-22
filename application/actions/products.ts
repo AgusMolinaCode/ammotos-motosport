@@ -1,6 +1,7 @@
 "use server";
 
 import { productsSyncService } from "@/infrastructure/services/ProductsSyncService";
+import { traducirCategoria } from "@/constants/categorias";
 import { prisma } from "@/infrastructure/database/prisma";
 import type { ProductData, ProductsResponse, Product as Turn14Product, ProductFile, Product } from "@/domain/types/turn14/products";
 import type { BrandFilterData, ProductFilters } from "@/infrastructure/services/ProductsSyncService";
@@ -40,6 +41,186 @@ export async function getTotalProductsByBrand(brandId: number): Promise<number> 
   } catch (error) {
     console.error(`Error counting products for brand ${brandId}:`, error);
     return 0;
+  }
+}
+
+/**
+ * Obtener productos directamente desde la DB local (tabla Product)
+ * En lugar de fetch a la API de Turn14
+ * Los precios e inventario se obtienen después via ProductsWithData
+ */
+export async function getProductsByBrandFromDB(
+  brandId: number,
+  page: number = 1,
+  filters: ProductFilters = {},
+  hideOutOfStock: boolean = false
+): Promise<ProductsWithFiltersResult> {
+  const PAGE_SIZE = 20; // Productos por página para la grilla
+  const skip = (page - 1) * PAGE_SIZE;
+
+  // Construir condiciones de filtrado
+  const whereConditions: {
+    brandId: number;
+    category?: string;
+    subcategory?: string;
+    productName?: { contains: string; mode: "insensitive" };
+  } = { brandId };
+
+  if (filters.category) {
+    whereConditions.category = filters.category;
+  }
+  if (filters.subcategory) {
+    whereConditions.subcategory = filters.subcategory;
+  }
+  if (filters.productName) {
+    whereConditions.productName = {
+      contains: filters.productName,
+      mode: "insensitive",
+    };
+  }
+
+  // Si hideOutOfStock es true, filtrar por productos con stock
+  // Usamos JOIN con BrandInventory que tiene totalStock precalculado
+  try {
+    // Construir condiciones adicionales para filtros (asegurando escape de comillas simples)
+    const escapeSql = (str: string) => str.replace(/'/g, "''");
+    const categoryFilter = filters.category ? `AND p."category" = '${escapeSql(filters.category)}'` : "";
+    const subcategoryFilter = filters.subcategory ? `AND p."subcategory" = '${escapeSql(filters.subcategory)}'` : "";
+    const productNameFilter = filters.productName ? `AND p."productName" ILIKE '%${escapeSql(filters.productName)}%'` : "";
+
+    // Construir queries como strings
+    const productsQuery = `
+      SELECT DISTINCT p.*
+      FROM products p
+      INNER JOIN brand_inventory bi ON p.id = bi."itemId"
+      WHERE p."brandId" = ${brandId}
+        AND bi."totalStock" > 0
+        ${categoryFilter}
+        ${subcategoryFilter}
+        ${productNameFilter}
+      ORDER BY p."productName" ASC
+      LIMIT ${PAGE_SIZE} OFFSET ${skip}
+    `;
+
+    const countQuery = `
+      SELECT COUNT(DISTINCT p.id) as count
+      FROM products p
+      INNER JOIN brand_inventory bi ON p.id = bi."itemId"
+      WHERE p."brandId" = ${brandId}
+        AND bi."totalStock" > 0
+        ${categoryFilter}
+        ${subcategoryFilter}
+        ${productNameFilter}
+    `;
+
+    // Ejecutar queries en paralelo
+    const [productsRaw, totalCountRaw, categories, subcategories] = await Promise.all([
+      // Productos paginados - con filtrado por stock si hideOutOfStock es true
+      hideOutOfStock
+        ? (prisma.$queryRawUnsafe(productsQuery) as Promise<Array<Record<string, unknown>>>)
+        : prisma.product.findMany({
+            where: whereConditions,
+            take: PAGE_SIZE,
+            skip,
+            orderBy: { productName: "asc" },
+          }),
+      // Total de productos que coinciden con filtros
+      hideOutOfStock
+        ? prisma.$queryRawUnsafe(countQuery).then((r) => {
+            const rows = r as Array<{ count: bigint }>;
+            return Number(rows[0]?.count ?? 0);
+          })
+        : prisma.product.count({ where: whereConditions }),
+      // Obtener categorías únicas para este brand
+      prisma.brandCategory.findMany({
+        where: { brandId: brandId === 0 ? undefined : brandId },
+        orderBy: { categoryEs: "asc" },
+      }),
+      // Obtener subcategorías únicas para este brand
+      prisma.brandSubcategory.findMany({
+        where: { brandId: brandId === 0 ? undefined : brandId },
+        orderBy: { subcategoryEs: "asc" },
+      }),
+    ]);
+
+    // Tipos para productos desde query raw
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const products: typeof productsRaw = hideOutOfStock
+      ? (productsRaw as never[])
+      : (productsRaw as never[]);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const productsArray = hideOutOfStock ? (productsRaw as any[]) : (productsRaw as any[]);
+    const totalCount = Number(totalCountRaw);
+
+    // Convertir productos de DB al formato Turn14 Product
+    const turn14Products = productsArray.map((product) => ({
+      id: product.id,
+      type: "Item" as const,
+      attributes: {
+        product_name: product.productName,
+        part_number: product.partNumber,
+        mfr_part_number: product.mfrPartNumber || "",
+        part_description: product.partDescription || "",
+        category: product.category,
+        subcategory: product.subcategory,
+        dimensions: product.dimensions as unknown as Product["attributes"]["dimensions"],
+        brand_id: product.brandId,
+        brand: product.brandName,
+        price_group_id: product.priceGroupId,
+        price_group: product.priceGroup,
+        active: product.active,
+        born_on_date: product.bornOnDate?.toISOString() || "",
+        regular_stock: product.regularStock,
+        powersports_indicator: product.powersportsIndicator,
+        clearance_item: product.clearanceItem,
+        dropship_controller_id: product.dropshipControllerId,
+        air_freight_prohibited: product.airFreightProhibited,
+        ltl_freight_required: product.ltlFreightRequired,
+        units_per_sku: product.unitsPerSku,
+        not_carb_approved: product.notCarbApproved,
+        carb_acknowledgement_required: product.carbAcknowledgementRequired,
+        carb_eo_number: product.carbEoNumber,
+        prop_65: product.prop65 || "N",
+        epa: product.epa || "N/A",
+        warehouse_availability: product.warehouseAvailability as unknown as Product["attributes"]["warehouse_availability"],
+        thumbnail: product.thumbnail || "",
+        barcode: product.barcode || undefined,
+        alternate_part_number: product.alternatePartNumber || null,
+        contents: null,
+      },
+    }));
+
+    // Construir filterData con traducciones
+    const filterData: BrandFilterData = {
+      categories: categories.map((c) => ({
+        category: c.category,
+        categoryEs: c.categoryEs,
+        count: 0, // Simplified - could calculate if needed
+      })),
+      subcategories: subcategories.map((s) => ({
+        subcategory: s.subcategory,
+        subcategoryEs: s.subcategoryEs,
+        count: 0,
+      })),
+      productNames: [], // Could be populated if needed
+    };
+
+    const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+    return {
+      data: turn14Products,
+      meta: {
+        total_pages: totalPages,
+        current_page: page,
+        total_matches: totalCount,
+        total_products: totalCount,
+      },
+      filterData,
+    };
+  } catch (error) {
+    console.error("Error fetching products from DB:", error);
+    throw error;
   }
 }
 
@@ -182,6 +363,155 @@ export async function getProductsByBrandsForOffers(
   } catch (error) {
     console.error("Error fetching products by brands:", error);
     return [];
+  }
+}
+
+/**
+ * Obtener productos filtrados por categoría desde la DB
+ */
+export async function getProductsByCategoryFromDB(
+  category: string,
+  page: number = 1,
+  subcategory?: string,
+  hideOutOfStock: boolean = false
+): Promise<ProductsWithFiltersResult> {
+  const PAGE_SIZE = 20;
+  const skip = (page - 1) * PAGE_SIZE;
+
+  try {
+    const escapeSql = (str: string) => str.replace(/'/g, "''");
+    const categoryFilter = `AND p."category" = '${escapeSql(category)}'`;
+    const subcategoryFilter = subcategory ? `AND p."subcategory" = '${escapeSql(subcategory)}'` : "";
+
+    // Queries para productos con stock
+    const productsWithStockQuery = `
+      SELECT DISTINCT p.*
+      FROM products p
+      INNER JOIN brand_inventory bi ON p.id = bi."itemId"
+      WHERE bi."totalStock" > 0
+        ${categoryFilter}
+        ${subcategoryFilter}
+      ORDER BY p."productName" ASC
+      LIMIT ${PAGE_SIZE} OFFSET ${skip}
+    `;
+
+    const countWithStockQuery = `
+      SELECT COUNT(DISTINCT p.id) as count
+      FROM products p
+      INNER JOIN brand_inventory bi ON p.id = bi."itemId"
+      WHERE bi."totalStock" > 0
+        ${categoryFilter}
+        ${subcategoryFilter}
+    `;
+
+    // Queries para todos los productos (sin filtro de stock)
+    const allProductsQuery = `
+      SELECT DISTINCT p.*
+      FROM products p
+      WHERE p."category" = '${escapeSql(category)}'
+        ${subcategoryFilter}
+      ORDER BY p."productName" ASC
+      LIMIT ${PAGE_SIZE} OFFSET ${skip}
+    `;
+
+    const allCountQuery = `
+      SELECT COUNT(DISTINCT p.id) as count
+      FROM products p
+      WHERE p."category" = '${escapeSql(category)}'
+        ${subcategoryFilter}
+    `;
+
+    const productsQuery = hideOutOfStock ? productsWithStockQuery : allProductsQuery;
+    const countQuery = hideOutOfStock ? countWithStockQuery : allCountQuery;
+
+    // Ejecutar queries en paralelo
+    const [productsRaw, totalCountRaw, subcategoriesRaw] = await Promise.all([
+      prisma.$queryRawUnsafe(productsQuery) as Promise<Array<Record<string, unknown>>>,
+      prisma.$queryRawUnsafe(countQuery).then((r) => {
+        const rows = r as Array<{ count: bigint }>;
+        return Number(rows[0]?.count ?? 0);
+      }),
+      // Obtener subcategorías únicas para esta categoría
+      prisma.$queryRawUnsafe(
+        `SELECT DISTINCT s."subcategory", s."subcategoryEs"
+        FROM "brand_subcategories" s
+        INNER JOIN "products" p ON s."subcategory" = p."subcategory"
+        WHERE p."category" = '${escapeSql(category)}'
+        ORDER BY s."subcategoryEs" ASC`
+      ) as Promise<Array<{ subcategory: string; subcategoryEs: string | null }>>,
+    ]);
+
+    const subcategories = subcategoriesRaw;
+
+    const productsArray = productsRaw as Array<Record<string, unknown>>;
+    const totalCount = Number(totalCountRaw);
+
+    // Convertir productos al formato Turn14 Product
+    const turn14Products = productsArray.map((product) => ({
+      id: product.id as string,
+      type: "Item" as const,
+      attributes: {
+        product_name: product.productName as string,
+        part_number: product.partNumber as string,
+        mfr_part_number: (product.mfrPartNumber as string) || "",
+        part_description: (product.partDescription as string) || "",
+        category: product.category as string,
+        subcategory: product.subcategory as string,
+        dimensions: product.dimensions as unknown as Product["attributes"]["dimensions"],
+        brand_id: product.brandId as number,
+        brand: product.brandName as string,
+        price_group_id: product.priceGroupId as number,
+        price_group: product.priceGroup as string,
+        active: product.active as boolean,
+        born_on_date: (product.bornOnDate as Date)?.toISOString() || "",
+        regular_stock: product.regularStock as boolean,
+        powersports_indicator: product.powersportsIndicator as boolean,
+        clearance_item: product.clearanceItem as boolean,
+        dropship_controller_id: product.dropshipControllerId as number,
+        air_freight_prohibited: product.airFreightProhibited as boolean,
+        ltl_freight_required: product.ltlFreightRequired as boolean,
+        units_per_sku: product.unitsPerSku as number,
+        not_carb_approved: product.notCarbApproved as boolean,
+        carb_acknowledgement_required: product.carbAcknowledgementRequired as boolean,
+        carb_eo_number: product.carbEoNumber as string | null,
+        prop_65: (product.prop65 as string) || "N",
+        epa: (product.epa as string) || "N/A",
+        warehouse_availability: product.warehouseAvailability as unknown as Product["attributes"]["warehouse_availability"],
+        thumbnail: (product.thumbnail as string) || "",
+        barcode: product.barcode as string | undefined,
+        alternate_part_number: product.alternatePartNumber as string | null,
+        contents: null,
+      },
+    }));
+
+    // Construir filterData
+    const filterData: BrandFilterData = {
+      categories: [{
+        category: category,
+        categoryEs: traducirCategoria(category),
+      }],
+      subcategories: subcategories.map((s) => ({
+        subcategory: s.subcategory,
+        subcategoryEs: s.subcategoryEs || s.subcategory,
+      })),
+      productNames: [],
+    };
+
+    const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+    return {
+      data: turn14Products,
+      meta: {
+        total_pages: totalPages,
+        current_page: page,
+        total_matches: totalCount,
+        total_products: totalCount,
+      },
+      filterData,
+    };
+  } catch (error) {
+    console.error(`Error fetching products for category ${category}:`, error);
+    throw error;
   }
 }
 
