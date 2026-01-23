@@ -83,7 +83,7 @@ export default async function BrandDetailPage({
             Marca no encontrada
           </h1>
           <Link
-            href="/test-brands"
+            href="/marcas"
             className="text-blue-600 hover:text-blue-800"
           >
             ← Volver a todas las marcas
@@ -153,7 +153,7 @@ export default async function BrandDetailPage({
           {/* Header */}
           <div className="mb-6">
             <Link
-              href="/test-brands"
+              href="/marcas"
               className="text-blue-600 hover:text-blue-800 inline-flex items-center gap-2 transition-colors"
             >
               ← Ver todas las marcas
@@ -312,7 +312,7 @@ export default async function BrandDetailPage({
         {/* ⚡ PREFETCH: Cargar siguiente página en background */}
         {hasNextPage && (
           <Link
-            href={`/brands/${brandSlug}?page=${nextPage}`}
+            href={`/marca/${brandSlug}?page=${nextPage}`}
             prefetch={true}
             className="hidden"
             aria-hidden="true"

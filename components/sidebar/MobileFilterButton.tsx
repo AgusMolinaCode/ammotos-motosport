@@ -87,7 +87,7 @@ export function MobileFilterButton({
   // Determinar URL base según si es categoría o marca
   const getBaseUrl = () => {
     if (categorySlug) return `/categories/${categorySlug}`;
-    if (brandSlug) return `/brands/${brandSlug}`;
+    if (brandSlug) return `/marca/${brandSlug}`;
     return "/";
   };
 

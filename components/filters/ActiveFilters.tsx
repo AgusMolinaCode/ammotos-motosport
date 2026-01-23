@@ -13,6 +13,7 @@ interface ActiveFiltersProps {
     subcategory?: string;
     subcategoryEs?: string;
     productName?: string;
+    brandName?: string;
   };
 }
 
@@ -20,18 +21,18 @@ export function ActiveFilters({ brandId, brandSlug, categorySlug, filters }: Act
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const hasFilters = !!(filters.category || filters.subcategory || filters.productName);
+  const hasFilters = !!(filters.category || filters.subcategory || filters.productName || filters.brandName);
 
   if (!hasFilters) return null;
 
   // Determinar URL base
   const getBaseUrl = () => {
     if (categorySlug) return `/categories/${categorySlug}`;
-    if (brandSlug) return `/brands/${brandSlug}`;
+    if (brandSlug) return `/marca/${brandSlug}`;
     return "/";
   };
 
-  const removeFilter = (filterType: "category" | "subcategory" | "productName") => {
+  const removeFilter = (filterType: "category" | "subcategory" | "productName" | "brandName" | "brandId") => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete(filterType);
     params.set("page", "1"); // Reset a página 1
@@ -76,6 +77,20 @@ export function ActiveFilters({ brandId, brandSlug, categorySlug, filters }: Act
         >
           <span>{filters.productName}</span>
           <span className="text-pink-600 group-hover:text-pink-900 font-bold">×</span>
+        </button>
+      )}
+
+      {/* Marca */}
+      {filters.brandName && (
+        <button
+          onClick={() => {
+            removeFilter("brandName");
+            removeFilter("brandId");
+          }}
+          className="group px-3 py-1.5 bg-orange-100 hover:bg-orange-200 text-orange-800 rounded-full text-sm font-medium transition-colors flex items-center gap-2"
+        >
+          <span>Marca: {filters.brandName}</span>
+          <span className="text-orange-600 group-hover:text-orange-900 font-bold">×</span>
         </button>
       )}
 

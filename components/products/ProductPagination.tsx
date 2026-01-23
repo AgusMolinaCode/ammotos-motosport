@@ -44,7 +44,7 @@ export function ProductPagination({
     if (categorySlug) {
       return `/categories/${categorySlug}?${params.toString()}`;
     }
-    return `/brands/${brandSlug}?${params.toString()}`;
+    return `/marca/${brandSlug}?${params.toString()}`;
   };
 
   // Función para navegar con loading state

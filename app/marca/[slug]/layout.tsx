@@ -41,7 +41,7 @@ export async function generateMetadata({
     openGraph: {
       type: "website",
       locale: "es_ES",
-      url: `https://ampowerparts.com/brands/${slug}`,
+      url: `https://ampowerparts.com/marca/${slug}`,
       siteName: "AmPowerparts",
       title: `${brandName} | AmPowerparts - Repuestos para Autos Deportivos`,
       description: `Encuentra los mejores repuestos y accesorios ${brandName} para tu auto deportivo.`,

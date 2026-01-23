@@ -23,12 +23,7 @@ export default async function TestBrandsPage() {
           <p className="text-zinc-600">
             ✅ Datos cargados desde la base de datos PostgreSQL
           </p>
-          <p className="text-zinc-600 mt-2">
-            🔄 Sincronización automática cada 7 días vía{" "}
-            <code className="bg-zinc-100 px-2 py-1 rounded">
-              /api/sync/brands
-            </code>
-          </p>
+          
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
@@ -55,7 +50,7 @@ export default async function TestBrandsPage() {
                       />
                     )}
                     <div className="flex-1">
-                      <Link href={`/brands/${brand.attributes.slug || brand.id}`}>
+                      <Link href={`/marca/${brand.attributes.slug || brand.id}`}>
                         <h3 className="font-semibold text-lg hover:text-blue-600 transition-colors cursor-pointer">
                           {brand.attributes.name}
                         </h3>

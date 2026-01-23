@@ -95,7 +95,7 @@ const OfferItems = () => {
             <div className="">
               <Link
                 className="flex items-center gap-2 md:gap-4 mb-4"
-                href={`/brands/${brandData.slug}`}
+                href={`/marca/${brandData.slug}`}
               >
                 {brandData.logo && (
                   <Image

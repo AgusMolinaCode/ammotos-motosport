@@ -373,7 +373,8 @@ export async function getProductsByCategoryFromDB(
   category: string,
   page: number = 1,
   subcategory?: string,
-  hideOutOfStock: boolean = false
+  hideOutOfStock: boolean = false,
+  brandNameFilter?: string
 ): Promise<ProductsWithFiltersResult> {
   const PAGE_SIZE = 20;
   const skip = (page - 1) * PAGE_SIZE;
@@ -382,6 +383,9 @@ export async function getProductsByCategoryFromDB(
     const escapeSql = (str: string) => str.replace(/'/g, "''");
     const categoryFilter = `AND p."category" = '${escapeSql(category)}'`;
     const subcategoryFilter = subcategory ? `AND p."subcategory" = '${escapeSql(subcategory)}'` : "";
+    const brandNameFilterClause = brandNameFilter
+      ? `AND p."brandName" = '${escapeSql(brandNameFilter)}'`
+      : "";
 
     // Queries para productos con stock
     const productsWithStockQuery = `
@@ -391,6 +395,7 @@ export async function getProductsByCategoryFromDB(
       WHERE bi."totalStock" > 0
         ${categoryFilter}
         ${subcategoryFilter}
+        ${brandNameFilterClause}
       ORDER BY p."productName" ASC
       LIMIT ${PAGE_SIZE} OFFSET ${skip}
     `;
@@ -402,6 +407,7 @@ export async function getProductsByCategoryFromDB(
       WHERE bi."totalStock" > 0
         ${categoryFilter}
         ${subcategoryFilter}
+        ${brandNameFilterClause}
     `;
 
     // Queries para todos los productos (sin filtro de stock)
@@ -410,6 +416,7 @@ export async function getProductsByCategoryFromDB(
       FROM products p
       WHERE p."category" = '${escapeSql(category)}'
         ${subcategoryFilter}
+        ${brandNameFilterClause}
       ORDER BY p."productName" ASC
       LIMIT ${PAGE_SIZE} OFFSET ${skip}
     `;
@@ -419,6 +426,7 @@ export async function getProductsByCategoryFromDB(
       FROM products p
       WHERE p."category" = '${escapeSql(category)}'
         ${subcategoryFilter}
+        ${brandNameFilterClause}
     `;
 
     const productsQuery = hideOutOfStock ? productsWithStockQuery : allProductsQuery;

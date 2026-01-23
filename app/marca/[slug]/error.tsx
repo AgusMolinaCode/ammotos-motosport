@@ -54,7 +54,7 @@ export default function BrandDetailError({
               Intentar de Nuevo
             </button>
             <Link
-              href="/test-brands"
+              href="/marcas"
               className="bg-zinc-200 text-zinc-800 px-4 py-2 rounded hover:bg-zinc-300 transition-colors inline-block"
             >
               Volver a Brands

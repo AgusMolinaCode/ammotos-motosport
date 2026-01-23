@@ -51,7 +51,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             Producto no encontrado
           </h1>
           <Link
-            href={`/brands/${brandSlug}`}
+            href={`/marca/${brandSlug}`}
             className="text-blue-600 hover:text-blue-800 inline-flex items-center gap-2 transition-colors"
           >
             ← Volver a {brandSlug}
@@ -73,7 +73,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             Marca no encontrada
           </h1>
           <Link
-            href="/test-brands"
+            href="/marcas"
             className="text-blue-600 hover:text-blue-800"
           >
             ← Volver a todas las marcas
@@ -118,7 +118,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <div className="my-6">
           <div className="flex flex-wrap items-center gap-4 px-2">
             <Link
-              href="/test-brands"
+              href="/marcas"
               className="text-blue-600 hover:text-blue-800 inline-flex items-center gap-2 transition-colors font-semibold text-lg md:text-xl shrink-0 whitespace-nowrap"
             >
               ← Ver todas las marcas
@@ -204,7 +204,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     No se encontró el producto con ID: {productId}
                   </p>
                   <Link
-                    href={`/brands/${brandSlugFromDb}`}
+                    href={`/marca/${brandSlugFromDb}`}
                     className="text-blue-600 hover:text-blue-800"
                   >
                     Ver todos los productos

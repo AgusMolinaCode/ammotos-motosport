@@ -62,12 +62,23 @@ export default async function CategoryPage({
   const currentPage = pageParam ? Math.max(1, parseInt(pageParam)) : 1;
   const hideOutOfStock = hideOutOfStockParam === "true";
 
+  // Verificar si hay filtro de marca (productName con prefijo [BRAND_FILTER])
+  const rawProductName = productName;
+  let brandNameFilter: string | undefined;
+  let actualProductNameFilter: string | undefined;
+
+  if (productName && productName.startsWith("[BRAND_FILTER]")) {
+    brandNameFilter = productName.replace("[BRAND_FILTER]", "");
+  } else {
+    actualProductNameFilter = productName;
+  }
+
   // Construir filtros
   const filters: ProductFilters = {};
   if (subcategory) filters.subcategory = decodeURIComponent(subcategory);
-  if (productName) filters.productName = decodeURIComponent(productName);
+  if (actualProductNameFilter) filters.productName = decodeURIComponent(actualProductNameFilter);
 
-  const hasActiveFilters = !!(subcategory || productName);
+  const hasActiveFilters = !!(subcategory || productName || brandNameFilter);
   const hasProductSelection = !!rawProductId;
   const productId = rawProductId ? extractProductId(rawProductId) : undefined;
 
@@ -136,7 +147,8 @@ export default async function CategoryPage({
     category,
     currentPage,
     subcategory,
-    hideOutOfStock
+    hideOutOfStock,
+    brandNameFilter
   );
 
   // Obtener marcas únicas para esta categoría
@@ -175,6 +187,7 @@ export default async function CategoryPage({
       ? traducirSubcategoria(filters.subcategory)
       : undefined,
     productName: filters.productName,
+    brandName: brandNameFilter,
   };
 
   const hasNextPage = currentPage < productsData.meta.total_pages;

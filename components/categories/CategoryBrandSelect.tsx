@@ -24,9 +24,13 @@ export function CategoryBrandSelect({ brands, categorySlug }: CategoryBrandSelec
     if (brandId) {
       const brand = brands.find((b) => b.id === brandId);
       if (brand) {
-        // Navegar a la página de la marca con la categoría como query param
-        router.push(`/brands/${brand.slug}?brandId=${brandId}&category=${encodeURIComponent(categorySlug)}`);
+        // Navegar a la página de la categoría filtrando por la marca seleccionada
+        // Usamos productName con prefijo "[BRAND_FILTER]" para indicar que es un filtro por marca
+        router.push(`/categories/${categorySlug}?productName=${encodeURIComponent(`[BRAND_FILTER]${brand.name}`)}&brandId=${brandId}`);
       }
+    } else {
+      // Si se selecciona "Todas las marcas", limpiar filtros
+      router.push(`/categories/${categorySlug}`);
     }
   };
 

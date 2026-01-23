@@ -18,7 +18,7 @@ export function EmptyPageMessage({
   // Determinar URL base
   const getBaseUrl = () => {
     if (categorySlug) return `/categories/${categorySlug}`;
-    if (brandSlug) return `/brands/${brandSlug}`;
+    if (brandSlug) return `/marca/${brandSlug}`;
     return "/";
   };
 

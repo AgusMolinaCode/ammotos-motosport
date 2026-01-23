@@ -38,7 +38,7 @@ function SliderBrands() {
     .map((brand) => ({
       src: brand.logo as string,
       alt: brand.name,
-      href: `/brands/${brand.slug || brand.id}`,
+      href: `/marca/${brand.slug || brand.id}`,
     }));
 
   if (loading) {

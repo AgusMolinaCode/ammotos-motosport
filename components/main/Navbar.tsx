@@ -41,7 +41,7 @@ const Navbar = () => {
             Home
           </Link>
           <Link
-            href="/test-brands"
+            href="/marcas"
             onClick={() => setIsSidebarOpen(false)}
             className="text-xl font-medium py-2 border-b border-gray-200"
           >
@@ -84,7 +84,7 @@ const Navbar = () => {
                 </button>
               </Link>
 
-              <Link href="/test-brands" className="text-xl lg:text-2xl font-medium ml-6">
+              <Link href="/marcas" className="text-xl lg:text-2xl font-medium ml-6">
                 <button
                   role="link"
                   className="relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:w-full after:origin-bottom after:scale-x-0 after:bg-neutral-800 after:transition-transform after:duration-300 after:ease-[cubic-bezier(0.65_0.05_0.36_1)] hover:after:origin-bottom hover:after:scale-x-100 cursor-pointer"

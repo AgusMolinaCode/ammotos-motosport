@@ -56,7 +56,7 @@ const SearchBar = () => {
     // Find the brand to get the slug
     const brand = brands.find((b) => b.id === brandId);
     const slug = brand?.slug || brandId;
-    router.push(`/brands/${slug}`);
+    router.push(`/marca/${slug}`);
   };
 
   return (

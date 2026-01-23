@@ -39,7 +39,7 @@ export function HideOutOfStockSwitch({ brandId, brandSlug, categorySlug }: HideO
     // Determine URL based on whether we have category or brand
     const newUrl = categorySlug
       ? `/categories/${categorySlug}?${params.toString()}`
-      : `/brands/${brandSlug}?${params.toString()}`;
+      : `/marca/${brandSlug}?${params.toString()}`;
     router.push(newUrl, { scroll: false });
   }, [brandSlug, categorySlug, hideOutOfStock, router, searchParams]);
 

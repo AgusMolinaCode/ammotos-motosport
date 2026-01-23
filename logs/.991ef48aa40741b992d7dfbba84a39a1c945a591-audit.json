@@ -6,11 +6,6 @@
     "auditLog": "C:\\Users\\urano\\OneDrive\\Escritorio\\Programacion\\turn14_ammotos\\logs\\.991ef48aa40741b992d7dfbba84a39a1c945a591-audit.json",
     "files": [
         {
-            "date": 1767788949473,
-            "name": "C:\\Users\\urano\\OneDrive\\Escritorio\\Programacion\\turn14_ammotos\\logs\\mcp-puppeteer-2026-01-07.log",
-            "hash": "252897c8074beb5e203e44c63454d0381ef8dac703c1a5d60d4d0ebbbee6d3c0"
-        },
-        {
             "date": 1767882315077,
             "name": "C:\\Users\\urano\\OneDrive\\Escritorio\\Programacion\\turn14_ammotos\\logs\\mcp-puppeteer-2026-01-08.log",
             "hash": "ca5f85ae600acd9f533c030e74837113d32bc4e18f21eba90dd928a3392d666a"
@@ -59,6 +54,11 @@
             "date": 1768966500891,
             "name": "C:\\Users\\urano\\OneDrive\\Escritorio\\Programacion\\turn14_ammotos\\logs\\mcp-puppeteer-2026-01-21.log",
             "hash": "74dd40191172ce7e385962af8c455f4ed91f9c975de0644dcd0cb1d9e1414c31"
+        },
+        {
+            "date": 1769088437637,
+            "name": "C:\\Users\\urano\\OneDrive\\Escritorio\\Programacion\\turn14_ammotos\\logs\\mcp-puppeteer-2026-01-22.log",
+            "hash": "e3bb0497f196d80cc2016914e23168c039799086ea3b5b3c276d04a751cd976e"
         }
     ],
     "hashType": "sha256"

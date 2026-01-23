@@ -4,6 +4,7 @@ import "./globals.css";
 import SmallBanner from "@/components/main/SmallBanner";
 import Navbar from "@/components/main/Navbar";
 import SearchBar from "@/components/main/SearchBar";
+import Footer from "@/components/main/Footer";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -13,7 +14,7 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: {
     default:
-      "AmPowerparts - Tu Tienda de Repuestos y Accesorios para Autos Deportivos",
+      "AM.Powerparts - Tu Tienda de Repuestos y Accesorios para Autos Deportivos",
     template: "%s | AmPowerparts",
   },
   description:
@@ -95,6 +96,7 @@ export default function RootLayout({
           <SearchBar />
         </div>
         <div className="px-2">{children}</div>
+        <Footer />
       </body>
     </html>
   );

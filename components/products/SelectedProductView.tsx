@@ -48,7 +48,7 @@ export function SelectedProductView({
   // Determinar URL base para el botón de volver
   const getBackUrl = () => {
     if (categorySlug) return `/categories/${categorySlug}`;
-    if (brandSlug) return `/brands/${brandSlug}`;
+    if (brandSlug) return `/marca/${brandSlug}`;
     return "/";
   };
 

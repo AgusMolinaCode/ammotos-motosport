@@ -62,7 +62,11 @@
       "mcp__playwright__browser_evaluate",
       "mcp__playwright__browser_console_messages",
       "mcp__puppeteer__puppeteer_navigate",
-      "mcp__puppeteer__puppeteer_screenshot"
+      "mcp__puppeteer__puppeteer_screenshot",
+      "Bash(mv:*)",
+      "Bash(ren:*)",
+      "Bash(powershell -Command \"Rename-Item -Path ''C:\\\\Users\\\\urano\\\\OneDrive\\\\Escritorio\\\\Programacion\\\\turn14_ammotos\\\\app\\\\brands'' -NewName ''marca''\")",
+      "Bash(powershell:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
