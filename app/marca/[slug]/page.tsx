@@ -156,7 +156,7 @@ export default async function BrandDetailPage({
               href="/marcas"
               className="text-blue-600 hover:text-blue-800 inline-flex items-center gap-2 transition-colors"
             >
-              ← Ver todas las marcas
+              ← Ver todas las marcassssss
             </Link>
             <div className="flex justify-start items-center my-6">
               <h1 className="text-3xl font-bold mt-2">
